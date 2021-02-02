@@ -17,6 +17,7 @@ dependencies:
   - google-cloud-storage~=1.35.0
   - matplotlib~=3.0
   - networkx~=2.2
+  - nodejs~=12.19
   - numpy~=1.19
   - pandas~=1.2
   - pyarrow~=2.0
