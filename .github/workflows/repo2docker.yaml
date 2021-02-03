@@ -6,18 +6,17 @@ jobs:
     steps:
     - name: Get current date for use as a tag
       id: date
-      run: echo "TODAY=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      run: echo "TODAY=$(TZ='America/Denver' date +'%Y.%m.%d')" >> $GITHUB_ENV
     - name: Check that we captured the date
       run: echo $TODAY
-
-    #- name: Checkout files in repo
-    #  uses: actions/checkout@main
-    #- name: test building the image with repo2docker
-    #  uses: jupyterhub/repo2docker-action@master
-    #  with:
-    #    IMAGE_NAME: "catalystcoop/pilot-hub"
-    #    ADDITIONAL_TAG: $TODAY
-    #    NOTEBOOK_USER: jovyan
-    #    PUBLIC_REGISTRY_CHECK: true
-    #    DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-    #    DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Checkout files in repo
+      uses: actions/checkout@main
+    - name: test building the image with repo2docker
+      uses: jupyterhub/repo2docker-action@master
+      with:
+        IMAGE_NAME: "catalystcoop/pilot-hub"
+        ADDITIONAL_TAG: $TODAY
+        NOTEBOOK_USER: jovyan
+        PUBLIC_REGISTRY_CHECK: true
+        DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
