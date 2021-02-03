@@ -6,9 +6,9 @@ jobs:
     steps:
     - name: Get current date for use as a tag
       id: date
-      run: echo "TODAY::$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      run: echo "TODAY=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
     - name: Check that we captured the date
-      run: echo $TODAY
+      run: echo "date tag: " ${{ env.TODAY }}
     #- name: Checkout files in repo
     #  uses: actions/checkout@main
     #- name: test building the image with repo2docker
