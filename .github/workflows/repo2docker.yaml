@@ -8,7 +8,7 @@ jobs:
       id: date
       run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
     - name: Check that we captured the date
-      run: echo "The date-tag is ${{ steps.date.output.date }}"
+      run: echo "The date-tag is" ${{ steps.date.output.date }}
     - name: Checkout files in repo
       uses: actions/checkout@main
     - name: test building the image with repo2docker
