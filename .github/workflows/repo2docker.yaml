@@ -1,0 +1,21 @@
+name: Build Notebook Container
+on: [push] # You may want to trigger this Action on other things than a push.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get current date
+      id: date
+      run: echo "name=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+    - name: Checkout files in repo
+      uses: actions/checkout@main
+    - name: test building the image with repo2docker
+      uses: jupyterhub/repo2docker-action@master
+      with:
+        NO_PUSH: true
+        IMAGE_NAME: "catalystcoop/pilot-hub"
+        ADDITIONAL_TAG: ${{ steps.date.output.date }}
+        NOTEBOOK_USER: jovyan
+        PUBLIC_REGISTRY_CHECK: true
+        DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
