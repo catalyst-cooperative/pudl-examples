@@ -4,14 +4,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Get current date for use as a tag
-      id: date
+    - name: Get current date to tag the image with
       run: echo "TODAY=$(TZ='America/Denver' date +'%Y.%m.%d')" >> $GITHUB_ENV
-    - name: Check that we captured the date
-      run: echo $TODAY
     - name: Checkout files in repo
       uses: actions/checkout@main
-    - name: test building the image with repo2docker
+    - name: Build pudl-jupyter docker image with repo2docker
       uses: jupyterhub/repo2docker-action@master
       with:
         IMAGE_NAME: "catalystcoop/pilot-hub"
