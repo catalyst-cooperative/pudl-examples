@@ -7,8 +7,6 @@ jobs:
     - name: Get current date for use as a tag
       id: date
       run: echo "TODAY::$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-      env:
-        TZ: "America/Denver"
     - name: Check that we captured the date
       run: echo $TODAY
     #- name: Checkout files in repo
