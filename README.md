@@ -16,7 +16,13 @@ hub, you can work through the example notebooks by following
 
 
 We also use this repository to define PUDL's computational environment for
-users, via `[repo2docker](https://github.com/jupyterhub/repo2docker)`.
+users, via [`repo2docker`](https://github.com/jupyterhub/repo2docker). You
+should be able to run the most recent version of the Docker container based on
+this repository with the following command:
+
+```
+docker run --publish 127.0.0.1:8888:8888 catalystcoop/pilot-hub:latest
+```
 
 For more information:
 * Web: [Catalyst Cooperative](https://catalyst.coop)

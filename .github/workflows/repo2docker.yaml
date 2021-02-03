@@ -12,7 +12,6 @@ jobs:
     - name: test building the image with repo2docker
       uses: jupyterhub/repo2docker-action@master
       with:
-        NO_PUSH: true
         IMAGE_NAME: "catalystcoop/pilot-hub"
         ADDITIONAL_TAG: ${{ steps.date.output.date }}
         NOTEBOOK_USER: jovyan
