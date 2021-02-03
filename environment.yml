@@ -45,5 +45,6 @@ dependencies:
 
   - pip:
     - git+https://github.com/catalyst-cooperative/pudl.git@jupyterhub-beta
-    - recordlinkage~=0.14.0       # user environment
-    - fredapi~=0.4.3              # user environment
+    - recordlinkage~=0.14.0
+    - fredapi~=0.4.3
+    - jupyter-offlinenotebook~=0.2
