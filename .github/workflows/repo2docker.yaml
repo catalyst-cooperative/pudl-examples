@@ -6,17 +6,19 @@ jobs:
     steps:
     - name: Get current date for use as a tag
       id: date
-      run: echo "::set-output name=date::$(date +'%Y.%m.%d')"
+      run: echo "TODAY::$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      env:
+        TZ: "America/Denver"
     - name: Check that we captured the date
-      run: echo "The date-tag is" ${{ steps.date.output.date }}
-    - name: Checkout files in repo
-      uses: actions/checkout@main
-    - name: test building the image with repo2docker
-      uses: jupyterhub/repo2docker-action@master
-      with:
-        IMAGE_NAME: "catalystcoop/pilot-hub"
-        ADDITIONAL_TAG: ${{ steps.date.output.date }}
-        NOTEBOOK_USER: jovyan
-        PUBLIC_REGISTRY_CHECK: true
-        DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+      run: echo $TODAY
+    #- name: Checkout files in repo
+    #  uses: actions/checkout@main
+    #- name: test building the image with repo2docker
+    #  uses: jupyterhub/repo2docker-action@master
+    #  with:
+    #    IMAGE_NAME: "catalystcoop/pilot-hub"
+    #    ADDITIONAL_TAG: $TODAY
+    #    NOTEBOOK_USER: jovyan
+    #    PUBLIC_REGISTRY_CHECK: true
+    #    DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    #    DOCKER_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
