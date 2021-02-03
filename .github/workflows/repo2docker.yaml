@@ -15,7 +15,7 @@ jobs:
       uses: jupyterhub/repo2docker-action@master
       with:
         IMAGE_NAME: "catalystcoop/pilot-hub"
-        ADDITIONAL_TAG: $TODAY
+        ADDITIONAL_TAG: ${{ env.TODAY }}
         NOTEBOOK_USER: jovyan
         PUBLIC_REGISTRY_CHECK: true
         DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
