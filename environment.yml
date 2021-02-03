@@ -16,6 +16,7 @@ dependencies:
   - goodtables-pandas-py~=0.2.0
   - google-cloud-storage~=1.35.0
   - matplotlib~=3.0
+  - nbgitpuller~=0.9
   - networkx~=2.2
   - nodejs~=12.19
   - numpy~=1.19
