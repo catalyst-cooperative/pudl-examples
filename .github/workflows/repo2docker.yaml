@@ -8,7 +8,8 @@ jobs:
       id: date
       run: echo "TODAY=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
     - name: Check that we captured the date
-      run: echo "date tag: " $TODAY
+      run: echo $TODAY
+
     #- name: Checkout files in repo
     #  uses: actions/checkout@main
     #- name: test building the image with repo2docker
