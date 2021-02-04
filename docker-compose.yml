@@ -1,0 +1,16 @@
+version: "3"
+services:
+  pudl-jupyterlab:
+    image: catalystcoop/pilot-hub:latest
+    volumes:
+      - type: bind
+        source: ${PUDL_DATA_DIR}
+        target: /home/jovyan/shared
+      - type: bind
+        source: ${PUDL_WORKING_DIR}
+        target: /home/jovyan/notebooks-local
+    ports:
+      - published: 8888
+        target: ${PUDL_JUPYTERLAB_PORT}
+    container_name: pudl_jupyterlab
+    command: jupyter lab --ServerApp.ip 0.0.0.0 --no-browser
