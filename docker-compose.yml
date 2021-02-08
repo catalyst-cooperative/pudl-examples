@@ -4,11 +4,14 @@ services:
     image: catalystcoop/pilot-hub:latest
     volumes:
       - type: bind
-        source: ${PUDL_DATA_DIR}
+        source: ${PUDL_DATA}
         target: /home/jovyan/shared
+        read_only: true
+        consistency: delegated
       - type: bind
-        source: ${PUDL_WORKING_DIR}
-        target: /home/jovyan/notebooks-local
+        source: ${USER_DATA}
+        target: /home/jovyan/user_data
+        consistency: delegated
     ports:
       - published: 8888
         target: ${PUDL_JUPYTERLAB_PORT}

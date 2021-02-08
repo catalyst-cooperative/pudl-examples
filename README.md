@@ -17,23 +17,28 @@ hub, you can work through the example notebooks by following
 ## Running the PUDL Jupyter Container
 
 We also use this repository to define PUDL's computational environment for
-users, via [`repo2docker`](https://github.com/jupyterhub/repo2docker). If you
-have Docker and `docker-compose` installed on your computer, you should be able
-to start up a Jupyter Notebook server locally, based on this environment, by
-cloning this repository and running:
+users, via [`repo2docker`](https://github.com/jupyterhub/repo2docker). To
+use this environment, you'll need to install Docker and `docker-compose`.
+* [Get Docker](https://docs.docker.com/get-docker/)
+* [Install Docker Compose](https://docs.docker.com/compose/install/)
 
+With those installed, you should be able to start up a Jupyter Notebook server
+that has the PUDL software installed by cloning this repository and running:
 ```
 docker-compose up
 ```
+from within the top level repository directory.
 
 ## Environment Variables
 
 The Docker container needs to be pointed at a couple of local directories to
 work properly with PUDL. These paths are set using environment variables:
-* `PUDL_DATA_DIR` is the path to the PUDL directory containing your PUDL
-`data`, `sqlite` and `epacems` directories.
-* `PUDL_WORKING_DIR` is a local directory that you want to have access to
-within the container -- it can contain other data or notebooks, etc.
+* `PUDL_DATA` is the path to the PUDL directory containing your PUDL
+`data`, `sqlite` and `epacems` directories. It is treated as read-only, and by
+default is set to `./pudl_data`
+* `USER_DATA` is a local directory that you want to have access to
+within the container. It can contain other data, or your own notebooks, etc. by
+default it is set to `./user_data`
 
 You can also set these environment variables in the `.env` file that is part of
 the repository.
