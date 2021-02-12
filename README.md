@@ -43,6 +43,12 @@ default it is set to `./user_data`
 You can also set these environment variables in the `.env` file that is part of
 the repository.
 
+To be able to fill in data using the EIA API, you'll need to [obtain an API KEY
+from EPA](https://www.eia.gov/opendata/register.php). If you set an environment
+variable called `API_KEY_EIA` in your shell, and run our container using
+`docker-compose` it will be passed in to the container and available for use
+automatically.
+
 ## Contact Us
 
 * Web: [Catalyst Cooperative](https://catalyst.coop)
