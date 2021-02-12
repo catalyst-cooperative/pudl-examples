@@ -16,4 +16,4 @@ services:
       - published: 8888
         target: ${PUDL_JUPYTERLAB_PORT}
     container_name: pudl_jupyterlab
-    command: jupyter lab --ServerApp.ip 0.0.0.0 --no-browser
+    command: jupyter lab --ip 0.0.0.0 --no-browser
