@@ -1,7 +1,7 @@
 version: "3"
 services:
   pudl-jupyterlab:
-    image: catalystcoop/pilot-hub:latest
+    image: catalystcoop/pilot-hub:2021.02.12
     volumes:
       - type: bind
         source: ${PUDL_DATA}
