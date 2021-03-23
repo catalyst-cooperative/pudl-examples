@@ -12,10 +12,14 @@ services:
         source: ${USER_DATA}
         target: /home/jovyan/user_data
         consistency: delegated
+      - type: bind
+        source: ./notebooks
+        target: /home/jovyan/notebooks
+        consistency: delegated
     environment:
       - API_KEY_EIA
     ports:
       - published: 48512
         target: 48512
     container_name: pudl_jupyter
-    command: jupyter lab --ip 0.0.0.0 --no-browser
+    command: jupyter lab --ip 0.0.0.0 --port=48512 --no-browser
