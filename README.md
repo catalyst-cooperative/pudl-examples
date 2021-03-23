@@ -49,6 +49,39 @@ variable called `API_KEY_EIA` in your shell, and run our container using
 `docker-compose` it will be passed in to the container and available for use
 automatically.
 
+## Instructions for accessing bundled data
+To use this Docker container with processed data bundled together in an archive:
+
+* First, you'll need to [install Docker](https://docs.docker.com/get-docker/).
+  On MacOS and Windows it'll be called "Docker Desktop". On Linux it's just
+  "Docker."
+* On Linux, you'll also need to install a tool called
+  [docker-compose](https://docs.docker.com/compose/install/)
+* If you're on MacOS or Windows, open the settings in Docker Desktop and
+  increase the amount of memory it's allowed to use to be at least 8GB.
+* Make sure that the Docker service is running in the background. On MacOS it
+  should show up in the menu bar. On Windows it should show up in the system
+  tray.  On Linux, a daemon called `dockerd` should be running in the
+  background.
+* Download and extract this archive (ADD LINK) (~5GB) into a local directory.
+  On MacOS and Windows you should just be able to double-click the archive
+  file. On Linux you'll probably want to use the command line, with something
+  like: `tar -xvzf FILENAME.tgz`
+* At a command line, go into the directory which was created by extracting the
+  archive.  It should contain a file named `docker-compose.yml`. In that
+  directory, run `docker-compose up`
+* You should see some logging messages as the PUDL Docker image is downloaded
+  from Docker Hub, and it starts up a Jupyter Notebook server. At the end of
+  those logging message, it should give you several possible links to click.
+  Pick one that starts with `https://localhost:48512` or
+  `https://127.0.0.1:48512` and open it in your browser.  This is a local web
+  address -- the Jupyter Notebook server is running on your computer, not out
+  on the remote internet somewhere.
+* You should get a JupyterLab launcher / notebook interface. In the file
+  browser in the left hand sidebar, you should see a "notebooks" directory with
+  the example notebooks from this repository in it, which (hopefully!) you will
+  be able to run.
+
 ## Contact Us
 
 * Web: [Catalyst Cooperative](https://catalyst.coop)

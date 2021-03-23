@@ -1,7 +1,7 @@
 version: "3"
 services:
   pudl-jupyterlab:
-    image: catalystcoop/pilot-hub:2021.02.23
+    image: catalystcoop/pudl-jupyter:latest
     volumes:
       - type: bind
         source: ${PUDL_DATA}
@@ -15,7 +15,7 @@ services:
     environment:
       - API_KEY_EIA
     ports:
-      - published: 8888
-        target: ${PUDL_JUPYTERLAB_PORT}
-    container_name: pudl_jupyterlab
+      - published: 48512
+        target: 48512
+    container_name: pudl_jupyter
     command: jupyter lab --ip 0.0.0.0 --no-browser

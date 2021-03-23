@@ -11,7 +11,7 @@ jobs:
     - name: Build pudl-jupyter docker image with repo2docker
       uses: jupyterhub/repo2docker-action@master
       with:
-        IMAGE_NAME: "catalystcoop/pilot-hub"
+        IMAGE_NAME: "catalystcoop/pudl-jupyter"
         ADDITIONAL_TAG: ${{ env.TODAY }}
         NOTEBOOK_USER: jovyan
         PUBLIC_REGISTRY_CHECK: true
