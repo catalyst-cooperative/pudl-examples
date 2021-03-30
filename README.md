@@ -2,18 +2,20 @@
 
 This repository contains a collection of
 [Jupyter notebooks](https://jupyter.org) with examples of how to use the data
-and software distributed [Catalyst Cooperative](https://catalyst.coop)'s
+and software distributed under [Catalyst Cooperative](https://catalyst.coop)'s
 [Public Utility Data Liberation (PUDL) project](https://github.com/catalyst-cooperative/pudl).
 
 The example notebooks depend on having the processed PUDL data available, and
 it's too large to commit to a GitHub repository. There are two main ways to
 access it. You can either download it to your computer and run our Docker
-container locally, or you can request an account on our JupyterHub.
+container locally, or you can request an account on
+[our JupyterHub](https://catalyst-cooperative.pilot.2i2c.cloud/) which is
+hosted in collaboration with [2i2c.org](https://2i2c.org).
 
-## Download the processed data and run Docker
-* Download and extract this archive (~5GB) from Zenodo into a local directory.
-  On MacOS and Windows you should just be able to double-click the archive
-  file. On Linux you'll probably want to use the command line:
+## Option 1: Download the processed data and run Docker
+* Download and extract this archive (~6 GB) from Zenodo (ADD LINK) into a
+  local directory. On MacOS and Windows you should just be able to double-click
+  the archive file. On Linux (or MacOS) you may want to use the command line:
   ```
   tar -xzf databeta-YYYY-MM-DD.tgz
   ```
@@ -21,8 +23,9 @@ container locally, or you can request an account on our JupyterHub.
   extract.
 
 * Extracting the archive will create a directory called `databeta-YYYY-MM-DD`
-  containing some example Jupyter Notebooks, and all the processed PUDL data as
-  a combination of SQLite databases and Apache Parquet files.
+  containing the example Jupyter Notebooks from this repository, and all the
+  processed PUDL data as a combination of [SQLite](https://www.sqlite.org)
+  databases and [Apache Parquet](https://parquet.apache.org/) files.
 
 * If you have additional data you want to work with, you can put it in the
   `user_data` directory, and it will be available to you inside the Docker
@@ -47,10 +50,10 @@ container locally, or you can request an account on our JupyterHub.
   background.
 
 * At a command line, go into the directory which was created by extracting the
-  archive. It should contain a file named `pudl-jupyter.tar` -- this is the
+  archive. It should contain a file named `pudl-jupyter.tar` -- this is 
   a Docker image which will run a Jupyter Notebook server for you locally, with
   all of the PUDL software installed and ready to use. But first you need to
-  load this image into your local collection of docker images with this
+  load the image into your local collection of docker images with this
   command:
   ```
   docker load -i pudl-jupyter.tar
@@ -75,27 +78,31 @@ container locally, or you can request an account on our JupyterHub.
   browser in the left hand sidebar, you should see a `notebooks` directory with
   several example notebooks in it, which (hopefully!) you will be able to run.
 
-## Request an account on our 2i2c JupyterHub
-We also have an experimental shared [JupyterHub](https://jupyter.org/hub)
-currently maintained in collaboration with [2i2c](https://2i2c.org). If you
-have an account on our hub, you can work through the example notebooks by
-following [this link](https://catalyst-cooperative.pilot.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fcatalyst-cooperative%2Fpudl-examples&urlpath=lab%2Ftree%2Fpudl-examples%2Fnotebooks%2F01-pudl-database.ipynb&branch=main).
+## Option 2: Request an account on our JupyterHub
+We also have an experimental shared JupyterHub currently maintained in
+collaboration with [2i2c.org](https://2i2c.org). Once you
+have an account on our hub, you can
+[work through the example notebooks there](https://catalyst-cooperative.pilot.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fcatalyst-cooperative%2Fpudl-examples&urlpath=lab%2Ftree%2Fpudl-examples%2Fnotebooks%2F01-pudl-database.ipynb&branch=main) without needing to download anything or install
+anything.
 
 If you'd like to get an account email:
 [pudl@catalyst.coop](mailto:pudl@catalyst.coop)
 
-## Running the PUDL Jupyter Container with no data
+## Development-Oriented Usage
+
+### Running the PUDL Jupyter Container with no data
 If you just want the PUDL software environment without the processed data, for
-development or other purposes, you can pull the image from DockerHub directly:
+development or other purposes, you can pull a Docker image from the
+[catalystcoop/pudl-jupyter repository on DockerHub](https://hub.docker.com/r/catalystcoop/pudl-jupyter) directly:
 ```
 docker pull catalystcoop/pudl-jupyter:latest
 ```
 This image is built automatically using
 [`repo2docker`](https://github.com/jupyterhub/repo2docker) whenever a commit
-is made to our
-[pudl-examples repo](https://github.com/catalyst-cooperative/pudl-examples)
+is made to the 
+[pudl-examples repository](https://github.com/catalyst-cooperative/pudl-examples)
 
-## Environment Variables
+### Environment Variables
 The Docker container needs to be pointed at a couple of local directories to
 work properly with PUDL. These paths are set using environment variables:
 * `PUDL_DATA` is the path to the PUDL directory containing your PUDL
