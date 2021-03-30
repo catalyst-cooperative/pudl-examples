@@ -6,7 +6,6 @@ services:
       - type: bind
         source: ${PUDL_DATA}
         target: /home/jovyan/shared
-        read_only: true
         consistency: delegated
       - type: bind
         source: ${USER_DATA}
