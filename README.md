@@ -15,11 +15,12 @@ container locally, or you can request an account on our JupyterHub.
   On MacOS and Windows you should just be able to double-click the archive
   file. On Linux you'll probably want to use the command line:
   ```
-  tar -xzf databeta.tgz
+  tar -xzf databeta-YYYY-MM-DD.tgz
   ```
-  It may take a couple of minutes to extract.
+  (where `YYYY-MM-DD` is a date string). It may take a couple of minutes to
+  extract.
 
-* Extracting the archive will create a directory called `databeta`
+* Extracting the archive will create a directory called `databeta-YYYY-MM-DD`
   containing some example Jupyter Notebooks, and all the processed PUDL data as
   a combination of SQLite databases and Apache Parquet files.
 
