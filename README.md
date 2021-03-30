@@ -16,9 +16,11 @@ hosted in collaboration with [2i2c.org](https://2i2c.org).
 
 ### Download and extract the archived data and Docker container
 
-* Download and extract this archive (~6 GB) from Zenodo (ADD LINK) into a
-  local directory. On MacOS and Windows you should just be able to double-click
-  the archive file. On Linux (or MacOS) you may want to use the command line:
+* Download and extract the
+  [archived data from Zenodo](https://sandbox.zenodo.org/record/764417) (6 GB)
+  into a local directory. On MacOS and Windows you should just be able to
+  double-click the archive file. On Linux (or MacOS) you may want to use the
+  command line:
 
   ```sh
   tar -xzf databeta-YYYY-MM-DD.tgz
