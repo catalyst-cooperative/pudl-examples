@@ -14,7 +14,7 @@ hosted in collaboration with [2i2c.org](https://2i2c.org).
 
 ## Option 1: Download the processed data and run Docker
 
-### Download and extract the archived data and Docker container:
+### Download and extract the archived data and Docker container
 
 * Download and extract this archive (~6 GB) from Zenodo (ADD LINK) into a
   local directory. On MacOS and Windows you should just be able to double-click
@@ -48,7 +48,7 @@ hosted in collaboration with [2i2c.org](https://2i2c.org).
 ### Load the archived Docker image
 
 * At a command line, go into the directory which was created by extracting the
-  archive. It should contain a file named `pudl-jupyter.tar` -- this is 
+  archive. It should contain a file named `pudl-jupyter.tar` -- this is
   a Docker image which will run a Jupyter Notebook server for you locally, with
   all of the PUDL software installed and ready to use. But first you need to
   load the image into your local collection of docker images with this
