@@ -94,9 +94,11 @@ hosted in collaboration with [2i2c.org](https://2i2c.org).
 We also have an experimental shared JupyterHub currently maintained in
 collaboration with [2i2c.org](https://2i2c.org). Once you
 have an account on our hub, you can
-[work through the example notebooks there](https://catalyst-cooperative.pilot.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Fcatalyst-cooperative%2Fpudl-examples&urlpath=lab%2Ftree%2Fpudl-examples%2Fnotebooks%2F01-pudl-database.ipynb&branch=main) without needing to download anything or install
-anything. If you'd like to get an account email:
-[pudl@catalyst.coop](mailto:pudl@catalyst.coop)
+[work through the example notebooks there](https://bit.ly/pudl-examples-01)
+without needing to download anything or install
+anything. If you'd like to get an account
+[submit this Google form](https://forms.gle/TN3GuE2e2mnWoFC4A) and we'll get
+back to you soon!
 
 ## Contact Us
 
