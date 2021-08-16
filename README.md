@@ -12,26 +12,25 @@ container locally, or you can request an account on
 [our JupyterHub](https://catalyst-cooperative.pilot.2i2c.cloud/) which is
 hosted in collaboration with [2i2c.org](https://2i2c.org).
 
-## Option 1: Download the processed data and run Docker
+## Option 1: Download preprocessed data and run Docker
 
 ### Download and extract the archived data and Docker container
 
-* Download and extract the
-  [archived data from Zenodo](https://sandbox.zenodo.org/record/764417) (6 GB)
+* Download and extract the most recent
+  [PUDL data release from Zenodo](https://doi.org/10.5281/zenodo.3653158)
   into a local directory. On MacOS and Windows you should just be able to
   double-click the archive file. On Linux (or MacOS) you may want to use the
   command line:
 
   ```sh
-  tar -xzf databeta-YYYY-MM-DD.tgz
+  tar -xzf filename.tgz
   ```
 
-  (where `YYYY-MM-DD` is a date string). It may take a couple of minutes to
-  extract.
-* Extracting the archive will create a directory called `databeta-YYYY-MM-DD`
-  containing the example Jupyter Notebooks from this repository, and all the
-  processed PUDL data as a combination of [SQLite](https://www.sqlite.org)
-  databases and [Apache Parquet](https://parquet.apache.org/) files.
+  It may take a couple of minutes to extract.
+* Extracting the archive will create a directory containing the example Jupyter
+  Notebooks from this repository, and all the processed PUDL data as a combination of
+  [SQLite](https://www.sqlite.org) databases and
+  [Apache Parquet](https://parquet.apache.org/) files.
 
 ### Install and run Docker
 
