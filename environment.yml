@@ -4,20 +4,20 @@ channels:
   - defaults
   - intake
 dependencies:
-  - pip~=21.0
+  - pip~=21.2
   - python>=3.8,<3.10
   - geopandas~=0.9.0  # Ensures access to compatible GEOS binaries
   - pygeos~=0.9.0  # Ensures access to compatible GEOS binaries
   - python-snappy~=0.6.0  # Ensures snappy-dev library is installed w/o apt
 
   # user environment
-  - dask~=2021.2
-  - dask-labextension~=5.0
-  - jupyterlab~=3.0.12
-  - jupyter-resource-usage~=0.5.0
+  - dask~=2021.8
+  - dask-labextension~=5.1
+  - jupyterlab~=3.1
+  - jupyter-resource-usage~=0.5
   - nbgitpuller~=0.9
   - python-graphviz
 
   - pip:
-    - git+https://github.com/catalyst-cooperative/pudl.git@pudl-jupyter
+    - catalystcoop.pudl~=0.4
     - jupyter-offlinenotebook~=0.2
