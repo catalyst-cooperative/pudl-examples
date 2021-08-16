@@ -14,10 +14,11 @@ dependencies:
   - dask~=2021.8
   - dask-labextension~=5.1
   - jupyterlab~=3.1
+  - jupyter-offlinenotebook~=0.2
   - jupyter-resource-usage~=0.5
+  - nbclassic>=0.2.8
   - nbgitpuller~=0.9
   - python-graphviz
 
   - pip:
     - catalystcoop.pudl~=0.4
-    - jupyter-offlinenotebook~=0.2
