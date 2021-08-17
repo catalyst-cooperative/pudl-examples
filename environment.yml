@@ -18,4 +18,5 @@ dependencies:
   - nbclassic>=0.2.8
   - nbgitpuller~=0.9
   - python-graphviz
+  - seaborn~=0.11
 
