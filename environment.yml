@@ -6,11 +6,10 @@ channels:
 dependencies:
   - pip~=21.2
   - python>=3.8,<3.10
-  - geopandas~=0.9.0  # Ensures access to compatible GEOS binaries
-  - pygeos~=0.9.0  # Ensures access to compatible GEOS binaries
-  - python-snappy~=0.6.0  # Ensures snappy-dev library is installed w/o apt
+  - python-snappy~=0.6.0  # Install snappy-dev library without using apt
+  - catalystcoop.pudl~=0.4.0
 
-  # user environment
+  # Jupyter + Dask for interactive computing
   - dask~=2021.8
   - dask-labextension~=5.1
   - jupyterlab~=3.1
@@ -20,5 +19,3 @@ dependencies:
   - nbgitpuller~=0.9
   - python-graphviz
 
-  - pip:
-    - catalystcoop.pudl~=0.4
