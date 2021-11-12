@@ -4,16 +4,18 @@ channels:
   - defaults
   - intake
 dependencies:
-  - pip~=21.2
+  - pip~=21.0
   - python>=3.8,<3.10
   - python-snappy~=0.6.0  # Install snappy-dev library without using apt
-  - catalystcoop.pudl~=0.4.0
+  - sqlite~=3.36
+  - numba~=0.53
+  - catalystcoop.pudl~=0.5.0
 
   # Jupyter + Dask for interactive computing
   - dask~=2021.8
   - dask-gateway~=0.9
   - dask-labextension~=5.1
-  - jupyterlab>=3.1,<3.1.5
+  - jupyterlab>=3.2,<4.0
   - jupyter-offlinenotebook~=0.2
   - jupyter-resource-usage~=0.5
   - nbclassic>=0.2.8
