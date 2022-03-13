@@ -2,14 +2,13 @@ name: pudl
 channels:
   - conda-forge
   - defaults
-  - intake
 dependencies:
   - pip~=21.0
-  - python>=3.8,<3.10
+  - python>=3.8,<3.11
   - python-snappy~=0.6.0  # Install snappy-dev library without using apt
-  - sqlite~=3.36
-  - numba~=0.53
-  - catalystcoop.pudl~=0.5.0
+  - sqlite>=3.36,<4
+  - numba>=0.53,<0.56
+  - catalystcoop.pudl>=0.6,<0.7
 
   # Jupyter + Dask for interactive computing
   - dask~=2021.8
