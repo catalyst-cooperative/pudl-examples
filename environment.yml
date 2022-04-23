@@ -21,3 +21,7 @@ dependencies:
   - nbgitpuller>=1.1,<2
   - python-graphviz
   - seaborn>=0.11,<1
+
+  # Until we get the conda-forge packaging working
+  - pip:
+    - catalystcoop.pudl_catalog==0.1.0
