@@ -37,8 +37,8 @@ hosted in collaboration with [2i2c.org](https://2i2c.org).
 * [Download and install Docker](https://docs.docker.com/get-docker/). On MacOS
   and Windows it'll be called "Docker Desktop". On Linux it's just "Docker."
 * On Linux, you'll need to separately install a tool called
-  [docker-compose](https://docs.docker.com/compose/install/) (it comes
-  bundled with Docker Desktop for MacOS/Windows).
+  [docker compose](https://docs.docker.com/compose/cli-command/#install-on-linux)
+  (it comes bundled with Docker Desktop for MacOS/Windows).
 * If you're on MacOS or Windows, open the settings in Docker Desktop and
   increase the amount of memory that Docker is allowed to use to at least 8GB.
 * Check to make sure that the Docker service is running in the background. On
@@ -61,13 +61,13 @@ hosted in collaboration with [2i2c.org](https://2i2c.org).
 
   You should see some output at the command line as it loads the image.
 
-### Start the Jupyter Notebook server using `docker-compose`
+### Start the Jupyter Notebook server using `docker compose`
 
 * Once it's done loading, in that same directory (where you should also see a
   file named `docker-compose.yml`), run the command:
 
   ```sh
-  docker-compose up
+  docker compose up
   ```
 
 * You should see some logging messages as the PUDL Docker image starts up and
@@ -142,6 +142,6 @@ this repository (or the archive you downloaded from Zenodo)
 To be able to fill in data using the EIA API, you'll need to [obtain an API KEY
 from EPA](https://www.eia.gov/opendata/register.php). If you set an environment
 variable called `API_KEY_EIA` in the shell where you run the
-`catalystcoop/pudl-jupyter` container using `docker-compose` then the value of
+`catalystcoop/pudl-jupyter` container using `docker compose` then the value of
 that environment variable will be passed in to the container and available for
 use automatically.
