@@ -3,25 +3,24 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - pip~=21.0
-  - python>=3.8,<3.11
-  - python-snappy>=0.6,<1  # Install snappy-dev library without using apt
+  - pip>=22.0,<23
+  - python>=3.10,<3.11
+  - python-snappy>=0.6,<7 # Installs the snappy-dev library without using apt
   - sqlite>=3.36,<4
-  - numba>=0.53,<0.56
-  - catalystcoop.pudl>=0.6,<0.7
+  - numba>=0.57,<0.58
+  - catalystcoop.pudl==2022.11.30
 
   # Jupyter + Dask for interactive computing
-  - dask>=2021.8,<2023.0
-  - dask-gateway~=0.9
-  - dask-labextension~=5.1
+  - dask>=2021.8,<2022.11.2
+  - dask-gateway>=2022.4,<2022.11
+  - dask-labextension>=5.1,<6.1
   - jupyterlab>=3.2,<4.0
-  - jupyter-offlinenotebook~=0.2
-  - jupyter-resource-usage~=0.6
-  - nbclassic>=0.2.8
+  - jupyter-offlinenotebook>=0.2,<0.3
+  - jupyter-resource-usage>=0.6,<0.7
+  - nbclassic>=0.4,<0.5
   - nbgitpuller>=1.1,<2
   - python-graphviz
   - seaborn>=0.11,<1
 
-  # Until we get the conda-forge packaging working
-  - pip:
-    - catalystcoop.pudl_catalog==0.1.0
+  # Install the corresponding PUDL Intake data catalog
+  - catalystcoop.pudl_catalog==0.2.0
