@@ -7,7 +7,7 @@ dependencies:
   - python>=3.10,<3.11
   - python-snappy>=0.6,<7 # Installs the snappy-dev library without using apt
   - sqlite>=3.36,<4
-  - numba>=0.57,<0.58
+  - numba>=0.56,<0.57
   - catalystcoop.pudl==2022.11.30
 
   # Jupyter + Dask for interactive computing
