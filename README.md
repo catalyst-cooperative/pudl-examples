@@ -8,17 +8,17 @@ and software distributed by [Catalyst Cooperative](https://catalyst.coop)'s
 ## Run PUDL Notebooks on Kaggle
 
 The easiest way to get up and running with these examples and a fresh copy of all the
-PUDL data is on [Kaggle](https://www.kaggle.com):
+PUDL data is on [Kaggle](https://www.kaggle.com).
+
+Kaggle offers substantial free computing resources and convenient data storage, so you
+can start playing with the PUDL data without needing to set up any software or download
+any data.
 
 - [PUDL Data on Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/data)
 - [01 PUDL Data Access](https://www.kaggle.com/code/catalystcooperative/01-pudl-data-access)
 - [02 State Hourly Electricity Demand](https://www.kaggle.com/code/catalystcooperative/02-state-hourly-electricity-demand)
 
-You'll the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html) helpful for interpreting the data.
-
-Kaggle offers substantial free computing resources and convenient data storage, so you
-can start playing with the PUDL data without needing to set up any software or download
-any data.
+You'll find the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html) helpful for interpreting the data.
 
 ## Running Jupyter locally
 
