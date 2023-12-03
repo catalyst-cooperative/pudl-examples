@@ -48,7 +48,7 @@ If you're familiar with cloud services, you can check out:
 
 ## Stalk us on the Internet
 
-- [WWW](https://catalyst.coop)
+- https://catalyst.coop
 - Email: [pudl@catalyst.coop](mailto:pudl@catalyst.coop)
 - Mastodon: [@CatalystCoop@mastodon.energy](https://mastodon.energy/@CatalystCoop)
 - BlueSky: [@catalyst.coop](https://bsky.app/profile/catalyst.coop)
