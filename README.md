@@ -1,4 +1,4 @@
-# PUDL Examples
+# PUDL Example Notebooks
 
 This repository contains a collection of
 [Jupyter notebooks](https://jupyter.org) with examples of how to use the data
@@ -18,7 +18,8 @@ any data.
 - [01 PUDL Data Access](https://www.kaggle.com/code/catalystcooperative/01-pudl-data-access)
 - [02 State Hourly Electricity Demand](https://www.kaggle.com/code/catalystcooperative/02-state-hourly-electricity-demand)
 
-You'll find the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html) helpful for interpreting the data.
+You'll find the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html)
+helpful for interpreting the data.
 
 ## Running Jupyter locally
 
@@ -29,8 +30,9 @@ upyter notebooks locally, you can also work with these notebooks and the PUDL da
   the [mamba](https://github.com/mamba-org/mamba) package manager and the
   [conda-forge](https://conda-forge.org/#about) channel.
 - Clone this repository.
-- [Download the PUDL dataset from Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/download) (it's ~8GB!) and unzip it somewhere conveniently accessible from the
-  notebooks in the cloned repo.
+- [Download the PUDL dataset from Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/download)
+  (it's ~8GB!) and unzip it somewhere conveniently accessible from the notebooks in the
+  cloned repo.
 - Start your JupyterLab or Jupyter Notebook server and navigate to the notebooks in
   the cloned repo.
 - You'll need to adjust the file paths in the notebooks to point at the directory where
