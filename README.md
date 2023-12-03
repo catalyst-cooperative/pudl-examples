@@ -2,146 +2,57 @@
 
 This repository contains a collection of
 [Jupyter notebooks](https://jupyter.org) with examples of how to use the data
-and software distributed under [Catalyst Cooperative](https://catalyst.coop)'s
+and software distributed by [Catalyst Cooperative](https://catalyst.coop)'s
 [Public Utility Data Liberation (PUDL) project](https://github.com/catalyst-cooperative/pudl).
 
-The example notebooks depend on having the processed PUDL data available, and
-it's too large to commit to a GitHub repository. There are two main ways to
-access it. You can either download it to your computer and run our Docker
-container locally, or you can request an account on
-[our JupyterHub](https://catalyst-cooperative.pilot.2i2c.cloud/) which is
-hosted in collaboration with [2i2c.org](https://2i2c.org).
+## Run PUDL Notebooks on Kaggle
 
-## Option 1: Download preprocessed data and run Docker
+The easiest way to get up and running with these examples and a fresh copy of all the
+PUDL data is on [Kaggle](https://www.kaggle.com):
 
-### Download and extract the archived data and Docker container
+- [PUDL Data on Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/data)
+- [01 PUDL Data Access](https://www.kaggle.com/code/catalystcooperative/01-pudl-data-access)
+- [02 State Hourly Electricity Demand](https://www.kaggle.com/code/catalystcooperative/02-state-hourly-electricity-demand)
 
-* Download and extract the most recent
-  [PUDL data release from Zenodo](https://doi.org/10.5281/zenodo.3653158)
-  into a local directory. On MacOS and Windows you should just be able to
-  double-click the archive file. On Linux (or MacOS) you may want to use the
-  command line:
+Kaggle offers substantial free computing resources and convenient data storage, so you
+can start playing with the PUDL data without needing to set up any software or download
+any data.
 
-  ```sh
-  tar -xzf filename.tgz
-  ```
+## Running Jupyter locally
 
-  It may take a couple of minutes to extract.
-* Extracting the archive will create a directory containing the example Jupyter
-  Notebooks from this repository, and all the processed PUDL data as a combination of
-  [SQLite](https://www.sqlite.org) databases and
-  [Apache Parquet](https://parquet.apache.org/) files.
+If you're already familiar with git, Python environments, filesystem paths, and running
+upyter notebooks locally, you can also work with these notebooks and the PUDL data locally:
 
-### Install and run Docker
+- Create a Python environment that includes common data science packages. We like to use
+  the [mamba](https://github.com/mamba-org/mamba) package manager and the
+  [conda-forge](https://conda-forge.org/#about) channel.
+- Clone this repository.
+- [Download the PUDL dataset from Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/download) (it's ~8GB!) and unzip it somewhere conveniently accessible from the
+  notebooks in the cloned repo.
+- Start your JupyterLab or Jupyter Notebook server and navigate to the notebooks in
+  the cloned repo.
+- You'll need to adjust the file paths in the notebooks to point at the directory where
+  you put the PUDL data, and might need to adjust the packages installed in your Python
+  environment to work with the notebooks.
 
-* [Download and install Docker](https://docs.docker.com/get-docker/). On MacOS
-  and Windows it'll be called "Docker Desktop". On Linux it's just "Docker."
-* On Linux, you'll need to separately install a tool called
-  [docker compose](https://docs.docker.com/compose/cli-command/#install-on-linux)
-  (it comes bundled with Docker Desktop for MacOS/Windows).
-* If you're on MacOS or Windows, open the settings in Docker Desktop and
-  increase the amount of memory that Docker is allowed to use to at least 8GB.
-* Check to make sure that the Docker service is running in the background. On
-  MacOS it should show up in the menu bar. On Windows it should show up in the
-  system tray. On Linux, a daemon called `dockerd` should be running in the
-  background.
+## Other Data Access Methods
 
-### Load the archived Docker image
+See [the PUDL documentation](https://catalystcoop-pudl.readthedocs.io/en/latest/data_access.html)
+for other data access methods.
 
-* At a command line, go into the directory which was created by extracting the
-  archive. It should contain a file named `pudl-jupyter.tar` -- this is
-  a Docker image which will run a Jupyter Notebook server for you locally, with
-  all of the PUDL software installed and ready to use. But first you need to
-  load the image into your local collection of docker images with this
-  command:
+If you're familiar with cloud services, you can check out:
 
-  ```sh
-  docker load -i pudl-jupyter.tar
-  ```
+- The [AWS Open Data Registry](https://registry.opendata.aws/catalyst-cooperative-pudl/):
+  s3://pudl.catalyst.coop (free access)
+- Google Cloud Storage: gs://pudl.catalyst.coop (requester pays)
 
-  You should see some output at the command line as it loads the image.
+## Stalk us on the Internet
 
-### Start the Jupyter Notebook server using `docker compose`
-
-* Once it's done loading, in that same directory (where you should also see a
-  file named `docker-compose.yml`), run the command:
-
-  ```sh
-  docker compose up
-  ```
-
-* You should see some logging messages as the PUDL Docker image starts up and
-  runs the Jupyter Notebook server. Near the end of those logging message, you
-  should see several possible links to click or copy-and-paste.
-  Pick one that starts with `https://localhost:48512` or
-  `https://127.0.0.1:48512` and open it in a web browser. (Note: this is a local
-  web address for the Jupyter Notebook server running on your computer.)
-* You should see JupyterLab launcher and notebook interface. In the file
-  browser in the left hand sidebar, you should see a `notebooks` directory with
-  several example notebooks in it, which (hopefully!) you will be able to run.
-
-### Add your own data
-
-* If you have additional data you want to work with in conjunction with the
-  PUDL data, you can put it in the `user_data` directory, and it will be
-  accessible to you from within the Docker container. You can also save
-  outputs to that directory inside the Docker container, and they will be
-  available in the `user_data` directory on your computer.
-
-## Option 2: Request an account on our JupyterHub
-
-We also have an experimental shared JupyterHub currently maintained in
-collaboration with [2i2c.org](https://2i2c.org). Once you
-have an account on our hub, you can
-[work through the example notebooks there](https://bit.ly/pudl-examples-01)
-without needing to download anything or install
-anything. If you'd like to get an account
-[submit this Google form](https://forms.gle/TN3GuE2e2mnWoFC4A) and we'll get
-back to you soon!
-
-## Contact Us
-
-* Web: [Catalyst Cooperative](https://catalyst.coop)
-* Email: [pudl@catalyst.coop](mailto:pudl@catalyst.coop)
-* Twitter: [@CatalystCoop](https://twitter.com/CatalystCoop)
-
----
-
-## Addendum: Development-Oriented Usage
-
-### Running the PUDL Jupyter Container with no data
-
-If you just want the PUDL software environment without the processed data, for
-development or other purposes, you can pull a Docker image from the
-[catalystcoop/pudl-jupyter repository on DockerHub](https://hub.docker.com/r/catalystcoop/pudl-jupyter) directly:
-
-```sh
-docker pull catalystcoop/pudl-jupyter:latest
-```
-
-This image is built automatically using
-[`repo2docker`](https://github.com/jupyterhub/repo2docker) whenever a commit
-is made to the
-[pudl-examples repository](https://github.com/catalyst-cooperative/pudl-examples)
-
-### Environment Variables
-
-The Docker container needs to be pointed at a couple of local directories to
-work properly with PUDL. These paths are set using environment variables:
-
-* `PUDL_DATA` is the path to the PUDL directory containing your PUDL
-  `data`, `sqlite` and `epacems` directories. It is treated as read-only, and by
-  default is set to `./pudl_data`
-* `USER_DATA` is a local directory that you want to have access to
-  within the container. It can contain other data, or your own notebooks, etc. by
-  default it is set to `./user_data`
-
-You can change these defaults by editing the `.env` file in the top directory of
-this repository (or the archive you downloaded from Zenodo)
-
-To be able to fill in data using the EIA API, you'll need to [obtain an API KEY
-from EPA](https://www.eia.gov/opendata/register.php). If you set an environment
-variable called `API_KEY_EIA` in the shell where you run the
-`catalystcoop/pudl-jupyter` container using `docker compose` then the value of
-that environment variable will be passed in to the container and available for
-use automatically.
+- [WWW](https://catalyst.coop)
+- Email: [pudl@catalyst.coop](mailto:pudl@catalyst.coop)
+- Mastodon: [@CatalystCoop@mastodon.energy](https://mastodon.energy/@CatalystCoop)
+- BlueSky: [@catalyst.coop](https://bsky.app/profile/catalyst.coop)
+- [Kaggle](https://www.kaggle.com/catalystcooperative)
+- [HuggingFace](https://huggingface.co/catalystcooperative)
+- [GitHub](https://github.com/catalyst-cooperative)
+- Twitter: [@CatalystCoop](https://twitter.com/CatalystCoop)
