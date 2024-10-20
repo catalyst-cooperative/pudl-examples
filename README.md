@@ -17,6 +17,8 @@ any data.
 - [PUDL Data on Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/data)
 - [01 PUDL Data Access](https://www.kaggle.com/code/catalystcooperative/01-pudl-data-access)
 - [02 State Hourly Electricity Demand](https://www.kaggle.com/code/catalystcooperative/02-state-hourly-electricity-demand)
+- [03 EIA-930 Sanity Checks](https://www.kaggle.com/code/catalystcooperative/03-eia930-sanity-checks)
+- [04 Renewable Generation Profiles](https://www.kaggle.com/code/catalystcooperative/04-renewable-generation-profiles)
 
 You'll find the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html)
 helpful for interpreting the data.
@@ -31,7 +33,7 @@ upyter notebooks locally, you can also work with these notebooks and the PUDL da
   [conda-forge](https://conda-forge.org/#about) channel.
 - Clone this repository.
 - [Download the PUDL dataset from Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/download)
-  (it's ~8GB!) and unzip it somewhere conveniently accessible from the notebooks in the
+  (it's ~20GB!) and unzip it somewhere conveniently accessible from the notebooks in the
   cloned repo.
 - Start your JupyterLab or Jupyter Notebook server and navigate to the notebooks in
   the cloned repo.
@@ -46,7 +48,7 @@ for other data access methods.
 
 If you're familiar with cloud services, you can check out:
 
-- The [AWS Open Data Registry](https://registry.opendata.aws/catalyst-cooperative-pudl/):
+- [PUDL in the AWS Open Data Registry](https://registry.opendata.aws/catalyst-cooperative-pudl/):
   s3://pudl.catalyst.coop (free access)
 - Google Cloud Storage: gs://pudl.catalyst.coop (requester pays)
 
@@ -56,7 +58,8 @@ If you're familiar with cloud services, you can check out:
 - Email: [pudl@catalyst.coop](mailto:pudl@catalyst.coop)
 - Mastodon: [@CatalystCoop@mastodon.energy](https://mastodon.energy/@CatalystCoop)
 - BlueSky: [@catalyst.coop](https://bsky.app/profile/catalyst.coop)
+- [GitHub](https://github.com/catalyst-cooperative)
+- [LinkedIn](https://linkedin.com/company/catalyst-cooperative)
 - [Kaggle](https://www.kaggle.com/catalystcooperative)
 - [HuggingFace](https://huggingface.co/catalystcooperative)
-- [GitHub](https://github.com/catalyst-cooperative)
 - Twitter: [@CatalystCoop](https://twitter.com/CatalystCoop)
