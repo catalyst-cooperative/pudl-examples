@@ -17,7 +17,7 @@ any data.
 - [PUDL Data on Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/data)
 - [01 PUDL Data Access](https://www.kaggle.com/code/catalystcooperative/01-pudl-data-access)
 - [02 State Hourly Electricity Demand](https://www.kaggle.com/code/catalystcooperative/02-state-hourly-electricity-demand)
-- [03 EIA-930 Sanity Checks](https://www.kaggle.com/code/catalystcooperative/03-eia930-sanity-checks)
+- [03 EIA-930 Sanity Checks](https://www.kaggle.com/code/catalystcooperative/03-eia-930-sanity-checks)
 - [04 Renewable Generation Profiles](https://www.kaggle.com/code/catalystcooperative/04-renewable-generation-profiles)
 
 You'll find the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html)
@@ -54,7 +54,7 @@ If you're familiar with cloud services, you can check out:
 
 ## Stalk us on the Internet
 
-- https://catalyst.coop
+- <https://catalyst.coop>
 - Email: [pudl@catalyst.coop](mailto:pudl@catalyst.coop)
 - Mastodon: [@CatalystCoop@mastodon.energy](https://mastodon.energy/@CatalystCoop)
 - BlueSky: [@catalyst.coop](https://bsky.app/profile/catalyst.coop)
