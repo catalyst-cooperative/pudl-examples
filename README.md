@@ -62,4 +62,17 @@ If you're familiar with cloud services, you can check out:
 - [LinkedIn](https://linkedin.com/company/catalyst-cooperative)
 - [Kaggle](https://www.kaggle.com/catalystcooperative)
 - [HuggingFace](https://huggingface.co/catalystcooperative)
+- [YouTube](https://youtube.com/@CatalystCooperative)
+- [Slack](https://join.slack.com/t/catalystcooperative/shared_invite/zt-2yg1v2sb7-GsoGlA9Ojc_LCJ00vPWKbQ)
 - Twitter: [@CatalystCoop](https://twitter.com/CatalystCoop)
+
+## Supporting PUDL
+
+These example notebooks are part of the
+[Public Utility Data Liberation Project (PUDL)](https://github.com/catalyst-cooperative/pudl),
+a project of [Catalyst Cooperative](https://catalyst.coop). PUDL has been made possible
+by the generous support of our sustainers, grant funders, and volunteer open source
+contributors.
+
+If you would like to support the ongoing development of PUDL, please consider
+[becoming a sustainer](https://opencollective.com/pudl).
