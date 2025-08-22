@@ -19,6 +19,7 @@ any data.
 - [02 State Hourly Electricity Demand](https://www.kaggle.com/code/catalystcooperative/02-state-hourly-electricity-demand)
 - [03 EIA-930 Sanity Checks](https://www.kaggle.com/code/catalystcooperative/03-eia-930-sanity-checks)
 - [04 Renewable Generation Profiles](https://www.kaggle.com/code/catalystcooperative/04-renewable-generation-profiles)
+- [05 FERC-714 Electricity Demand Forecast Biases](https://www.kaggle.com/code/catalystcooperative/05-ferc-714-electricity-demand-forecast-biases)
 
 You'll find the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html)
 helpful for interpreting the data.
@@ -26,20 +27,22 @@ helpful for interpreting the data.
 ## Running Jupyter locally
 
 If you're already familiar with git, Python environments, filesystem paths, and running
-upyter notebooks locally, you can also work with these notebooks and the PUDL data locally:
+Jupyter notebooks locally, you can also work with these notebooks and the PUDL data locally:
 
 - Create a Python environment that includes common data science packages. We like to use
   the [mamba](https://github.com/mamba-org/mamba) package manager and the
   [conda-forge](https://conda-forge.org/#about) channel.
 - Clone this repository.
-- [Download the PUDL dataset from Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/download)
-  (it's ~20GB!) and unzip it somewhere conveniently accessible from the notebooks in the
-  cloned repo.
 - Start your JupyterLab or Jupyter Notebook server and navigate to the notebooks in
   the cloned repo.
-- You'll need to adjust the file paths in the notebooks to point at the directory where
-  you put the PUDL data, and might need to adjust the packages installed in your Python
-  environment to work with the notebooks.
+- If all the necessary packages are installed, you should be able to run the notebooks
+  without worrying about where the data is, since it is read directly from our public
+  AWS S3 bucket.
+- If you would rather work with the data locally, you can [Download the PUDL dataset from Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/download)
+  (it's ~20GB!) and unzip it somewhere conveniently accessible from the notebooks in the
+  cloned repo.
+- In this case you'll need to adjust the file paths in the notebooks to point at the
+  directory where you put the PUDL data.
 
 ## Other Data Access Methods
 
