@@ -7241,9 +7241,9 @@ packages:
 - pypi: ./
   name: pudl-examples
   version: 0.1.0
-  sha256: 4f4fd87b3bbb011eb261e604d49518beb52ab3c9c4cd8d2b4b708533168a5e4a
+  sha256: 0d960434e81270a876107ccc8935340ce036aef3755175c883985663f134f204
   requires_dist:
-  - marimo
+  - marimo>=0.15.2,<0.16
   requires_python: '>=3.13'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/pycodestyle-2.12.1-pyhd8ed1ab_1.conda
