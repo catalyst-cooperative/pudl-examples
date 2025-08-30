@@ -1,0 +1,46 @@
+name: Update pixi lockfiles
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 5 * * 1 # Run every Monday
+
+jobs:
+  pixi-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          run-install: false
+      - name: Update lockfiles and install
+        run: |
+          set -o pipefail
+          pixi upgrade --json | pixi exec pixi-diff-to-markdown >> diff.md
+          pixi reinstall --all
+      - name: Generate GH token
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ secrets.WORKFLOW_TRIGGERER_APP_ID }}
+          private-key: ${{ secrets.WORKFLOW_TRIGGERER_PRIVATE_KEY }}
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          commit-message: Update pixi lockfile
+          title: Update pixi lockfile
+          body-path: diff.md
+          branch: update-pixi
+          base: main
+          labels: pixi
+          delete-branch: true
+          add-paths: |
+            pixi.lock
+            pyproject.toml
