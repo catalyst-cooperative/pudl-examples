@@ -5752,9 +5752,9 @@ packages:
 - pypi: ./
   name: pudl-examples
   version: 0.1.0
-  sha256: 4dc049d59b830e6b27dfbb5422d0d6ede984550e35b2116a0e3a3c535a712955
+  sha256: 8327e986d131723aabc515d878496d16ba765ac054b52fdd559c7a9131039b03
   requires_dist:
-  - marimo>=0.15
+  - marimo
   requires_python: '>=3.13'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/pycparser-2.22-pyh29332c3_1.conda

@@ -1,6 +1,6 @@
 [project]
 authors = [{ name = "Zane Selvans", email = "zane.selvans@catalyst.coop" }]
-dependencies = ["marimo>=0.15"]
+dependencies = ["marimo>=0.15.2,<0.16"]
 name = "pudl-examples"
 requires-python = ">= 3.13"
 version = "0.1.0"
