@@ -6,21 +6,23 @@ app = marimo.App(width="medium", app_title="SEC 10-K Data Review")
 
 @app.cell
 def _():
-    import polars as pl
-    import matplotlib
+    import os
+
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
     import matplotx
-    import marimo as mo
+    import polars as pl
     from upath import UPath
-    import os
+
+    import marimo as mo
 
     pl.Config.set_tbl_rows(500)
     pl.Config.set_tbl_cols(100)
     pl.Config.set_fmt_str_lengths(100)
 
-    matplotlib.rcParams["figure.figsize"] = (10, 5)
-    matplotlib.rcParams["figure.dpi"] = 150
-    matplotlib.style.use(matplotx.styles.onedark)
+    mpl.rcParams["figure.figsize"] = (10, 5)
+    mpl.rcParams["figure.dpi"] = 150
+    mpl.style.use(matplotx.styles.onedark)
 
     S3_PARQUET_PATH = UPath("s3://pudl.catalyst.coop/nightly")
     if os.environ.get("PUDL_OUTPUT", False):
@@ -349,11 +351,9 @@ def _(mo):
 
 @app.cell
 def _(companies, pl):
-    (
-        companies.filter(pl.col("company_name").str.contains("^[xX]cel"))[
-            "company_name"
-        ].unique()
-    )
+    companies.filter(pl.col("company_name").str.contains("^[xX]cel"))[
+        "company_name"
+    ].unique()
     return
 
 
@@ -432,8 +432,6 @@ def _(parsubs, pl):
         .filter(
             pl.col("parent_company_name").str.contains("berkshire.*hathaway"),
             pl.col("subsidiary_company_name").str.contains("(nv |nevada|sierra)"),
-            # pl.col("parent_company_central_index_key").eq("0001081316"),
-            # pl.col("subsidiary_company_central_index_key").is_not_null() | pl.col("subsidiary_company_utility_id_eia").is_not_null(),
         )
         .sort("report_date")
     )

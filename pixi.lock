@@ -7241,10 +7241,10 @@ packages:
 - pypi: ./
   name: pudl-examples
   version: 0.1.0
-  sha256: 0d960434e81270a876107ccc8935340ce036aef3755175c883985663f134f204
+  sha256: ffa091a56caec26c3d12224601ec5b352610d27d566b109279f37c9e601c96d7
   requires_dist:
-  - marimo>=0.15.2,<0.16
-  requires_python: '>=3.13'
+  - marimo
+  requires_python: '>=3.13,<3.14'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/pycodestyle-2.12.1-pyhd8ed1ab_1.conda
   sha256: 8671d9dcbf458adb6435616ded0fd71925f0fa1b074528604db2f64fac54bf52

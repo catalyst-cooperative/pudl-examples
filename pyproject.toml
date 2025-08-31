@@ -1,9 +1,61 @@
 [project]
-authors = [{ name = "Zane Selvans", email = "zane.selvans@catalyst.coop" }]
+authors = [
+  { name = "Catalyst Cooperative", email = "pudl@catalyst.coop" },
+  { name = "Zane Selvans", email = "zane.selvans@catalyst.coop" },
+]
 dependencies = ["marimo>=0.15.2,<0.16"]
 name = "pudl-examples"
-requires-python = ">= 3.13"
+description = "Notebooks demonstrating how to work with PUDL data."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.13,<3.14"
+license = { file = "LICENSE.txt" }
 version = "0.1.0"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python",
+  "Topic :: Scientific/Engineering",
+]
+keywords = [
+  "analysis",
+  "climate change",
+  "coal",
+  "dashboard",
+  "data",
+  "data analysis",
+  "data science",
+  "data visualization",
+  "economics",
+  "eia",
+  "energy information administration",
+  "electricity",
+  "emissions",
+  "energy",
+  "environmental protection agency",
+  "epa",
+  "federal energy regulatory commission",
+  "ferc",
+  "finance",
+  "ghg",
+  "greehouse gas",
+  "marimo",
+  "natural gas",
+  "notebooks",
+  "policy",
+  "united states",
+  "utility",
+]
+
+[project.urls]
+"Source" = "https://github.com/catalyst-cooperative/pudl-examples"
+"Homepage" = "https://github.com/catalyst-cooperative/pudl-examples"
+"Issue Tracker" = "https://github.com/catalyst-cooperative/pudl-examples/issues"
 
 [build-system]
 build-backend = "hatchling.build"
@@ -31,3 +83,98 @@ s3fs = ">=2025.7.0,<2026"
 python-lsp-server = ">=1.13.1,<2"
 duckdb = ">=1.3.2,<2"
 sqlglot = ">=27.8.0,<28"
+
+[tool.ruff]
+# Configurations that apply to both the `format` and `lint` subcommands.
+target-version = "py313"
+line-length = 88
+indent-width = 4
+# Would be nice to format these, but complicated with Kaggle.
+exclude = ["*.ipynb"]
+
+[tool.ruff.format]
+# Configuration specfic to the `format` subcommand.
+# We use black compatible formatting.
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+# Configurations that apply to the `lint` subcommand.
+preview = true # Required for NPY201
+explicit-preview-rules = true # and ONLY NPY201
+select = [
+  "A", # flake8-builtins
+  # "ANN", # identify missing type annotations
+  "ARG",  # find unused arguments
+  "B",    # flake8-bugbear
+  "C",    # Limit cyclomatic complexity using mccabe
+  "C4",   # flake8-comprehensions
+  "D",    # pydocstyle errors
+  "DOC",  # pydoclint
+  "E",    # pycodestyle errors
+  "ERA",  # eradicate: finds commented out code
+  "EXE",  # executable file issues
+  "F",    # pyflakes
+  "FURB", # refurb: general code quality/modernization. Still in preview.
+  "I",    # isort
+  "ICN",  # flake8 import conventions
+  "N",    # pep8-naming
+  "NPY",  # NumPy specific checks
+  "PD",   # pandas checks
+  "PGH",  # pygrep-hooks
+  "PIE",  # flake8-pie miscellaneous linting
+  "PTH",  # use pathlib
+  "Q",    # flake8-quotes
+  "RET",  # check return values
+  "RSE",  # unnecessary parenthises on raised exceptions
+  "S",    # flake8-bandit
+  "SIM",  # flake8-simplify
+  "TID",  # Tidy Imports
+  "UP",   # pyupgrade (use modern python syntax)
+  "W",    # pycodestyle warnings
+  # "DTZ", # datetime / timzeone issues flake8-datetimez
+  "PERF", # performance issues
+  # "PT", # pytest style
+  # "PL", # PyLint (lots of rules)
+  "RUF", # Ruff specific rules
+  # "T", # Find print statements that should probably be logging
+]
+ignore = [
+  "B018",  # "Useless" expression -- useful in notebooks.
+  "D100",  # Missing docstring in public module
+  "D104",  # Missing docstring in public package
+  "D401",  # Require imperative mood in docstrings.
+  "D417",
+  "E203",  # Space before ':' (black recommends to ignore)
+  "E266",  # Too many leading `#` before block comment
+  "E501",  # Docs line too long
+  "N806",  # lowercase constant variables.
+  "N803",  # lowercase constant variables.
+  "PD010", # Use of df.stack()
+  "PD013", # Use of df.unstack()
+  "PD015", # Use of pd.merge() rather than df.merge()
+  "PD901", # df as variable name
+  "S101",  # Use of assert
+]
+extend-select = ["NPY201"] # preview rule to easy migration to Numpy 2.0
+
+[tool.ruff.lint.per-file-ignores]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pudl_examples"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "double"
+multiline-quotes = "double"
+
+[tool.doc8]
+max-line-length = 88
