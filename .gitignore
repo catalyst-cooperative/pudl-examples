@@ -4,5 +4,3 @@ dask-worker-space
 # pixi environments
 .pixi/*
 !.pixi/config.toml
-# User Marimo configs
-marimo.toml
