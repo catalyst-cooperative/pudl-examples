@@ -23,17 +23,13 @@ def _():
     mpl.rcParams["figure.figsize"] = (10, 5)
     mpl.rcParams["figure.dpi"] = 150
     mpl.style.use(matplotx.styles.onedark)
-
-    S3_PARQUET_PATH = UPath("s3://pudl.catalyst.coop/nightly")
-    if os.environ.get("PUDL_OUTPUT", False):
-        LOCAL_PARQUET_PATH = UPath(os.environ["PUDL_OUTPUT"]) / "parquet"
-    return LOCAL_PARQUET_PATH, S3_PARQUET_PATH, mo, pl, plt
+    return UPath, mo, os, pl, plt
 
 
 @app.cell
-def _(LOCAL_PARQUET_PATH, S3_PARQUET_PATH, pl):
+def _(UPath, os, pl):
     def get_pudl(table_name: str) -> pl.DataFrame:
-        """Read a Parquet table from the PUDL output directory.
+        """Read a PUDL table from local storage if possible, and S3 nightlies if not.
 
         Args:
             table_name: The name of the table to read (without the .parquet extension).
@@ -41,13 +37,23 @@ def _(LOCAL_PARQUET_PATH, S3_PARQUET_PATH, pl):
         Returns:
             The requested PUDL table as a Polars DataFrame.
         """
-        try:
-            table_path = LOCAL_PARQUET_PATH / f"{table_name}.parquet"
-            if not table_path.exists():
-                raise FileNotFoundError(f"{table_path} does not exist.")
-        except:  # noqa: E722
-            table_path = S3_PARQUET_PATH / f"{table_name}.parquet"
-        return pl.read_parquet(table_path)
+        pudl_output = os.environ.get("PUDL_OUTPUT", False)
+        local_parquet_path = (
+            UPath(pudl_output) / f"parquet/{table_name}.parquet"
+            if pudl_output
+            else None
+        )
+        s3_parquet_path = (
+            UPath("s3://pudl.catalyst.coop/nightly") / f"{table_name}.parquet"
+        )
+
+        if (local_parquet_path is not None) and (local_parquet_path.exists()):
+            return pl.read_parquet(local_parquet_path)
+        if s3_parquet_path.exists():
+            return pl.read_parquet(s3_parquet_path)
+        raise FileNotFoundError(
+            f"Could not find {table_name}.parquet in either local or S3 path."
+        )
 
     return (get_pudl,)
 
