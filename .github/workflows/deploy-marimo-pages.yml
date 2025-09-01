@@ -4,7 +4,7 @@ name: Deploy Marimo Pages
 on:
   push:
     branches:
-      - main
+      - pixi-setup
     paths:
       - "marimo/**"
       - ".github/workflows/deploy-marimo-pages.yml"

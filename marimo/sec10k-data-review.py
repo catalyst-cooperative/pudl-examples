@@ -17,12 +17,12 @@ app = marimo.App(width="full", app_title="SEC 10-K Data Review")
 @app.cell
 def _():
     import os
+    from pathlib import Path
 
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import matplotx
     import polars as pl
-    from upath import UPath
 
     import marimo as mo
 
@@ -33,11 +33,11 @@ def _():
     mpl.rcParams["figure.figsize"] = (10, 5)
     mpl.rcParams["figure.dpi"] = 150
     mpl.style.use(matplotx.styles.onedark)
-    return UPath, mo, os, pl, plt
+    return Path, mo, os, pl, plt
 
 
 @app.cell
-def _(UPath, os, pl):
+def _(Path, os, pl):
     def get_pudl(table_name: str) -> pl.DataFrame:
         """Read a PUDL table from local storage if possible, and S3 nightlies if not.
 
@@ -49,21 +49,13 @@ def _(UPath, os, pl):
         """
         pudl_output = os.environ.get("PUDL_OUTPUT", False)
         local_parquet_path = (
-            UPath(pudl_output) / f"parquet/{table_name}.parquet"
-            if pudl_output
-            else None
+            Path(pudl_output) / f"parquet/{table_name}.parquet" if pudl_output else None
         )
-        s3_parquet_path = (
-            UPath("s3://pudl.catalyst.coop/nightly") / f"{table_name}.parquet"
-        )
+        s3_parquet_url = f"s3://pudl.catalyst.coop/nightly/{table_name}.parquet"
 
         if (local_parquet_path is not None) and (local_parquet_path.exists()):
             return pl.read_parquet(local_parquet_path)
-        if s3_parquet_path.exists():
-            return pl.read_parquet(s3_parquet_path)
-        raise FileNotFoundError(
-            f"Could not find {table_name}.parquet in either local or S3 path."
-        )
+        return pl.read_parquet(s3_parquet_url)
 
     return (get_pudl,)
 
