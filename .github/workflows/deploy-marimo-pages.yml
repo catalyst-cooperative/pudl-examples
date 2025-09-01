@@ -8,6 +8,8 @@ on:
     paths:
       - "marimo/**"
       - ".github/workflows/deploy-marimo-pages.yml"
+      - "pixi.lock"
+      - "pyproject.toml"
   workflow_dispatch:
 
 jobs:
