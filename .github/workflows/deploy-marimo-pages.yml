@@ -1,0 +1,59 @@
+---
+name: Deploy Marimo Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "marimo/**"
+      - ".github/workflows/deploy-marimo-pages.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.9.0
+        with:
+          cache: true
+
+      - name: Ensure docs directory exists
+        run: mkdir -p docs/
+
+      - name: Export Marimo notebooks
+        run: |
+          pixi run marimo export html-wasm marimo/sec10k-data-review.py -o docs/sec10k-data-review.html --mode edit
+
+      - name: Verify generated files
+        run: |
+          echo "Generated files:"
+          find docs -type f -name "*.html" -exec ls -la {} \;
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages
