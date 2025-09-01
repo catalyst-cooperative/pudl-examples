@@ -1,3 +1,13 @@
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "matplotlib==3.10.6",
+#     "matplotx==0.3.10",
+#     "polars==1.32.3",
+#     "universal_pathlib==0.2.6",
+# ]
+# ///
+
 import marimo
 
 __generated_with = "0.15.2"
