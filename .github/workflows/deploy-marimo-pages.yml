@@ -21,7 +21,8 @@ jobs:
       - name: Set up pixi
         uses: prefix-dev/setup-pixi@v0.9.0
         with:
-          cache: true
+          manifest-path: pyproject.toml
+          # cache: true
 
       - name: Ensure docs directory exists
         run: mkdir -p docs/
