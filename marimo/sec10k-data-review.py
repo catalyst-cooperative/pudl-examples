@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.15.2"
-app = marimo.App(width="medium", app_title="SEC 10-K Data Review")
+app = marimo.App(width="full", app_title="SEC 10-K Data Review")
 
 
 @app.cell
