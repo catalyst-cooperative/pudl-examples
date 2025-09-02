@@ -4,7 +4,6 @@
 #     "matplotlib==3.10.6",
 #     "matplotx==0.3.10",
 #     "polars==1.32.3",
-#     "universal_pathlib==0.2.6",
 # ]
 # ///
 
