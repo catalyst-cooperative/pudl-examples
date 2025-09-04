@@ -10,10 +10,10 @@
 import marimo
 
 __generated_with = "0.15.2"
-app = marimo.App(width="full", app_title="SEC 10-K Data Review")
+app = marimo.App(width="columns", app_title="SEC 10-K Data Review")
 
 
-@app.cell
+@app.cell(column=0)
 def _():
     import os
     from pathlib import Path
@@ -59,7 +59,72 @@ def _(Path, os, pl):
     return (get_pudl,)
 
 
-@app.cell(hide_code=True)
+@app.cell
+def _(pl):
+    def clean_industry_data(df: pl.DataFrame) -> pl.DataFrame:
+        # Step 1: Clean industry_name_sic
+        # Find the most common name for each industry_id_sic
+        canonical_names = (
+            df.filter(pl.col("industry_name_sic").is_not_null())
+            .group_by("industry_id_sic")
+            .agg(common_name=pl.col("industry_name_sic").mode())
+        )
+
+        # Identify the most common name and ensure it's unique per ID
+        unique_canonical_names = (
+            canonical_names.group_by("industry_id_sic")
+            .agg(count=pl.count())
+            .filter(pl.col("count") == 1)
+        )
+
+        # Create a mapping dictionary
+        name_mapping = {
+            row["industry_id_sic"]: row["common_name"]
+            for row in unique_canonical_names.rows()
+        }
+
+        # Fill in canonical names where applicable
+        df = df.with_columns(
+            pl.when(pl.col("industry_name_sic").is_null())
+            .then(pl.col("industry_id_sic").map(name_mapping))
+            .otherwise(pl.col("industry_name_sic"))
+            .alias("cleaned_industry_name_sic")
+        )
+
+        # Step 2: Fill in industry_id_sic using cleaned names
+        df = df.with_columns(
+            pl.when(
+                pl.col("industry_id_sic").is_null()
+                & pl.col("cleaned_industry_name_sic").is_not_null()
+            )
+            .then(pl.col("cleaned_industry_name_sic").map(name_mapping))
+            .otherwise(pl.col("industry_id_sic"))
+            .alias("cleaned_industry_id_sic")
+        )
+
+        # Step 3: Handle nulls based on central_index_key and consistency before and after
+        def fill_nulls(group: pl.DataFrame) -> pl.DataFrame:
+            # Sort by report_date
+            group = group.sort("report_date")
+
+            # Forward fill for missing IDs and names
+            group = group.with_columns(
+                ffill_id=pl.col("industry_id_sic").fill_null(strategy="forward"),
+                ffill_name=pl.col("industry_name_sic").fill_null(strategy="forward"),
+            )
+
+            # Backward fill for missing IDs and names
+            return group.with_columns(
+                pl.col("ffill_id").fill_null(strategy="backward"),
+                pl.col("ffill_name").fill_null(strategy="backward"),
+            )
+
+        return df.groupby("central_index_key").agg(fill_nulls(pl.all()))
+
+    return
+
+
+@app.cell(column=1, hide_code=True)
 def _(mo):
     mo.md(
         r"""
