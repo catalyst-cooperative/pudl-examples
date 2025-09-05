@@ -4,10 +4,12 @@ name: Deploy Marimo Pages
 on:
   push:
     branches:
-      - main
+      - pixi-setup
     paths:
       - "marimo/**"
       - ".github/workflows/deploy-marimo-pages.yml"
+      - "pixi.lock"
+      - "pyproject.toml"
   workflow_dispatch:
 
 jobs:
@@ -21,14 +23,15 @@ jobs:
       - name: Set up pixi
         uses: prefix-dev/setup-pixi@v0.9.0
         with:
+          manifest-path: pyproject.toml
           cache: true
 
       - name: Ensure docs directory exists
-        run: mkdir -p docs/
+        run: mkdir -p docs/sec10k-data-review/
 
       - name: Export Marimo notebooks
         run: |
-          pixi run marimo export html-wasm marimo/sec10k-data-review.py -o docs/sec10k-data-review.html --mode edit
+          pixi run marimo export html-wasm marimo/sec10k-data-review.py -o docs/sec10k-data-review/ --mode edit
 
       - name: Verify generated files
         run: |
