@@ -5630,7 +5630,7 @@ packages:
 - pypi: ./
   name: pudl-examples
   version: 0.1.0
-  sha256: e62527793d7dfe96585ee110fec8822cd9e3dfba033d0464a2db2044a84bccd5
+  sha256: ded2165c041abafaede5d39f6f8ef23f1cc780b7838a879f29a55d7c96229904
   requires_python: '>=3.13,<3.14'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/pycodestyle-2.12.1-pyhd8ed1ab_1.conda
