@@ -60,67 +60,7 @@ def _(Path, os, pl):
 
 
 @app.cell
-def _(pl):
-    def clean_industry_data(df: pl.DataFrame) -> pl.DataFrame:
-        # Step 1: Clean industry_name_sic
-        # Find the most common name for each industry_id_sic
-        canonical_names = (
-            df.filter(pl.col("industry_name_sic").is_not_null())
-            .group_by("industry_id_sic")
-            .agg(common_name=pl.col("industry_name_sic").mode())
-        )
-
-        # Identify the most common name and ensure it's unique per ID
-        unique_canonical_names = (
-            canonical_names.group_by("industry_id_sic")
-            .agg(count=pl.count())
-            .filter(pl.col("count") == 1)
-        )
-
-        # Create a mapping dictionary
-        name_mapping = {
-            row["industry_id_sic"]: row["common_name"]
-            for row in unique_canonical_names.rows()
-        }
-
-        # Fill in canonical names where applicable
-        df = df.with_columns(
-            pl.when(pl.col("industry_name_sic").is_null())
-            .then(pl.col("industry_id_sic").map(name_mapping))
-            .otherwise(pl.col("industry_name_sic"))
-            .alias("cleaned_industry_name_sic")
-        )
-
-        # Step 2: Fill in industry_id_sic using cleaned names
-        df = df.with_columns(
-            pl.when(
-                pl.col("industry_id_sic").is_null()
-                & pl.col("cleaned_industry_name_sic").is_not_null()
-            )
-            .then(pl.col("cleaned_industry_name_sic").map(name_mapping))
-            .otherwise(pl.col("industry_id_sic"))
-            .alias("cleaned_industry_id_sic")
-        )
-
-        # Step 3: Handle nulls based on central_index_key and consistency before and after
-        def fill_nulls(group: pl.DataFrame) -> pl.DataFrame:
-            # Sort by report_date
-            group = group.sort("report_date")
-
-            # Forward fill for missing IDs and names
-            group = group.with_columns(
-                ffill_id=pl.col("industry_id_sic").fill_null(strategy="forward"),
-                ffill_name=pl.col("industry_name_sic").fill_null(strategy="forward"),
-            )
-
-            # Backward fill for missing IDs and names
-            return group.with_columns(
-                pl.col("ffill_id").fill_null(strategy="backward"),
-                pl.col("ffill_name").fill_null(strategy="backward"),
-            )
-
-        return df.groupby("central_index_key").agg(fill_nulls(pl.all()))
-
+def _():
     return
 
 
@@ -139,7 +79,6 @@ def _(mo):
     - Filtering all the industry names for "electric" and "power" shows a bunch of other industries that are not related to electricity generation. Mostly electronics, etc.
     - So the 4911 and 4931 seem to be the main ones we expect to link to EIA Utilities.
     - And then there's a number of smaller industries with cogeneration that often match, but don't have as many companies in them, and probably aren't responsible for much generation.
-    - Note: this kind of analysis would be easier if we cleaned up the SIC names & IDs so that they're more consistent & complete.
     """
     )
     return
@@ -156,10 +95,13 @@ def _(companies, pl):
     (
         companies.filter(pl.col("utility_id_eia").is_not_null())
         .select(["industry_id_sic", "industry_name_sic"])
-        .group_by(["industry_id_sic", "industry_name_sic"])
-        .agg(count=pl.len())
+        .group_by(pl.col("industry_id_sic"))
+        .agg(
+            industry_name_sic=pl.first("industry_name_sic"),
+            count=pl.len(),
+        )
         .sort("count", descending=True)
-        .head(20)
+        .head(25)
     )
     return
 
@@ -167,28 +109,48 @@ def _(companies, pl):
 @app.cell
 def _(companies, pl):
     electricity_sics = (
-        companies.group_by(sic=pl.col("industry_id_sic"))
-        .agg(fraction_with_utility_id=pl.col("utility_id_eia").is_not_null().mean())
+        companies.group_by(pl.col("industry_id_sic"))
+        .agg(
+            industry_name_sic=pl.first("industry_name_sic"),
+            fraction_with_utility_id=pl.col("utility_id_eia")
+            .is_not_null()
+            .mean()
+            .round(3),
+        )
         .sort("fraction_with_utility_id", descending=True)
-        .head(20)
     )
-    electricity_sics
+    electricity_sics.head(25)
     return (electricity_sics,)
+
+
+@app.cell
+def _(electricity_sics, plt):
+    plt.xticks(rotation=90, size=5)
+    plt.xlabel("Industry ID (SIC)")
+    plt.ylabel("Fraction of companies with Utility ID (EIA)")
+    plt.bar(
+        electricity_sics.head(100)["industry_id_sic"],
+        electricity_sics.head(100)["fraction_with_utility_id"],
+    )
+    return
 
 
 @app.cell
 def _(companies, electricity_sics, pl):
     majority_electric = (
         electricity_sics.filter(pl.col("fraction_with_utility_id") > 0.5)
-        .select("sic")
+        .select(pl.col("industry_id_sic"))
         .to_series()
         .to_list()
     )
     (
         companies.filter(pl.col("industry_id_sic").is_in(majority_electric))
         .select(["industry_id_sic", "industry_name_sic"])
-        .group_by(["industry_id_sic", "industry_name_sic"])
-        .agg(count=pl.len())
+        .group_by(pl.col("industry_id_sic"))
+        .agg(
+            count=pl.len(),
+            industry_name_sic=pl.first("industry_name_sic"),
+        )
         .sort("count", descending=True)
     )
     return (majority_electric,)
@@ -204,13 +166,14 @@ def _(companies, majority_electric, pl, plt):
         .group_by(["year", "industry_id_sic"])
         .agg(
             fraction_with_utility_id=pl.col("utility_id_eia").is_not_null().mean(),
+            industry_name_sic=pl.first("industry_name_sic"),
         )
         .sort("year")
     )
 
-    for sic in util_ids_by_year["industry_id_sic"].unique():
-        df = util_ids_by_year.filter(pl.col("industry_id_sic") == sic)
-        plt.plot(df["year"], df["fraction_with_utility_id"], label=sic)
+    for industry_name in util_ids_by_year["industry_name_sic"].unique():
+        df = util_ids_by_year.filter(pl.col("industry_name_sic") == industry_name)
+        plt.plot(df["year"], df["fraction_with_utility_id"], label=industry_name)
 
     plt.legend()
     return
