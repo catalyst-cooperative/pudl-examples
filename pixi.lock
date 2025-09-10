@@ -162,8 +162,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/pixman-0.46.4-h54a6638_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/platformdirs-4.4.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.6.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/polars-1.33.0-default_haa9dfc8_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/polars-default-1.33.0-py39hf521cc8_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/polars-1.33.1-default_h755bcc6_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/polars-default-1.33.1-py39hf521cc8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pre-commit-4.3.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/propcache-0.3.1-py313h8060acc_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/psutil-7.0.0-py313h07c4f96_1.conda
@@ -358,8 +358,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/pillow-11.3.0-py313h77ba6b6_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/platformdirs-4.4.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.6.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/polars-1.33.0-default_h9330aca_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/polars-default-1.33.0-py39hbd2d40b_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/polars-1.33.1-default_h8f3f44c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/polars-default-1.33.1-py39hbd2d40b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pre-commit-4.3.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/propcache-0.3.1-py313h717bdf5_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/psutil-7.0.0-py313h585f44e_1.conda
@@ -531,8 +531,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/pillow-11.3.0-py313h1d270a1_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/platformdirs-4.4.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.6.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-1.33.0-default_hebcc771_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-default-1.33.0-py39h31c57e4_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-1.33.1-default_h107b989_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-default-1.33.1-py39h31c57e4_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pre-commit-4.3.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/propcache-0.3.1-py313ha9b7d5b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/psutil-7.0.0-py313hcdf3177_1.conda
@@ -724,8 +724,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/win-64/pixman-0.46.4-h5112557_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/platformdirs-4.4.0-pyhcf101f3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pluggy-1.6.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/polars-1.33.0-default_h54d6f96_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/polars-default-1.33.0-py39he906d20_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/polars-1.33.1-default_hd0420bf_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/polars-default-1.33.1-py39he906d20_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/pre-commit-4.3.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/propcache-0.3.1-py313hb4c8b1a_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/psutil-7.0.0-py313h5ea7bf4_1.conda
@@ -5294,51 +5294,54 @@ packages:
   - pkg:pypi/pluggy?source=hash-mapping
   size: 24246
   timestamp: 1747339794916
-- conda: https://conda.anaconda.org/conda-forge/linux-64/polars-1.33.0-default_haa9dfc8_0.conda
-  sha256: 070e0052fc734e0113a8e59d963635324923a51ca7cfa06216ba946761502ed5
-  md5: 407ff7bd902f8955ef214e0804656d72
+- conda: https://conda.anaconda.org/conda-forge/linux-64/polars-1.33.1-default_h755bcc6_0.conda
+  sha256: 1e087571dd53b179e42b7d47acd6031921c9b9de4c341a408fc8bb23096d28c3
+  md5: 1884a1a6acc457c8e4b59b0f6450e140
   depends:
-  - polars-default ==1.33.0 py39hf521cc8_0
+  - polars-default ==1.33.1 py39hf521cc8_0
   license: MIT
   license_family: MIT
   purls:
   - pkg:pypi/polars?source=compressed-mapping
-  size: 5726
-  timestamp: 1756889773637
-- conda: https://conda.anaconda.org/conda-forge/osx-64/polars-1.33.0-default_h9330aca_0.conda
-  sha256: 558f5c2f2236423bfc113486273a8aefea7c527dbc5581ad66969d4f448e7ced
-  md5: 3c81dffb8c9684696b1b992dffa06485
+  size: 5729
+  timestamp: 1757413932841
+- conda: https://conda.anaconda.org/conda-forge/osx-64/polars-1.33.1-default_h8f3f44c_0.conda
+  sha256: 1fcd7dac72b49456c4d865b64f35a5ac4a05c70fc1e11a15b368483cd140c10a
+  md5: 94aa9bb538ab6d72cdaf9490ef0121ba
   depends:
-  - polars-default ==1.33.0 py39hbd2d40b_0
+  - polars-default ==1.33.1 py39hbd2d40b_0
   license: MIT
   license_family: MIT
-  purls: []
-  size: 5747
-  timestamp: 1756889546553
-- conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-1.33.0-default_hebcc771_0.conda
-  sha256: d9c08e8480c0b3b5238aa16e86c2aaf606a611ef8a9452a22ac464fe4a90db8c
-  md5: 21f850da3bbc42f59a21dc5ea42010e8
+  purls:
+  - pkg:pypi/polars?source=compressed-mapping
+  size: 5746
+  timestamp: 1757413397270
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-1.33.1-default_h107b989_0.conda
+  sha256: 396fe6dd7d25ecd05ca1e290465c6aab30388adbb27f6b80c776f44548b9a627
+  md5: 7bb9d21a632ff0e2240c475438591db7
   depends:
-  - polars-default ==1.33.0 py39h31c57e4_0
+  - polars-default ==1.33.1 py39h31c57e4_0
   license: MIT
   license_family: MIT
-  purls: []
-  size: 5752
-  timestamp: 1756889536569
-- conda: https://conda.anaconda.org/conda-forge/win-64/polars-1.33.0-default_h54d6f96_0.conda
-  sha256: d08d265890916614f75f69efcbb51ebfefffa9c83bd5d04069a7136e6e6830ee
-  md5: 402e9c3f8322dc52cc66bd4a14bdf9d7
+  purls:
+  - pkg:pypi/polars?source=compressed-mapping
+  size: 5754
+  timestamp: 1757413441375
+- conda: https://conda.anaconda.org/conda-forge/win-64/polars-1.33.1-default_hd0420bf_0.conda
+  sha256: 8b2229f96725090d4ef1c23b0082562b048cb2a9c2abfa0c3b8e5cbcf2cf95e5
+  md5: 3cb9d0e5f40305440675a5f094c3b721
   depends:
-  - polars-default ==1.33.0 py39he906d20_0
+  - polars-default ==1.33.1 py39he906d20_0
   license: MIT
   license_family: MIT
-  purls: []
-  size: 5755
-  timestamp: 1756889554862
-- conda: https://conda.anaconda.org/conda-forge/linux-64/polars-default-1.33.0-py39hf521cc8_0.conda
+  purls:
+  - pkg:pypi/polars?source=compressed-mapping
+  size: 5753
+  timestamp: 1757413424803
+- conda: https://conda.anaconda.org/conda-forge/linux-64/polars-default-1.33.1-py39hf521cc8_0.conda
   noarch: python
-  sha256: 81cde9e0f93dbec25b1cab27fd9c3f9ef7d43ac4d83c1bc8006ae63213b810f2
-  md5: 87726fe40a940b477f1ec0c08c8a52ae
+  sha256: 789e3a969a1b437c1df80265088ddc656dbb6f69443c0a9724a4b587faf0da42
+  md5: 900f486d119d5c83d14c812068a3ecad
   depends:
   - python
   - libgcc >=14
@@ -5364,12 +5367,12 @@ packages:
   license: MIT
   purls:
   - pkg:pypi/polars?source=compressed-mapping
-  size: 31874263
-  timestamp: 1756889773637
-- conda: https://conda.anaconda.org/conda-forge/osx-64/polars-default-1.33.0-py39hbd2d40b_0.conda
+  size: 32170742
+  timestamp: 1757413932841
+- conda: https://conda.anaconda.org/conda-forge/osx-64/polars-default-1.33.1-py39hbd2d40b_0.conda
   noarch: python
-  sha256: 2a61e60008323aa89400b87707b49faffb04e8e2aa037d39ce2fc6f57c45e5ce
-  md5: 17777b45c66e7437aed533c313028bca
+  sha256: 2c563963f7767dd7d396a2214d2e17e610132c5fb63b21cc1b0279f252460da3
+  md5: 6cb909dad5147fc3551d3c6c3820e7da
   depends:
   - python
   - __osx >=10.13
@@ -5392,17 +5395,17 @@ packages:
   - __osx >=10.13
   license: MIT
   purls:
-  - pkg:pypi/polars?source=hash-mapping
-  size: 31699457
-  timestamp: 1756889546552
-- conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-default-1.33.0-py39h31c57e4_0.conda
+  - pkg:pypi/polars?source=compressed-mapping
+  size: 31963506
+  timestamp: 1757413397269
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/polars-default-1.33.1-py39h31c57e4_0.conda
   noarch: python
-  sha256: bdf24a222d7780e5684059e8a738be3306651ba1113ba2d4774a99e602c1c7ef
-  md5: 14a35885b7127507240aea432376d4f0
+  sha256: 65a0122d2ed894a9f94dcd96bd9de740ceffbf1b34341e8d6e1b1be0aa207a3a
+  md5: 0bac077a11de4673eeb6aa609ab7bd69
   depends:
   - python
-  - libcxx >=19
   - __osx >=11.0
+  - libcxx >=19
   - _python_abi3_support 1.*
   - cpython >=3.9
   constrains:
@@ -5421,13 +5424,13 @@ packages:
   - __osx >=11.0
   license: MIT
   purls:
-  - pkg:pypi/polars?source=hash-mapping
-  size: 28990144
-  timestamp: 1756889536567
-- conda: https://conda.anaconda.org/conda-forge/win-64/polars-default-1.33.0-py39he906d20_0.conda
+  - pkg:pypi/polars?source=compressed-mapping
+  size: 29418459
+  timestamp: 1757413441375
+- conda: https://conda.anaconda.org/conda-forge/win-64/polars-default-1.33.1-py39he906d20_0.conda
   noarch: python
-  sha256: e77f0165b5fa69a012b77cbd2c79e1e0d67defcb8d839399185bacef03bf29cf
-  md5: 09f4c46228f332810afe0875b5a93c50
+  sha256: f30d7e72d445014d63ec907900331b20ddab87c729996dd2c39be1ae2a53854d
+  md5: 5ae3ef1e9e0afb6c5a86100d05890970
   depends:
   - python
   - vc >=14.3,<15
@@ -5453,9 +5456,9 @@ packages:
   - polars-u64-idx <0.0.0a0
   license: MIT
   purls:
-  - pkg:pypi/polars?source=hash-mapping
-  size: 34658700
-  timestamp: 1756889554861
+  - pkg:pypi/polars?source=compressed-mapping
+  size: 35019348
+  timestamp: 1757413424802
 - conda: https://conda.anaconda.org/conda-forge/noarch/pre-commit-4.3.0-pyha770c72_0.conda
   sha256: 66b6d429ab2201abaa7282af06b17f7631dcaafbc5aff112922b48544514b80a
   md5: bc6c44af2a9e6067dd7e949ef10cdfba
@@ -5630,7 +5633,7 @@ packages:
 - pypi: ./
   name: pudl-examples
   version: 0.1.0
-  sha256: ded2165c041abafaede5d39f6f8ef23f1cc780b7838a879f29a55d7c96229904
+  sha256: 125d9d54ad525cd7942162a450f203adba82ebcc4bd246f4b6d563f5a2ab710e
   requires_python: '>=3.13,<3.14'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/pycodestyle-2.12.1-pyhd8ed1ab_1.conda
@@ -6514,6 +6517,7 @@ packages:
   constrains:
   - sqlglotrs ==0.6.2
   license: MIT
+  license_family: MIT
   purls:
   - pkg:pypi/sqlglot?source=hash-mapping
   size: 5125530

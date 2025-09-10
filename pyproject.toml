@@ -70,7 +70,7 @@ pudl_examples = { path = ".", editable = true }
 [tool.pixi.tasks]
 
 [tool.pixi.dependencies]
-polars = ">=1.33.0,<2"
+polars = ">=1.33.1,<2"
 pre-commit = ">=4.3.0,<5"
 ruff = ">=0.12.12,<0.13"
 matplotlib = ">=3.10.6,<4"
@@ -177,3 +177,15 @@ multiline-quotes = "double"
 
 [tool.doc8]
 max-line-length = 88
+
+[tool.marimo.display]
+theme = "system"
+dataframes = "rich"
+default_width = "full"
+
+[tool.marimo.language_servers.pylsp]
+enable_ruff = true
+enabled = true
+
+[tool.marimo.formatting]
+line_length = 88
