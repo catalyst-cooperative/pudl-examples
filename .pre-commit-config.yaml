@@ -1,0 +1,76 @@
+---
+exclude: (^.pixi/|.snap)
+repos:
+  # Quick content checks based on grepping for python specific patterns:
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: rst-backticks # Find single rather than double backticks
+      - id: rst-directive-colons # Missing double-colons after directives
+      - id: rst-inline-touching-normal # Inline code should never touch normal text
+      - id: python-use-type-annotations # Use annotations not old-style type comments
+
+  # Other file formatting, plus common Git mistakes & text file standardization:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files # Don't accidentally commit giant files.
+      - id: check-merge-conflict # Watch for lingering merge markers.
+      - id: check-yaml # Validate all YAML files.
+      - id: check-toml
+      - id: check-case-conflict # Avoid case sensitivity in file names.
+      - id: debug-statements # Watch for lingering debugger calls.
+      - id: mixed-line-ending # Use Unix line-endings to avoid big no-op CSV diffs.
+        args: ["--fix=lf"]
+      - id: trailing-whitespace
+      - id: name-tests-test # Follow PyTest naming convention.
+      - id: end-of-file-fixer
+
+  ####################################################################################
+  # Formatters: hooks that re-write code & documentation files
+  ####################################################################################
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.12
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.6.2
+    hooks:
+      - id: prettier
+        types_or: [yaml]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/ComPWA/taplo-pre-commit
+    rev: v0.9.3
+    hooks:
+      - id: taplo-format
+
+  ####################################################################################
+  # Linters: hooks that check but don't alter files
+  ####################################################################################
+
+  # Check Github Actions
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.7
+    hooks:
+      - id: actionlint
+
+# Configuration for pre-commit.ci
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    For more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: main
+  autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
+  autoupdate_schedule: weekly
+  submodules: false
