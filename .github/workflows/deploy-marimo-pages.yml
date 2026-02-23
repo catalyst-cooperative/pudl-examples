@@ -2,14 +2,16 @@
 name: Deploy Marimo Pages
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - "marimo/**"
+      - "wasm/marimo/**"
+      - "scripts/export_marimo_notebooks.py"
+      - "pixi.toml"
+      - "pixi.lock"
       - ".github/workflows/deploy-marimo-pages.yml"
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,17 +20,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Set up pixi
-        uses: prefix-dev/setup-pixi@v0.9.0
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@v0.8.14
         with:
-          cache: true
+          pixi-version: v0.49.0
+
+      - name: Install dependencies
+        run: pixi install --locked -e wasm
 
       - name: Ensure docs directory exists
         run: mkdir -p docs/
 
       - name: Export Marimo notebooks
-        run: |
-          pixi run marimo export html-wasm marimo/sec10k-data-review.py -o docs/sec10k-data-review.html --mode edit
+        run: pixi run -e wasm export-wasm-marimo
 
       - name: Verify generated files
         run: |

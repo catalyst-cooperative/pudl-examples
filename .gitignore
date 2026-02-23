@@ -3,3 +3,4 @@
 **/*.swp
 dask-worker-space
 **/__pycache__/
+docs/
