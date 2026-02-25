@@ -51,6 +51,19 @@ You can find detailed instructions for how to download the data in our [data
 access
 documentation](https://catalystcoop-pudl.readthedocs.io/en/nightly/data_access.html#quick-reference).
 
+## Run Notebook Integration Test
+
+To execute all top-level notebooks and fail if any notebook errors, run:
+
+```
+$ pixi run -e dev check-ipynbs
+```
+
+This task runs `pytest` with `nbmake`, with per-notebook progress (`-vv`) and
+timing output (`--durations=0`). It uses `--capture=tee-sys` to show live output
+while keeping pytest capture enabled. The same check is run in GitHub Actions by
+the `Integration Test Notebooks` workflow.
+
 ## Developer Setup
 
 If you'd like to contribute code back to this repository, you will also need to install our `pre-commit` hooks:

@@ -28,6 +28,11 @@ requests = "==2.31.0"
 
 [feature.dev.dependencies]
 pre-commit = ">=4.5.1,<5"
+pytest = ">=8.0.0,<9"
+nbmake = ">=1.5.5,<2"
 
 [environments]
 dev = ["dev"]
+
+[tasks]
+check-ipynbs = "pytest -vv --durations=0 --capture=tee-sys --nbmake --nbmake-timeout=1200 *.ipynb"
