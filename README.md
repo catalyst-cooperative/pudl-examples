@@ -64,6 +64,9 @@ timing output (`--durations=0`). It uses `--capture=tee-sys` to show live output
 while keeping pytest capture enabled. The same check is run in GitHub Actions by
 the `Integration Test Notebooks` workflow.
 
+This passes through normal pytest arguments, so you can add filters like `pixi
+run -e dev check-ipynbs -k 04-renewable` to only run specific notebooks.
+
 ## Developer Setup
 
 If you'd like to contribute code back to this repository, you will also need to install our `pre-commit` hooks:
