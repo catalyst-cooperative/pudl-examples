@@ -25,6 +25,7 @@ altair = "==5.4.1"
 tqdm = "==4.66.2"
 matplotx = "*"
 requests = "==2.31.0"
+ffmpeg = "*"
 
 [feature.dev.dependencies]
 pre-commit = ">=4.5.1,<5"
