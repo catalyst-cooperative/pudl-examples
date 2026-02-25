@@ -1,0 +1,33 @@
+[workspace]
+name = "pudl-examples"
+version = "0.1.0"
+description = "Pixi environment for PUDL example notebooks"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[dependencies]
+# Marimo is currently pinned to pyodide 0.27.7 for WebAssembly notebooks. See https://github.com/marimo-team/marimo/pull/5995
+#
+# Since we eventually want to be able to run notebooks in Marimo WebAssembly mode, we need to pin to the versions that are in pyodide 0.27.7
+# https://pyodide.org/en/0.27.7/usage/packages-in-pyodide.html
+python = "3.11.*"
+ipykernel = "*"
+jupyterlab = "*"
+ipython = "==8.23.0"
+pandas = "==2.2.3"
+numpy = "==2.0.2"
+matplotlib = "==3.8.4"
+seaborn = "*"
+geopandas = "0.14.*" # As of 2026-02-24 our Kaggle environment requires this
+pyarrow = "==18.1.0"
+duckdb = "==1.1.2"
+altair = "==5.4.1"
+tqdm = "==4.66.2"
+matplotx = "*"
+requests = "==2.31.0"
+
+[feature.dev.dependencies]
+pre-commit = ">=4.5.1,<5"
+
+[environments]
+dev = ["dev"]

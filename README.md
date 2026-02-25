@@ -5,9 +5,9 @@ This repository contains a collection of
 and software distributed by [Catalyst Cooperative](https://catalyst.coop)'s
 [Public Utility Data Liberation (PUDL) project](https://github.com/catalyst-cooperative/pudl).
 
-## Run PUDL Notebooks on Kaggle
+## Run Jupyter Notebooks on Kaggle
 
-The easiest way to get up and running with these examples and a fresh copy of all the
+The easiest way to get up and running with the Jupyter examples and a fresh copy of all the
 PUDL data is on [Kaggle](https://www.kaggle.com).
 
 Kaggle offers substantial free computing resources and convenient data storage, so you
@@ -24,36 +24,43 @@ any data.
 You'll find the [PUDL data dictionary](https://catalystcoop-pudl.readthedocs.io/en/latest/data_dictionaries/pudl_db.html)
 helpful for interpreting the data.
 
-## Running Jupyter locally
+## Run Notebooks Locally
 
-If you're already familiar with git, Python environments, filesystem paths, and running
-Jupyter notebooks locally, you can also work with these notebooks and the PUDL data locally:
+You can also work with these notebooks and the PUDL data locally.
 
-- Create a Python environment that includes common data science packages. We like to use
-  the [mamba](https://github.com/mamba-org/mamba) package manager and the
-  [conda-forge](https://conda-forge.org/#about) channel.
-- Clone this repository.
-- Start your JupyterLab or Jupyter Notebook server and navigate to the notebooks in
-  the cloned repo.
-- If all the necessary packages are installed, you should be able to run the notebooks
-  without worrying about where the data is, since it is read directly from our public
-  AWS S3 bucket.
-- If you would rather work with the data locally, you can [Download the PUDL dataset from Kaggle](https://www.kaggle.com/datasets/catalystcooperative/pudl-project/download)
-  (it's ~20GB!) and unzip it somewhere conveniently accessible from the notebooks in the
-  cloned repo.
-- In this case you'll need to adjust the file paths in the notebooks to point at the
-  directory where you put the PUDL data.
+We use `pixi` to manage the Python environment. You can install it according to
+[their instructions](https://pixi.sh/latest/installation).
 
-## Other Data Access Methods
+Then install the project environment including development dependencies:
 
-See [the PUDL documentation](https://catalystcoop-pudl.readthedocs.io/en/latest/data_access.html)
-for other data access methods.
+```
+$ pixi install -e dev
+```
 
-If you're familiar with cloud services, you can check out:
+To run the Jupyter notebooks, run:
 
-- [PUDL in the AWS Open Data Registry](https://registry.opendata.aws/catalyst-cooperative-pudl/):
-  s3://pudl.catalyst.coop (free access)
-- Google Cloud Storage: gs://pudl.catalyst.coop (requester pays)
+```
+$ pixi run jupyter lab
+```
+
+These notebooks access data directly from our public cloud bucket every time
+they run, which can be slow. It can be much faster to download the data to your
+computer *once*, and then point your notebooks at the local copy.
+
+You can find detailed instructions for how to download the data in our [data
+access
+documentation](https://catalystcoop-pudl.readthedocs.io/en/nightly/data_access.html#quick-reference).
+
+## Developer Setup
+
+If you'd like to contribute code back to this repository, you will also need to install our `pre-commit` hooks:
+
+```
+$ pixi run -e dev pre-commit install
+```
+
+Otherwise, just tweak or add notebooks as usual, commit them to your branch, and
+make a pull request!
 
 ## Stalk us on the Internet
 
