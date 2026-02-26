@@ -7,11 +7,27 @@ app = marimo.App(width="medium")
 @app.cell
 def _():
     from datetime import date
+    import itertools
+    import functools
 
+    import fastparquet as fp
     import pandas as pd
     import marimo as mo
+    import matplotlib as mp
+    import altair as alt
 
-    return mo, pd
+    return alt, functools, itertools, mo, pd
+
+
+@app.cell
+def _(pd):
+    def pudl(name):
+        return pd.read_parquet(
+            f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet",
+            engine="fastparquet"
+        )
+
+    return (pudl,)
 
 
 @app.function
@@ -20,20 +36,21 @@ def pretty_plant_name(row):
 
 
 @app.cell
-def _(pd):
-    out_eia__yearly_plants = pd.read_parquet("https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_eia__yearly_plants.parquet")
-    return (out_eia__yearly_plants,)
-
-
-@app.cell
-def _(pd):
-    out_eia__yearly_generators = pd.read_parquet("https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_eia__yearly_generators.parquet")
-    out_eia923__monthly_generation_fuel_combined = pd.read_parquet("https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_eia923__monthly_generation_fuel_combined.parquet")
-    out_eia923__monthly_generation = pd.read_parquet("https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_eia923__monthly_generation.parquet")
+def _(mo, pudl):
+    with mo.status.progress_bar(total=4, title="Loading data", subtitle="out_eia__yearly_plants", remove_on_exit=True) as bar:
+        out_eia__yearly_plants = pudl("out_eia__yearly_plants")
+        bar.update(subtitle="out_eia__yearly_generators")
+        out_eia__yearly_generators = pudl("out_eia__yearly_generators")
+        bar.update(subtitle="out_eia923__monthly_generation_fuel_combined")
+        out_eia923__monthly_generation_fuel_combined = pudl("out_eia923__monthly_generation_fuel_combined")
+        bar.update(subtitle="out_eia923__monthly_generation")
+        out_eia923__monthly_generation = pudl("out_eia923__monthly_generation")
+        bar.update(subtitle="Done!")
     return (
         out_eia923__monthly_generation,
         out_eia923__monthly_generation_fuel_combined,
         out_eia__yearly_generators,
+        out_eia__yearly_plants,
     )
 
 
@@ -173,31 +190,24 @@ def _(
 
 
 @app.cell
-def _():
-    import matplotlib as mp
-    import altair as alt
-
-    return (alt,)
-
-
-@app.cell
 def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
-    plant_netgen_chart = alt.Chart(this_plant__monthly_generation_fuel_combined).mark_line().encode(
-        alt.X("report_date").title("Report date"),
-        alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
-    ).properties(title=f"Total: {this_plant.name}, {this_plant['city']}, {this_plant['state']}")
-    mo.ui.altair_chart(plant_netgen_chart)
-    return
-
-
-@app.cell
-def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
-    plant_netgen_bysource_chart = alt.Chart(this_plant__monthly_generation_fuel_combined).mark_line().encode(
-        alt.X("report_date").title("Report date"),
-        alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
-        color="fuel_type_code_pudl"
-    ).properties(title=f"By fuel type: {this_plant.name}, {this_plant['city']}, {this_plant['state']}")
-    mo.ui.altair_chart(plant_netgen_bysource_chart)
+    if this_plant__monthly_generation_fuel_combined.shape[0] == 0:
+        mo.output.append(
+            mo.callout("No generation data available for this plant.", kind="warn")
+        )
+    else:
+        plant_netgen_chart = alt.Chart(this_plant__monthly_generation_fuel_combined).mark_line().encode(
+            alt.X("report_date").title("Report date"),
+            alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
+        ).properties(title=f"Total: {this_plant.name}, {this_plant['city']}, {this_plant['state']}")
+        mo.output.append(mo.ui.altair_chart(plant_netgen_chart))
+    
+        plant_netgen_bysource_chart = alt.Chart(this_plant__monthly_generation_fuel_combined).mark_line().encode(
+            alt.X("report_date").title("Report date"),
+            alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
+            color="fuel_type_code_pudl"
+        ).properties(title=f"By fuel type: {this_plant.name}, {this_plant['city']}, {this_plant['state']}")
+        mo.output.append(mo.ui.altair_chart(plant_netgen_bysource_chart))
     return
 
 
@@ -210,43 +220,95 @@ def _(mo):
 
 
 @app.cell
-def _(alt, this_plant__monthly_generation):
-    bygen_chart = alt.Chart(this_plant__monthly_generation).mark_line().encode(
-        alt.X("report_date"),
-        alt.Y("net_generation_mwh"),
-        color="generator_id"
-    )
-    bygen_chart
-    return
-
-
-@app.cell
-def _(this_plant__generators):
-    this_plant__generators.set_index("generator_id").T.dropna(thresh=1)
+def _(alt, mo, this_plant__generators, this_plant__monthly_generation):
+    if this_plant__monthly_generation.shape[0] == 0:
+        mo.output.append(mo.md("No generation data available at the generator level for this plant.").style({"background":"#fee"}))
+    else:
+        n_monthly_gens = len(this_plant__monthly_generation.generator_id.unique())
+        if n_monthly_gens < this_plant__generators.shape[0]:
+            mo.output.append(mo.md(f"Generation data available for {n_monthly_gens} of {this_plant__generators.shape[0]} generators for this plant.").style({"background":"#eee"}))
+        bygen_chart = alt.Chart(this_plant__monthly_generation).mark_line().encode(
+            alt.X("report_date"),
+            alt.Y("net_generation_mwh"),
+            color="generator_id"
+        )
+        mo.output.append(bygen_chart)
     return
 
 
 @app.cell
 def _(mo, this_plant__generators):
-    selected_generator = mo.ui.dropdown.from_series(this_plant__generators.generator_id, label="Select generator:", value=this_plant__generators.generator_id.iloc[0])
-    selected_generator
-    return (selected_generator,)
+    measurement_cols = list(this_plant__generators.dtypes[this_plant__generators.dtypes == "float32"].index)
+    nonmeasurement_counts = this_plant__generators.drop(columns=measurement_cols).nunique()
+    nonmeasurement_counts = nonmeasurement_counts.loc[nonmeasurement_counts>0]
+    filters = {}
+    only_option = set()
+    for k,v in nonmeasurement_counts.to_dict().items():
+        available = this_plant__generators[k].value_counts(dropna=False).index
+        if available.shape[0]==1:
+            only_option.add(k)
+        filters[k] = mo.ui.multiselect(options={str(x): x for x in available}, value=[str(available[0])] if k in only_option else None)
+    filters = mo.ui.dictionary(filters)
+    return filters, only_option
 
 
 @app.cell
-def _(
-    alt,
-    out_eia923__monthly_generation,
-    selected_generator,
-    this_plant__monthly_generation,
-):
-    gen_chart = alt.Chart(this_plant__monthly_generation.loc[
-        (out_eia923__monthly_generation.generator_id == selected_generator.value)
-    ]).mark_line().encode(
-        alt.X("report_date"),
-        alt.Y("net_generation_mwh")
+def _(filters, functools, itertools, mo, only_option, this_plant__generators):
+    mo.output.append(
+        mo.hstack([
+            mo.vstack([
+                mo.hstack([mo.md(f[0]).right(), f[1]], widths=[1.1,1]).style({"color":"#bbbbbb"} if f[0] in only_option else {})
+                for f in row if f
+            ])  
+            for row in itertools.zip_longest(*itertools.batched(filters.items(), 3))
+        ], widths=[0.65,1,1])
     )
-    gen_chart
+    selected__generators = this_plant__generators[
+        functools.reduce(
+            lambda accum, update: accum & update, 
+            [
+                this_plant__generators[k].isin(v.value)
+                for k,v in filters.items() if v.value
+            ]
+        )
+    ]
+    mo.output.append(mo.hstack([
+        mo.md(
+            "All" if selected__generators.shape[0] == this_plant__generators.shape[0]
+            else f"{selected__generators.shape[0]} of"
+        ),
+        mo.md(f"{this_plant__generators.shape[0]} generators selected")
+    ], justify="start").style(background="#eee"))
+    return (selected__generators,)
+
+
+@app.cell
+def _(this_plant__generators):
+    ops_columns = [
+        "generator_id",
+        "technology_description",
+        "operational_status", "generator_operating_date", "original_planned_generator_operating_date", "generator_retirement_date", "planned_generator_retirement_date", "current_planned_generator_operating_date",
+         "capacity_factor","capacity_mw","summer_capacity_estimate","summer_capacity_mw","summer_estimated_capability_mw",
+        "winter_capacity_estimate","winter_capacity_mw","winter_estimated_capability_mw"
+    ]
+    nrg_columns = [
+        "generator_id",
+        "fuel_type_code_pudl", "prime_mover_code",
+    ]+[f"energy_source_code_{i}" for i in range(1,7)]
+    ignore_columns = [
+        "operational_status_code",
+    
+    ]
+    remaining_columns = ["generator_id"] + sorted(set(this_plant__generators.columns) - set(ops_columns+nrg_columns))
+    return nrg_columns, ops_columns, remaining_columns
+
+
+@app.cell
+def _(mo, nrg_columns, ops_columns, remaining_columns, selected__generators):
+    mo.output.append(mo.ui.table(
+        selected__generators[
+            ops_columns+nrg_columns[1:]+remaining_columns[1:]
+        ].set_index("generator_id").T.dropna(thresh=1)))
     return
 
 
