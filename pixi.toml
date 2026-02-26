@@ -6,24 +6,34 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [feature.kaggle.dependencies]
+# See sync_kaggle_deps.py for how we keep this synced to what the Kaggle Docker image has
+#
+# Dependencies not pinned in the Docker image are just specified as *.
 python = "3.13.*"
-ipykernel = "*"
+ipykernel = "==6.17.1"
 jupyterlab = "*"
+# Keep this unconstrained: ipython==7.34.0 from Kaggle cannot be solved
 ipython = "*"
-pandas = "*"
-numpy = "*"
+pandas = "==2.2.2"
+numpy = "==2.0.2"
 matplotlib = "*"
-seaborn = "*"
-geopandas = "<1.0" # As of 2026-02-24 Kaggle is pinned to geopandas < 1.0
-pyarrow = "*"
-duckdb = "*"
-altair = "*"
-tqdm = "*"
+seaborn = "==0.13.2"
+geopandas = "==1.1.2"
+pyarrow = "==18.1.0"
+duckdb = "==1.3.2"
+altair = "==5.5.0"
+tqdm = "==4.67.3"
 matplotx = "*"
-requests = "*"
+requests = "==2.32.4"
 
 [feature.dev.dependencies]
 pre-commit = ">=4.5.1,<5"
+tomlkit = "*"
+requests = "*"
+requirements-parser = "*"
+
+[tasks]
+sync-kaggle-deps = "python scripts/sync_kaggle_deps.py"
 
 [environments]
 dev = ["dev"]

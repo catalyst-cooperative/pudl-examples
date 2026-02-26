@@ -58,6 +58,19 @@ You can find detailed instructions for how to download the data in our [data
 access
 documentation](https://catalystcoop-pudl.readthedocs.io/en/nightly/data_access.html#quick-reference).
 
+## Developer notes
+
+To install the pre-commit hooks, run:
+
+```
+$ pixi run -e dev pre-commit install
+```
+
+To update the Kaggle dependency pins, run:
+```
+$ pixi run -e dev sync-kaggle-deps
+```
+
 
 ## Stalk us on the Internet
 
