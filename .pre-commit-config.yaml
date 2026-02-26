@@ -1,0 +1,27 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+#
+# NOTE (2026-02-25): we exclude ipynbs because we sync them from Kaggle, and
+# Kaggle will overwrite changes without running the pre-commit hooks. If we stop
+# syncing from Kaggle, we can remove this exclusion.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: .ipynb
+      - id: end-of-file-fixer
+        exclude: .ipynb
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=800"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.1
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi]

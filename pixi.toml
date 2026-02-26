@@ -1,0 +1,30 @@
+[workspace]
+name = "pudl-examples"
+version = "0.1.0"
+description = "Pixi environment for PUDL example notebooks"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[feature.kaggle.dependencies]
+python = "3.13.*"
+ipykernel = "*"
+jupyterlab = "*"
+ipython = "*"
+pandas = "*"
+numpy = "*"
+matplotlib = "*"
+seaborn = "*"
+geopandas = "<1.0" # As of 2026-02-24 Kaggle is pinned to geopandas < 1.0
+pyarrow = "*"
+duckdb = "*"
+altair = "*"
+tqdm = "*"
+matplotx = "*"
+requests = "*"
+
+[feature.dev.dependencies]
+pre-commit = ">=4.5.1,<5"
+
+[environments]
+dev = ["dev"]
+kaggle = ["kaggle"]
