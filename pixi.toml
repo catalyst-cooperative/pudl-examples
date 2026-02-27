@@ -40,13 +40,19 @@ altair = "==5.4.1"
 fastparquet = "==2024.5.0"
 pandas = "==2.2.3"
 
+[feature.wasm-test.dependencies]
+pytest = "*"
+pytest-playwright = "*"
+playwright = "*"
+
 [tasks]
 # NOTE (2026-02-27): ipython==7.34.0 from Kaggle is not on conda-forge - too old
 # NOTE (2026-02-27): jupyterlab==3.6.8 from Kaggle is not compatible with python==3.12.12 from Kaggle
 sync-kaggle-deps = "python scripts/sync_kaggle_deps.py --exclude ipython jupyterlab"
 export-wasm-marimo = "python scripts/export_marimo_notebooks.py"
+test-wasm-marimo = "pytest -q tests/playwright"
 
 [environments]
 dev = ["dev"]
 kaggle = ["kaggle"]
-wasm = ["wasm"]
+wasm = ["wasm", "wasm-test"]

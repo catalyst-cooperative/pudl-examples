@@ -2,9 +2,19 @@
 """Export all marimo notebooks in a directory to WebAssembly."""
 
 import argparse
+import http.server
 import subprocess
 import sys
 from pathlib import Path
+
+
+def parse_bind(value: str) -> tuple[str, int]:
+    """Parse a HOST:PORT binding string."""
+    host, port_text = value.split(":")
+    port = int(port_text)
+    if not host:
+        host = "localhost"
+    return host, port
 
 
 def export_notebooks(source_dir: Path, target_dir: Path) -> None:
@@ -36,9 +46,27 @@ def export_notebooks(source_dir: Path, target_dir: Path) -> None:
                 str(target_path),
                 "--mode",
                 "run",
+                "-f",
             ],
             check=True,
         )
+
+
+def serve_directory(target_dir: Path, bind: str, port: int) -> None:
+    """Serve the target directory over HTTP until interrupted."""
+
+    def handler(request, client_address, server):
+        return http.server.SimpleHTTPRequestHandler(
+            request,
+            client_address,
+            server,
+            directory=target_dir,
+        )
+
+    with http.server.ThreadingHTTPServer((bind, port), handler) as server:
+        print(f"Serving {target_dir.resolve()} at http://{bind}:{port}")
+        print("Press Ctrl+C to stop.")
+        server.serve_forever()
 
 
 if __name__ == "__main__":
@@ -53,10 +81,31 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--target-dir",
+        "--target-directory",
         type=Path,
         default=Path("docs"),
         help="Directory to write exported .html files (default: docs).",
     )
+    parser.add_argument(
+        "--serve",
+        nargs="?",
+        const="localhost:8000",
+        type=parse_bind,
+        metavar="HOST:PORT",
+        help=(
+            "Serve the exported HTML directory at HOST:PORT. "
+            "If omitted, defaults to localhost:8000."
+        ),
+    )
+
     args = parser.parse_args()
 
     export_notebooks(source_dir=args.source_dir, target_dir=args.target_dir)
+
+    if args.serve is not None:
+        bind, port = args.serve
+        serve_directory(
+            target_dir=args.target_dir,
+            bind=bind,
+            port=port,
+        )

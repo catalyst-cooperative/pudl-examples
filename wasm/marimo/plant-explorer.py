@@ -22,6 +22,7 @@ def _():
 @app.cell
 def _():
     import altair as alt
+    import fastparquet
     import pandas as pd
 
     return alt, pd

@@ -117,8 +117,7 @@ If you want to export the notebooks to WebAssembly and see if they work as
 standalone HTML pages:
 
 ```
-$ pixi run -e wasm export-wasm-marimo # export the notebooks
-$ python3 -m http.server -d docs/ # serve the notebooks at localhost:8000
+$ pixi run -e wasm export-wasm-marimo --serve
 ```
 
 Then go to `localhost:8000/<your-notebook-name>.html` to see it work!
@@ -136,6 +135,22 @@ comes with a few quirks:
 
 See the [Marimo docs](https://docs.marimo.io/guides/wasm/) for more details.
 
+
+Finally, if you want to add automated tests with `playwright`:
+
+First, install a browser driver for `playwright`:
+
+```
+$ pixi run -e wasm playwright install --with-deps chromium
+```
+
+Then, run the tests:
+
+```
+$ pixi run -e wasm test-wasm-marimo
+```
+
+You can add more tests in `tests/playwright/...`
 
 
 ## Stalk us on the Internet
