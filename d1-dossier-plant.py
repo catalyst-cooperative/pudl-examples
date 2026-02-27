@@ -35,6 +35,11 @@ def pretty_plant_name(row):
     return f"{row.plant_name_eia} (id={row.plant_id_eia})"
 
 
+@app.function
+def pretty_value_counts(series):
+    return ", ".join(f"{k} ({v})" for k,v in series.value_counts().to_dict().items())
+
+
 @app.cell
 def _(mo, pudl):
     with mo.status.progress_bar(total=4, title="Loading data", subtitle="out_eia__yearly_plants", remove_on_exit=True) as bar:
@@ -105,7 +110,7 @@ def _(mo, out_eia__yearly_plants, selected_plant):
             str(i): i
             for i in available_years
         },
-        label="Data as of:",
+        label="Report date:",
         value=str(available_years.iloc[0])
     )
     return (selected_year,)
@@ -129,11 +134,13 @@ def _(
     this_plant = this_plant.rename(pretty_plant_name(this_plant))
 
     this_plant__monthly_generation_fuel_combined = out_eia923__monthly_generation_fuel_combined.loc[
-        out_eia923__monthly_generation_fuel_combined.plant_id_eia == selected_plant.value
+        (out_eia923__monthly_generation_fuel_combined.plant_id_eia == selected_plant.value) & 
+        (out_eia923__monthly_generation_fuel_combined.report_date.dt.year <= selected_year.value.year)
     ]
 
     this_plant__monthly_generation = out_eia923__monthly_generation.loc[
-        (out_eia923__monthly_generation.plant_id_eia == selected_plant.value)
+        (out_eia923__monthly_generation.plant_id_eia == selected_plant.value) &
+        (out_eia923__monthly_generation.report_date.dt.year <= selected_year.value.year)
     ]
 
     this_plant__generators = out_eia__yearly_generators.loc[
@@ -149,7 +156,8 @@ def _(
     this_plant__summary = pd.Series({
         "fuel_types": ", ".join(this_plant__monthly_generation_fuel_combined.fuel_type_code_pudl.unique()),
         "generators": this_plant__generators.shape[0],
-        "technologies": ", ".join(this_plant__generators.technology_description.dropna().drop_duplicates())
+        "status": pretty_value_counts(this_plant__generators.operational_status),
+        "technologies": pretty_value_counts(this_plant__generators.technology_description.dropna())
     }, name=this_plant.name)
 
     mo.vstack([
@@ -201,7 +209,7 @@ def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
             alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
         ).properties(title=f"Total: {this_plant.name}, {this_plant['city']}, {this_plant['state']}")
         mo.output.append(mo.ui.altair_chart(plant_netgen_chart))
-    
+
         plant_netgen_bysource_chart = alt.Chart(this_plant__monthly_generation_fuel_combined).mark_line().encode(
             alt.X("report_date").title("Report date"),
             alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
@@ -244,7 +252,8 @@ def _(mo, this_plant__generators):
     filters = {}
     only_option = set()
     for k,v in nonmeasurement_counts.to_dict().items():
-        available = this_plant__generators[k].value_counts(dropna=False).index
+        available = this_plant__generators[k].value_counts(dropna=False)
+        available = available.loc[available>0].index
         if available.shape[0]==1:
             only_option.add(k)
         filters[k] = mo.ui.multiselect(options={str(x): x for x in available}, value=[str(available[0])] if k in only_option else None)
@@ -254,31 +263,40 @@ def _(mo, this_plant__generators):
 
 @app.cell
 def _(filters, functools, itertools, mo, only_option, this_plant__generators):
-    mo.output.append(
-        mo.hstack([
-            mo.vstack([
-                mo.hstack([mo.md(f[0]).right(), f[1]], widths=[1.1,1]).style({"color":"#bbbbbb"} if f[0] in only_option else {})
-                for f in row if f
-            ])  
-            for row in itertools.zip_longest(*itertools.batched(filters.items(), 3))
-        ], widths=[0.65,1,1])
-    )
-    selected__generators = this_plant__generators[
-        functools.reduce(
-            lambda accum, update: accum & update, 
-            [
-                this_plant__generators[k].isin(v.value)
-                for k,v in filters.items() if v.value
-            ]
+    if len(filters)==0:
+        mo.output.append(mo.md("No other information about generators for this plant.").style({"background":"#fee"}))
+    else:
+        import math
+        max_column = max((len(k) + max(len(vk) for vk in v.options)) for k,v in filters.items())
+        max_label = max(len(k) for k,v in filters.items())
+        max_input = max(max(len(vk) for vk in v.options) for v in filters.values())
+        columns = math.ceil(80/max_column)
+
+        mo.output.append(
+            mo.hstack([
+                mo.vstack([
+                    mo.hstack([mo.md(f[0]).right(), f[1]], widths=[max_label/max_input, 1]).style({"color":"#bbbbbb"} if f[0] in only_option else {})
+                    for f in row if f
+                ])  
+                for row in itertools.batched(filters.items(), math.ceil(len(filters)/columns))
+            ], widths="equal")
         )
-    ]
-    mo.output.append(mo.hstack([
-        mo.md(
-            "All" if selected__generators.shape[0] == this_plant__generators.shape[0]
-            else f"{selected__generators.shape[0]} of"
-        ),
-        mo.md(f"{this_plant__generators.shape[0]} generators selected")
-    ], justify="start").style(background="#eee"))
+        selected__generators = this_plant__generators[
+            functools.reduce(
+                lambda accum, update: accum & update, 
+                [
+                    this_plant__generators[k].isin(v.value)
+                    for k,v in filters.items() if v.value
+                ]
+            )
+        ]
+        mo.output.append(mo.hstack([
+            mo.md(
+                "All" if selected__generators.shape[0] == this_plant__generators.shape[0]
+                else f"{selected__generators.shape[0]} of"
+            ),
+            mo.md(f"{this_plant__generators.shape[0]} generators selected")
+        ], justify="start").style(background="#eee"))
     return (selected__generators,)
 
 
@@ -297,18 +315,26 @@ def _(this_plant__generators):
     ]+[f"energy_source_code_{i}" for i in range(1,7)]
     ignore_columns = [
         "operational_status_code",
-    
     ]
     remaining_columns = ["generator_id"] + sorted(set(this_plant__generators.columns) - set(ops_columns+nrg_columns))
     return nrg_columns, ops_columns, remaining_columns
 
 
 @app.cell
-def _(mo, nrg_columns, ops_columns, remaining_columns, selected__generators):
-    mo.output.append(mo.ui.table(
-        selected__generators[
-            ops_columns+nrg_columns[1:]+remaining_columns[1:]
-        ].set_index("generator_id").T.dropna(thresh=1)))
+def _(
+    filters,
+    mo,
+    nrg_columns,
+    ops_columns,
+    remaining_columns,
+    selected__generators,
+):
+    if filters.value:
+        mo.output.append(mo.ui.table(
+            selected__generators[
+                ops_columns+nrg_columns[1:]+remaining_columns[1:]
+            ].set_index("generator_id").T.dropna(thresh=1)
+        ))
     return
 
 
