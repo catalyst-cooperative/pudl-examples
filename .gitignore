@@ -1,3 +1,4 @@
+.envrc
 **/*ipynb_checkpoints
 **/*.swp
 dask-worker-space

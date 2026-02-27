@@ -66,10 +66,16 @@ To install the pre-commit hooks, run:
 $ pixi run -e dev pre-commit install
 ```
 
-To update the Kaggle dependency pins, run:
+To update the Kaggle dependency pins:
+
+1. Create a Kaggle API token and put it in your env as `KAGGLE_API_TOKEN`.
+2. Run the sync script:
 ```
 $ pixi run -e dev sync-kaggle-deps
 ```
+3. Run `pixi lock` to see if the Kaggle deps are... actually solvable.
+4. Resolve any solvability problems by adding the less-important-to-pin
+   dependencies to `--exclude` in the `sync-kaggle-deps` pixi task.
 
 
 ## Stalk us on the Internet
