@@ -144,8 +144,9 @@ def apply_kaggle_pins_to_pixi_deps(
 ) -> None:
     """Clobber existing dependencies with whatever came from Kaggle.
 
-    Note that this *mutates* the deps_table and thus the pixi_doc. Which means
-    we can just write pixi_doc after we call this.
+    Note that this *mutates* the deps_table and thus its parent (pixi_doc from main())
+    sees all changes without us having to do anything. 
+    Which means main() can just write pixi_doc after this function returns.
     """
     kaggle_pins = probe_result["pins"]
     kaggle_pins["python"] = f"=={probe_result['python_version']}"
@@ -275,7 +276,7 @@ def run_command(cmd: list[str], *, cwd: Path | None = None) -> str:
             check=True,
         )
     except subprocess.CalledProcessError as exc:
-        details = (exc.stderr or exc.stdout or "").strip()
+        details = (exc.stderr or exc.stdout or "[no output]").strip()
         raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{details}") from exc
     return proc.stdout
 
