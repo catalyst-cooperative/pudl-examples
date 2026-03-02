@@ -94,7 +94,8 @@ if __name__ == "__main__":
         metavar="HOST:PORT",
         help=(
             "Serve the exported HTML directory at HOST:PORT. "
-            "If omitted, defaults to localhost:8000."
+            "If HOST:PORT is omitted, defaults to localhost:8000. "
+            "If --serve is not provided, don't serve the directory at all."
         ),
     )
 

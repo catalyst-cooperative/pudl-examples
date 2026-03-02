@@ -23,7 +23,8 @@ and `wasm` defined. We also have `dev` defined for repository-infrastructure
 related tools.
 
 Speaking of which - you probably want to install the pre-commit hooks if you're
-planning on making changes to the code.
+planning on making changes to the notebooks, the repository infrastructure, or
+anything else that might require you to commit something.
 
 ```
 $ pixi run -e dev pre-commit install
