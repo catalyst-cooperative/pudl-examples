@@ -90,8 +90,10 @@ def main() -> None:
     if rendered != original:
         pixi_path.write_text(rendered, encoding="utf-8")
 
-    missing_in_kaggle_runtime = probe_result.get("missing", [])
-    print(f"missing_in_kaggle_runtime={missing_in_kaggle_runtime}")
+        # NOTE 2026-03-02: some missing deps are expected, so only print this
+        # out if we updated the pixi.toml file.
+        missing_in_kaggle_runtime = probe_result.get("missing", [])
+        print(f"missing_in_kaggle_runtime={missing_in_kaggle_runtime}")
 
 
 def probe_kaggle_runtime_dependencies(
@@ -145,7 +147,7 @@ def apply_kaggle_pins_to_pixi_deps(
     """Clobber existing dependencies with whatever came from Kaggle.
 
     Note that this *mutates* the deps_table and thus its parent (pixi_doc from main())
-    sees all changes without us having to do anything. 
+    sees all changes without us having to do anything.
     Which means main() can just write pixi_doc after this function returns.
     """
     kaggle_pins = probe_result["pins"]
