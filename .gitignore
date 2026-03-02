@@ -3,3 +3,5 @@
 **/*.swp
 dask-worker-space
 **/__pycache__/
+docs/
+tests/playwright/_build/

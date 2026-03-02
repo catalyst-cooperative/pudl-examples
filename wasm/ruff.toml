@@ -1,0 +1,4 @@
+[lint.pyflakes]
+# NOTE 2026-02-27: these need to be imported so that Pandas can read Parquet
+# files in pyodide, but are not explicitly used in the code.
+allowed-unused-imports = ["fastparquet", "pyarrow"]

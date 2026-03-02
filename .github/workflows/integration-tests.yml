@@ -1,0 +1,31 @@
+---
+name: Integration Tests
+
+on:
+  pull_request:
+    paths:
+      - "wasm/marimo/**"
+      - "scripts/export_marimo_notebooks.py"
+      - "pixi.toml"
+      - "pixi.lock"
+      - ".github/workflows/integration-tests.yml"
+      - "tests/playwright/**"
+
+jobs:
+  wasm-marimo-playwright:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install pixi
+        uses: prefix-dev/setup-pixi@v0.9.3
+        with:
+          environments: wasm
+
+      - name: Install Playwright browser
+        run: pixi run -e wasm playwright install --with-deps chromium
+
+      - name: Run Playwright tests against exported notebooks
+        run: pixi run -e wasm test-wasm-marimo
