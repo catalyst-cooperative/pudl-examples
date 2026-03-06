@@ -39,6 +39,7 @@ marimo = "*"
 altair = "==5.4.1"
 fastparquet = "==2024.5.0"
 pandas = "==2.2.3"
+pyarrow = "==18.1.0"
 
 [feature.wasm-test.dependencies]
 pytest = "*"
