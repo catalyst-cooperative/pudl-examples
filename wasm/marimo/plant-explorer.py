@@ -213,7 +213,9 @@ def _(
                 this_plant__monthly_generation_fuel_combined.fuel_type_code_pudl.unique()
             ),
             "capacity_mw": round(
-                this_plant__generators[this_plant__generators.operational_status == "existing"].capacity_mw.sum()
+                this_plant__generators[
+                    this_plant__generators.operational_status == "existing"
+                ].capacity_mw.sum()
             ),
             "generators": this_plant__generators.shape[0],
             "status": pretty_value_counts(this_plant__generators.operational_status),
@@ -262,7 +264,7 @@ def _(
                                         "county",
                                         "timezone",
                                         "latitude",
-                                        "longitude",                                        
+                                        "longitude",
                                     ]
                                 ].dropna()
                             ),
