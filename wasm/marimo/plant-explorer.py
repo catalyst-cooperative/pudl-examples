@@ -36,7 +36,7 @@ def _(pd):
 
 @app.function
 def pretty_plant_name(row):
-    return f"{row.plant_name_eia} (id={row.plant_id_eia})"
+    return f"{row.plant_name_eia} (EIA id={row.plant_id_eia})"
 
 
 @app.function
@@ -45,7 +45,7 @@ def pretty_value_counts(series):
 
 
 @app.cell
-def _(mo, pudl):
+def _(mo, pd, pudl):
     with mo.status.progress_bar(
         total=4,
         title="Loading data",
@@ -56,8 +56,18 @@ def _(mo, pudl):
         do_fetch_data.update(subtitle="out_eia__yearly_generators")
         out_eia__yearly_generators = pudl("out_eia__yearly_generators")
         do_fetch_data.update(subtitle="out_eia923__monthly_generation_fuel_combined")
-        out_eia923__monthly_generation_fuel_combined = pudl(
-            "out_eia923__monthly_generation_fuel_combined"
+        # reduce columns read on this chonker
+        out_eia923__monthly_generation_fuel_combined = pd.read_parquet(
+            "https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_eia923__monthly_generation_fuel_combined.parquet",
+            engine="fastparquet",
+            columns=[
+                "plant_id_eia",
+                "report_date",
+                "prime_mover_code",
+                "energy_source_code",
+                "fuel_type_code_pudl",
+                "net_generation_mwh",
+            ],
         )
         do_fetch_data.update(subtitle="out_eia923__monthly_generation")
         out_eia923__monthly_generation = pudl("out_eia923__monthly_generation")
@@ -133,10 +143,20 @@ def _(mo, out_eia__yearly_plants, selected_plant):
     )
     selected_year = mo.ui.dropdown(
         options={str(i): i for i in available_years},
-        label="Report date:",
+        label="Plant facts from year:",
         value=str(available_years.iloc[0]),
     )
-    return (selected_year,)
+    return available_years, selected_year
+
+
+@app.cell
+def _(available_years, mo, selected_year):
+    selected_timeseries_start = mo.ui.dropdown(
+        options={str(i): i for i in available_years if i <= selected_year.value},
+        label="Timeseries going back to:",
+        value=str(available_years.min()),
+    )
+    return (selected_timeseries_start,)
 
 
 @app.cell
@@ -148,11 +168,12 @@ def _(
     out_eia__yearly_plants,
     pd,
     selected_plant,
+    selected_timeseries_start,
     selected_year,
 ):
     this_plant = out_eia__yearly_plants.loc[
         (out_eia__yearly_plants.plant_id_eia == selected_plant.value)
-        & (out_eia__yearly_plants.report_date == selected_year.value)
+        & (out_eia__yearly_plants.report_date.dt.year == selected_year.value)
     ].iloc[0]
     this_plant = this_plant.rename(pretty_plant_name(this_plant))
 
@@ -164,16 +185,21 @@ def _(
             )
             & (
                 out_eia923__monthly_generation_fuel_combined.report_date.dt.year
-                <= selected_year.value.year
+                <= selected_year.value
+            )
+            & (
+                out_eia923__monthly_generation_fuel_combined.report_date.dt.year
+                >= selected_timeseries_start.value
             )
         ]
     )
 
     this_plant__monthly_generation = out_eia923__monthly_generation.loc[
         (out_eia923__monthly_generation.plant_id_eia == selected_plant.value)
+        & (out_eia923__monthly_generation.report_date.dt.year <= selected_year.value)
         & (
             out_eia923__monthly_generation.report_date.dt.year
-            <= selected_year.value.year
+            >= selected_timeseries_start.value
         )
     ]
 
@@ -230,6 +256,7 @@ def _(
         [
             mo.md(f"# {this_plant.name}"),
             selected_year,
+            selected_timeseries_start,
             mo.md("----"),
             mo.hstack(
                 [
