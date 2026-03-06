@@ -128,7 +128,7 @@ def _(mo, out_eia__yearly_plants, selected_plant):
         out_eia__yearly_plants.loc[
             (out_eia__yearly_plants.plant_id_eia == selected_plant.value)
         ]
-        .report_date.drop_duplicates()
+        .report_date.dt.year.drop_duplicates()
         .sort_values(ascending=False)
     )
     selected_year = mo.ui.dropdown(
@@ -212,6 +212,9 @@ def _(
             "fuel_types": ", ".join(
                 this_plant__monthly_generation_fuel_combined.fuel_type_code_pudl.unique()
             ),
+            "capacity_mw": round(
+                this_plant__generators[this_plant__generators.operational_status == "existing"].capacity_mw.sum()
+            ),
             "generators": this_plant__generators.shape[0],
             "status": pretty_value_counts(this_plant__generators.operational_status),
             "technologies": pretty_value_counts(
@@ -258,6 +261,8 @@ def _(
                                         "zip_code",
                                         "county",
                                         "timezone",
+                                        "latitude",
+                                        "longitude",                                        
                                     ]
                                 ].dropna()
                             ),
