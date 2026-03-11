@@ -23,12 +23,20 @@ def _():
     return alt, functools, itertools, mo, pd
 
 
+@app.function
+def path(name):
+    return (
+        f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet",
+    )
+
+
 @app.cell
 def _(pd):
-    def pudl(name):
+    def pudl(name, columns=None):
         return pd.read_parquet(
-            f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet",
+            path(name),
             engine="fastparquet",
+            **({"columns": columns} if columns else {}),
         )
 
     return (pudl,)
@@ -45,7 +53,7 @@ def pretty_value_counts(series):
 
 
 @app.cell
-def _(mo, pd, pudl):
+def _(mo, pudl):
     with mo.status.progress_bar(
         total=4,
         title="Loading data",
@@ -57,9 +65,8 @@ def _(mo, pd, pudl):
         out_eia__yearly_generators = pudl("out_eia__yearly_generators")
         do_fetch_data.update(subtitle="out_eia923__monthly_generation_fuel_combined")
         # reduce columns read on this chonker
-        out_eia923__monthly_generation_fuel_combined = pd.read_parquet(
-            "https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_eia923__monthly_generation_fuel_combined.parquet",
-            engine="fastparquet",
+        out_eia923__monthly_generation_fuel_combined = pudl(
+            "out_eia923__monthly_generation_fuel_combined",
             columns=[
                 "plant_id_eia",
                 "report_date",
@@ -69,7 +76,7 @@ def _(mo, pd, pudl):
                 "net_generation_mwh",
             ],
         )
-        do_fetch_data.update(subtitle="out_eia923__monthly_generation")
+        do_fetch_data.update(subtitle=".")
         out_eia923__monthly_generation = pudl("out_eia923__monthly_generation")
         do_fetch_data.update(subtitle="Done!")
     return (
@@ -395,30 +402,69 @@ def _(
 
 @app.cell
 def _(mo, this_plant__generators):
-    measurement_cols = list(
-        this_plant__generators.dtypes[this_plant__generators.dtypes == "float32"].index
-    )
-    nonmeasurement_counts = this_plant__generators.drop(
-        columns=measurement_cols
-    ).nunique()
-    nonmeasurement_counts = nonmeasurement_counts.loc[nonmeasurement_counts > 0]
+    filter_columns = [
+        "generator_id",
+        "unit_id_pudl",
+        "technology_description",
+        "energy_source_code_1",
+        "prime_mover_code",
+        "operational_status",
+        "fuel_type_code_pudl",
+        "associated_combined_heat_power",
+        "operational_status_code",
+    ]
+    filter_counts = this_plant__generators[filter_columns].nunique()
+    filter_counts = filter_counts.loc[filter_counts > 0]
     filters = {}
     only_option = set()
-    for k, v in nonmeasurement_counts.to_dict().items():
+    filter_options = {}
+    filter_defaults = {}
+    for k, v in filter_counts.to_dict().items():
         available = this_plant__generators[k].value_counts(dropna=False)
         available = available.loc[available > 0].index
         if available.shape[0] == 1:
             only_option.add(k)
-        filters[k] = mo.ui.multiselect(
-            options={str(x): x for x in available},
-            value=[str(available[0])] if k in only_option else None,
+        filter_options[k] = {str(x): x for x in available}
+        filter_defaults[k] = [str(available[0])] if k in only_option else None
+
+    if filter_options:
+        import math
+
+        option_lengths = {k: [len(vk) for vk in v] for k, v in filter_options.items()}
+        max_column = max(
+            (len(k) + max(option_lengths[k])) for k, v in filter_options.items()
         )
+        max_label = max(len(k) for k in filter_options)
+        max_input = max(max(v) for v in option_lengths.values())
+        columns = math.ceil(80 / max_column)
+
+        for k in filter_options:
+            filters[k] = mo.Html(
+                f"""<div data-testid="genselect-{k}" style="display: flex; gap: 0.5rem; {"color: #bbbbbb" if k in only_option else ""}">
+         <label style="flex: {max_label / max_input} 1 0%; text-align: end;">{k}</label>
+         <div style="flex: 1 1 0%;">{{multiselect}}</div>
+     </div>"""
+            ).batch(
+                multiselect=mo.ui.multiselect(
+                    options=filter_options[k],
+                    value=filter_defaults[k],
+                    # label=k,
+                )
+            )
     filters = mo.ui.dictionary(filters)
-    return filters, only_option
+    return columns, filters, math
 
 
 @app.cell
-def _(filters, functools, itertools, mo, only_option, this_plant__generators):
+def _(
+    columns,
+    filters,
+    functools,
+    itertools,
+    math,
+    mo,
+    this_plant__generators,
+):
     if len(filters) == 0:
         mo.output.append(
             mo.md("No other information about generators for this plant.").style(
@@ -426,28 +472,10 @@ def _(filters, functools, itertools, mo, only_option, this_plant__generators):
             )
         )
     else:
-        import math
-
-        max_column = max(
-            (len(k) + max(len(vk) for vk in v.options)) for k, v in filters.items()
-        )
-        max_label = max(len(k) for k, v in filters.items())
-        max_input = max(max(len(vk) for vk in v.options) for v in filters.values())
-        columns = math.ceil(80 / max_column)
-
         mo.output.append(
             mo.hstack(
                 [
-                    mo.vstack(
-                        [
-                            mo.hstack(
-                                [mo.md(f[0]).right(), f[1]],
-                                widths=[max_label / max_input, 1],
-                            ).style({"color": "#bbbbbb"} if f[0] in only_option else {})
-                            for f in row
-                            if f
-                        ]
-                    )
+                    mo.vstack([f[1] for f in row if f])
                     for row in itertools.batched(
                         filters.items(), math.ceil(len(filters) / columns)
                     )
@@ -459,9 +487,9 @@ def _(filters, functools, itertools, mo, only_option, this_plant__generators):
             functools.reduce(
                 lambda accum, update: accum & update,
                 [
-                    this_plant__generators[k].isin(v.value)
+                    this_plant__generators[k].isin(v.value["multiselect"])
                     for k, v in filters.items()
-                    if v.value
+                    if v.value["multiselect"]
                 ],
             )
         ]
@@ -469,12 +497,14 @@ def _(filters, functools, itertools, mo, only_option, this_plant__generators):
             mo.hstack(
                 [
                     mo.md(
-                        "All"
-                        if selected__generators.shape[0]
-                        == this_plant__generators.shape[0]
-                        else f"{selected__generators.shape[0]} of"
+                        (
+                            "All"
+                            if selected__generators.shape[0]
+                            == this_plant__generators.shape[0]
+                            else f"{selected__generators.shape[0]} of"
+                        )
+                        + f" {this_plant__generators.shape[0]} generators selected"
                     ),
-                    mo.md(f"{this_plant__generators.shape[0]} generators selected"),
                 ],
                 justify="start",
             ).style(background="#eee")
@@ -530,7 +560,8 @@ def _(
                     ops_columns + nrg_columns[1:] + remaining_columns[1:]
                 ]
                 .set_index("generator_id")
-                .T.dropna(thresh=1)
+                .T.dropna(thresh=1),
+                selection=None,
             )
         )
     return
