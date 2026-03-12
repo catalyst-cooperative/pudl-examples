@@ -1,0 +1,270 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.20.4",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "abf842a45df5fcaa642b863cda97562a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "5e0992f51b8017758f634d3035eda3e5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "fab8af0debe323b9b029c04d8b1df31c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "59df3dbb3f765e309be67f68c76fadaf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "15e8ffa04bd01c80f9167cd4a3136547",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "e483bd0453a4ed1e76865065d1ae9d60",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "90fcbbc72a5e0a1e5840fe2f63aeed78",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "a41c1c117ead789911e489c4898c346e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "881c84d458a3216e88a2b0437ae3d285",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "668309039ed2b8636d591d51cd5dabbf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: row;justify-content: space-between;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='Xref-0' random-id='52ff40b6-0d02-cabc-89ba-03549b3a8563'><marimo-dropdown data-initial-value='[&quot;CO&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select a state:&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;AK&quot;,&quot;AL&quot;,&quot;AR&quot;,&quot;AZ&quot;,&quot;CA&quot;,&quot;CO&quot;,&quot;CT&quot;,&quot;DC&quot;,&quot;DE&quot;,&quot;FL&quot;,&quot;GA&quot;,&quot;HI&quot;,&quot;IA&quot;,&quot;ID&quot;,&quot;IL&quot;,&quot;IN&quot;,&quot;KS&quot;,&quot;KY&quot;,&quot;LA&quot;,&quot;MA&quot;,&quot;MD&quot;,&quot;ME&quot;,&quot;MI&quot;,&quot;MN&quot;,&quot;MO&quot;,&quot;MS&quot;,&quot;MT&quot;,&quot;NC&quot;,&quot;ND&quot;,&quot;NE&quot;,&quot;NH&quot;,&quot;NJ&quot;,&quot;NM&quot;,&quot;NV&quot;,&quot;NY&quot;,&quot;OH&quot;,&quot;OK&quot;,&quot;OR&quot;,&quot;PA&quot;,&quot;RI&quot;,&quot;SC&quot;,&quot;SD&quot;,&quot;TN&quot;,&quot;TX&quot;,&quot;UT&quot;,&quot;VA&quot;,&quot;VT&quot;,&quot;WA&quot;,&quot;WI&quot;,&quot;WV&quot;,&quot;WY&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='SFPL-0' random-id='2338b6d4-b81b-d7f2-a456-497b1ce6dd8a'><marimo-dropdown data-initial-value='[&quot;Adams&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select a county:&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;Adams&quot;,&quot;Alamosa&quot;,&quot;Arapahoe&quot;,&quot;Baca&quot;,&quot;Bent&quot;,&quot;Boulder&quot;,&quot;Broomfield&quot;,&quot;Chaffee&quot;,&quot;Cheyenne&quot;,&quot;Clear Creek&quot;,&quot;Conejos&quot;,&quot;Crowley&quot;,&quot;Delta&quot;,&quot;Denver&quot;,&quot;Douglas&quot;,&quot;Eagle&quot;,&quot;El Paso&quot;,&quot;Elbert&quot;,&quot;Fremont&quot;,&quot;Garfield&quot;,&quot;Grand&quot;,&quot;Gunnison&quot;,&quot;Huerfano&quot;,&quot;Jackson&quot;,&quot;Jefferson&quot;,&quot;Kiowa&quot;,&quot;Kit Carson&quot;,&quot;La Plata&quot;,&quot;Lake&quot;,&quot;Larimer&quot;,&quot;Las Animas&quot;,&quot;Lincoln&quot;,&quot;Logan&quot;,&quot;Mesa&quot;,&quot;Moffat&quot;,&quot;Montezuma&quot;,&quot;Montrose&quot;,&quot;Morgan&quot;,&quot;Otero&quot;,&quot;Ouray&quot;,&quot;Park&quot;,&quot;Phillips&quot;,&quot;Pitkin&quot;,&quot;Prowers&quot;,&quot;Pueblo&quot;,&quot;Rio Blanco&quot;,&quot;Rio Grande&quot;,&quot;Routt&quot;,&quot;Saguache&quot;,&quot;San Miguel&quot;,&quot;Sedgwick&quot;,&quot;Summit&quot;,&quot;Weld&quot;,&quot;Yuma&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='BYtC-0' random-id='9c6b1708-1a8e-a19b-d4c6-67e632ca4a34'><marimo-dropdown data-initial-value='[&quot;Cherokee (id=469)&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select a plant:&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;Cherokee (id=469)&quot;,&quot;Frank Knutson (id=55505)&quot;,&quot;Trigen-Colorado Metro (id=55630)&quot;,&quot;Blue Spruce Energy Center (id=55645)&quot;,&quot;Brighton PV Solar Plant (id=59144)&quot;,&quot;Adams Community Solar Garden LLC (id=59849)&quot;,&quot;Adams Community Solar Garden III LLC (id=59850)&quot;,&quot;Xcel Adams 2 Community Solar Array (id=60725)&quot;,&quot;Xcel Adams 1 Community Solar Array (id=60726)&quot;,&quot;Victory Solar LLC (id=60764)&quot;,&quot;Panasonic Carport Solar Hybrid (id=61439)&quot;,&quot;Denver Metro Solar (id=61563)&quot;,&quot;Imboden Solar Garden (id=61753)&quot;,&quot;Pioneer Solar (CO), LLC (id=61991)&quot;,&quot;Oak Leaf Solar XXIII LLC (CSG) (id=62256)&quot;,&quot;Amazon Denver DEN3 (id=62877)&quot;,&quot;Mtn. Solar 1 (id=63276)&quot;,&quot;Mtn. Solar 2 (id=63277)&quot;,&quot;CO LI CSG 1 - Kamerra (id=63278)&quot;,&quot;Amazon DEN2 Solar Project (id=63536)&quot;,&quot;TruStile Doors - Denver (id=64388)&quot;,&quot;Venture 1 - 1A CSG (id=64880)&quot;,&quot;Venture 2 - 1B (id=65235)&quot;,&quot;Venture 3 - 1C (id=65236)&quot;,&quot;Venture 4 - 1D (id=65237)&quot;,&quot;Gaylord Rockies CHP (id=65898)&quot;,&quot;Oak Leaf - CSG Portfolio (OL 37) (id=66737)&quot;,&quot;Oak Leaf - CSG Portfolio (OL 38) (id=66738)&quot;,&quot;Oak Leaf - CSG Portfolio (OL 44) (id=66740)&quot;,&quot;DIA 9 (id=67201)&quot;,&quot;Bromley Battery Storage (id=67305)&quot;,&quot;Prairie Center Energy LLC (id=68058)&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "506d22ce36b90f925e7a1a45a59ec73b",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "51b89560c861e1c152800a3d8f747838",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "0f0cc586ed7d069526441e120eab4b37",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"cherokee-eia-id469\">Cherokee (EIA id=469)</h1></span><marimo-ui-element object-id='Kclp-0' random-id='92797026-ca6d-cdcd-43e5-0801c2f8b497'><marimo-dropdown data-initial-value='[&quot;2026&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Plant facts from year:&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;2026&quot;,&quot;2025&quot;,&quot;2024&quot;,&quot;2023&quot;,&quot;2022&quot;,&quot;2021&quot;,&quot;2020&quot;,&quot;2019&quot;,&quot;2018&quot;,&quot;2017&quot;,&quot;2016&quot;,&quot;2015&quot;,&quot;2014&quot;,&quot;2013&quot;,&quot;2012&quot;,&quot;2011&quot;,&quot;2010&quot;,&quot;2009&quot;,&quot;2008&quot;,&quot;2007&quot;,&quot;2006&quot;,&quot;2005&quot;,&quot;2004&quot;,&quot;2003&quot;,&quot;2002&quot;,&quot;2001&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='emfo-0' random-id='7b828fa0-6afa-a66f-6d49-d33d382390b7'><marimo-dropdown data-initial-value='[&quot;2001&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Timeseries going back to:&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;2026&quot;,&quot;2025&quot;,&quot;2024&quot;,&quot;2023&quot;,&quot;2022&quot;,&quot;2021&quot;,&quot;2020&quot;,&quot;2019&quot;,&quot;2018&quot;,&quot;2017&quot;,&quot;2016&quot;,&quot;2015&quot;,&quot;2014&quot;,&quot;2013&quot;,&quot;2012&quot;,&quot;2011&quot;,&quot;2010&quot;,&quot;2009&quot;,&quot;2008&quot;,&quot;2007&quot;,&quot;2006&quot;,&quot;2005&quot;,&quot;2004&quot;,&quot;2003&quot;,&quot;2002&quot;,&quot;2001&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element><span class=\"markdown prose dark:prose-invert contents\"><hr /></span><div style='display: flex;flex: 1;flex-direction: row;justify-content: space-around;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><div style='flex: 1.2;display: flex;min-width: 0;min-height: 0'><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"grid\">Grid</h2></span><table border=\"1\" class=\"dataframe\"><thead><tr style=\"text-align: right;\"><th></th><th>Cherokee (EIA id=469)</th></tr></thead><tbody><tr><th>plant_name_eia</th><td>Cherokee</td></tr><tr><th>plant_id_eia</th><td>469</td></tr><tr><th>balancing_authority_code_eia</th><td>PSCO</td></tr><tr><th>sector_name_eia</th><td>Electric Utility</td></tr><tr><th>utility_name_eia</th><td>Public Service Co of Colorado</td></tr><tr><th>utility_id_eia</th><td>15466</td></tr><tr><th>utility_id_pudl</th><td>272</td></tr></tbody></table></div></div><div style='flex: 0.9;display: flex;min-width: 0;min-height: 0'><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"location\">Location</h2></span><table border=\"1\" class=\"dataframe\"><thead><tr style=\"text-align: right;\"><th></th><th>Cherokee (EIA id=469)</th></tr></thead><tbody><tr><th>street_address</th><td>6198 Franklin St</td></tr><tr><th>state</th><td>CO</td></tr><tr><th>zip_code</th><td>80216</td></tr><tr><th>county</th><td>Adams</td></tr><tr><th>timezone</th><td>America/Denver</td></tr><tr><th>latitude</th><td>39.807274</td></tr><tr><th>longitude</th><td>-104.9645</td></tr></tbody></table></div></div><div style='flex: 1;display: flex;min-width: 0;min-height: 0'><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"function\">Function</h2></span><table border=\"1\" class=\"dataframe\"><thead><tr style=\"text-align: right;\"><th></th><th>Cherokee (EIA id=469)</th></tr></thead><tbody><tr><th>fuel_types</th><td>coal, oil, gas</td></tr><tr><th>capacity_mw</th><td>1006</td></tr><tr><th>generators</th><td>7</td></tr><tr><th>status</th><td>existing (4), retired (3)</td></tr><tr><th>technologies</th><td>Conventional Steam Coal (3), Natural Gas Fired Combined Cycle (3), Natural Gas Steam Turbine (1)</td></tr></tbody></table></div></div></div></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "a3669d52d25b07acbda382cc45d26a62",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='nWHF-0' random-id='7d1db9fa-a580-eb8b-8226-b846c076cc7c'><marimo-vega data-initial-value='{}' data-label='null' data-spec='{&quot;config&quot;:{&quot;view&quot;:{&quot;continuousWidth&quot;:300,&quot;continuousHeight&quot;:300}},&quot;data&quot;:{&quot;url&quot;:&quot;./@file/79850-20535739-5K0zjsJ8.arrow&quot;,&quot;format&quot;:{&quot;type&quot;:&quot;arrow&quot;}},&quot;mark&quot;:{&quot;type&quot;:&quot;line&quot;},&quot;encoding&quot;:{&quot;x&quot;:{&quot;field&quot;:&quot;report_date&quot;,&quot;title&quot;:&quot;Report date&quot;,&quot;type&quot;:&quot;temporal&quot;},&quot;y&quot;:{&quot;aggregate&quot;:&quot;sum&quot;,&quot;field&quot;:&quot;net_generation_mwh&quot;,&quot;title&quot;:&quot;Net Generation (MWh)&quot;,&quot;type&quot;:&quot;quantitative&quot;}},&quot;title&quot;:&quot;Total: Cherokee (EIA id=469), Adams, CO&quot;,&quot;width&quot;:&quot;container&quot;,&quot;&#36;schema&quot;:&quot;https://vega.github.io/schema/vega-lite/v5.20.1.json&quot;}' data-chart-selection='true' data-field-selection='true' data-embed-options='{}'></marimo-vega></marimo-ui-element><marimo-ui-element object-id='nWHF-1' random-id='f8d2e9c7-5164-1ef3-4460-63482e32c54f'><marimo-vega data-initial-value='{}' data-label='null' data-spec='{&quot;config&quot;:{&quot;view&quot;:{&quot;continuousWidth&quot;:300,&quot;continuousHeight&quot;:300}},&quot;data&quot;:{&quot;url&quot;:&quot;./@file/79850-20535739-oxYqFqGu.arrow&quot;,&quot;format&quot;:{&quot;type&quot;:&quot;arrow&quot;}},&quot;mark&quot;:{&quot;type&quot;:&quot;line&quot;},&quot;encoding&quot;:{&quot;color&quot;:{&quot;field&quot;:&quot;fuel_type_code_pudl&quot;,&quot;type&quot;:&quot;nominal&quot;},&quot;x&quot;:{&quot;field&quot;:&quot;report_date&quot;,&quot;title&quot;:&quot;Report date&quot;,&quot;type&quot;:&quot;temporal&quot;},&quot;y&quot;:{&quot;aggregate&quot;:&quot;sum&quot;,&quot;field&quot;:&quot;net_generation_mwh&quot;,&quot;title&quot;:&quot;Net Generation (MWh)&quot;,&quot;type&quot;:&quot;quantitative&quot;}},&quot;title&quot;:&quot;By fuel type: Cherokee (EIA id=469), Adams, CO&quot;,&quot;width&quot;:&quot;container&quot;,&quot;&#36;schema&quot;:&quot;https://vega.github.io/schema/vega-lite/v5.20.1.json&quot;}' data-chart-selection='true' data-field-selection='true' data-embed-options='{}'></marimo-vega></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "iLit",
+      "code_hash": "254c9a486b51077a7503c3438866cebf",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"generators\">Generators</h1></span><marimo-ui-element object-id='iLit-0' random-id='1573fb06-c988-1d7c-8b39-34359b1a7862'><marimo-vega data-initial-value='{}' data-label='null' data-spec='{&quot;config&quot;:{&quot;view&quot;:{&quot;continuousWidth&quot;:300,&quot;continuousHeight&quot;:300}},&quot;data&quot;:{&quot;url&quot;:&quot;./@file/127690-20535739-fR345aFm.arrow&quot;,&quot;format&quot;:{&quot;type&quot;:&quot;arrow&quot;}},&quot;mark&quot;:{&quot;type&quot;:&quot;line&quot;},&quot;encoding&quot;:{&quot;color&quot;:{&quot;field&quot;:&quot;generator_id&quot;,&quot;type&quot;:&quot;nominal&quot;},&quot;x&quot;:{&quot;field&quot;:&quot;report_date&quot;,&quot;title&quot;:&quot;Report date&quot;,&quot;type&quot;:&quot;temporal&quot;},&quot;y&quot;:{&quot;field&quot;:&quot;net_generation_mwh&quot;,&quot;title&quot;:&quot;Net Generation (MWh)&quot;,&quot;type&quot;:&quot;quantitative&quot;}},&quot;title&quot;:&quot;By generator: Cherokee (EIA id=469), Adams, CO&quot;,&quot;width&quot;:&quot;container&quot;,&quot;&#36;schema&quot;:&quot;https://vega.github.io/schema/vega-lite/v5.20.1.json&quot;}' data-chart-selection='true' data-field-selection='true' data-embed-options='{}'></marimo-vega></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n/Users/austensharpe/Desktop/Repos/pudl-examples/.pixi/envs/wasm/lib/python3.12/site-packages/altair/utils/data.py:71: UserWarning: You passed a `<class 'narwhals.stable.v1.DataFrame'>` to `is_pandas_dataframe`.\n\nHint: Instead of e.g. `is_pandas_dataframe(df)`, did you mean `is_pandas_dataframe(df.to_native())`?\n  return _is_pandas_dataframe(obj) or isinstance(\n",
+          "mimetype": "text/plain"
+        }
+      ]
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "5df7e705362bac1e5567fcb911ba8bf2",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "1ec0ef02cb7f72e5b0bf4986968baeee",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><div style='display: flex;flex: 1;flex-direction: row;justify-content: space-between;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><div style='flex: 1;display: flex;min-width: 0;min-height: 0'><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='ZHCJ-25' random-id='4e3508a9-fd37-959d-1d13-e4acc44cb9ef'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[]}' data-label='null' data-element-ids='{&quot;ZHCJ-24&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-generator_id\" style=\"display: flex; gap: 0.5rem; \">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">generator_id</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-24' random-id='2694c64c-b7c7-2111-bf38-d3c8d598c8f1'><marimo-multiselect data-initial-value='[]' data-label='null' data-options='[&quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;,&quot;5&quot;,&quot;6&quot;,&quot;7&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element><marimo-ui-element object-id='ZHCJ-27' random-id='aec1b53d-276f-1e47-a559-1bb12e88c0b1'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[]}' data-label='null' data-element-ids='{&quot;ZHCJ-26&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-technology_description\" style=\"display: flex; gap: 0.5rem; \">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">technology_description</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-26' random-id='42fe3e6e-b85e-9462-e27e-a7743ac8ec71'><marimo-multiselect data-initial-value='[]' data-label='null' data-options='[&quot;Conventional Steam Coal&quot;,&quot;Natural Gas Fired Combined Cycle&quot;,&quot;Natural Gas Steam Turbine&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element><marimo-ui-element object-id='ZHCJ-29' random-id='39122ef8-44f4-df89-4a21-6c0d819e64a1'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[]}' data-label='null' data-element-ids='{&quot;ZHCJ-28&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-energy_source_code_1\" style=\"display: flex; gap: 0.5rem; \">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">energy_source_code_1</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-28' random-id='86ba23d5-2daf-71a0-8da0-0c5770cca746'><marimo-multiselect data-initial-value='[]' data-label='null' data-options='[&quot;NG&quot;,&quot;BIT&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element><marimo-ui-element object-id='ZHCJ-31' random-id='cdd4429e-936b-022a-0fcd-015eca59b8b4'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[]}' data-label='null' data-element-ids='{&quot;ZHCJ-30&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-prime_mover_code\" style=\"display: flex; gap: 0.5rem; \">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">prime_mover_code</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-30' random-id='0f64e17b-0943-4c4b-6136-70fc66220281'><marimo-multiselect data-initial-value='[]' data-label='null' data-options='[&quot;ST&quot;,&quot;CT&quot;,&quot;CA&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element></div></div><div style='flex: 1;display: flex;min-width: 0;min-height: 0'><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='ZHCJ-33' random-id='b4294102-0021-1448-85da-23479b88797e'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[]}' data-label='null' data-element-ids='{&quot;ZHCJ-32&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-operational_status\" style=\"display: flex; gap: 0.5rem; \">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">operational_status</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-32' random-id='22d2c1c2-54b3-0403-c316-a542b5e32375'><marimo-multiselect data-initial-value='[]' data-label='null' data-options='[&quot;existing&quot;,&quot;retired&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element><marimo-ui-element object-id='ZHCJ-35' random-id='67913f41-6a77-eac0-19ac-87f83c239751'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[]}' data-label='null' data-element-ids='{&quot;ZHCJ-34&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-fuel_type_code_pudl\" style=\"display: flex; gap: 0.5rem; \">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">fuel_type_code_pudl</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-34' random-id='3882d58c-dfcf-fb0f-1dc4-2cd7180c20b9'><marimo-multiselect data-initial-value='[]' data-label='null' data-options='[&quot;gas&quot;,&quot;coal&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element><marimo-ui-element object-id='ZHCJ-37' random-id='399a878e-6c0c-57a1-809f-2ab4ab23c2b8'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[&quot;False&quot;]}' data-label='null' data-element-ids='{&quot;ZHCJ-36&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-associated_combined_heat_power\" style=\"display: flex; gap: 0.5rem; color: #bbbbbb\">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">associated_combined_heat_power</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-36' random-id='1a3c0859-7679-3ac5-ae00-7340a8838a61'><marimo-multiselect data-initial-value='[&quot;False&quot;]' data-label='null' data-options='[&quot;False&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element><marimo-ui-element object-id='ZHCJ-39' random-id='e6693840-3b48-a8ca-c3b9-440a6dd8c797'><marimo-dict data-initial-value='{&quot;multiselect&quot;:[]}' data-label='null' data-element-ids='{&quot;ZHCJ-38&quot;:&quot;multiselect&quot;}'><div data-testid=\"genselect-operational_status_code\" style=\"display: flex; gap: 0.5rem; \">\n     <label style=\"flex: 0.9375 1 0%; text-align: end;\">operational_status_code</label>\n     <div style=\"flex: 1 1 0%;\"><marimo-ui-element object-id='ZHCJ-38' random-id='db3644e8-802d-a686-3108-346f60457589'><marimo-multiselect data-initial-value='[]' data-label='null' data-options='[&quot;OP&quot;,&quot;RE&quot;]' data-full-width='false'></marimo-multiselect></marimo-ui-element></div>\n </div></marimo-dict></marimo-ui-element></div></div></div><div style='background:#eee'><div style='display: flex;flex: 1;flex-direction: row;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">All 7 generators selected</span></span></div></div></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "bf5c9486a4b1b69f6b8a6fb11673b76a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "6c08164aa0e1d4feaa3ce61b6a9f912a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='TqIu-0' random-id='d03007de-ad16-6e34-c596-a8b98a46a1b4'><marimo-table data-initial-value='[]' data-label='null' data-data='&quot;[{&#92;&quot;&#92;&quot;:&#92;&quot;technology_description&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;Conventional Steam Coal&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;Conventional Steam Coal&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;Conventional Steam Coal&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;Natural Gas Steam Turbine&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;Natural Gas Fired Combined Cycle&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;Natural Gas Fired Combined Cycle&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;Natural Gas Fired Combined Cycle&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;operational_status&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;retired&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;retired&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;retired&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;existing&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;existing&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;existing&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;existing&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;generator_operating_date&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;1957-06-01 00:00:00&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;1959-06-01 00:00:00&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;1962-06-01 00:00:00&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;1968-06-01 00:00:00&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;2015-08-01 00:00:00&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;2015-08-01 00:00:00&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;2015-08-01 00:00:00&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;original_planned_generator_operating_date&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;2015-12-01 00:00:00&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;2015-12-01 00:00:00&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;2015-12-01 00:00:00&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;generator_retirement_date&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;2012-04-01 00:00:00&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;2011-10-01 00:00:00&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;2015-08-01 00:00:00&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;NaT&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;planned_generator_retirement_date&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;2027-12-01 00:00:00&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;NaT&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;NaT&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;capacity_mw&#92;&quot;,&#92;&quot;1&#92;&quot;:125.0,&#92;&quot;2&#92;&quot;:125.0,&#92;&quot;3&#92;&quot;:170.5,&#92;&quot;4&#92;&quot;:380.79998779296875,&#92;&quot;5&#92;&quot;:185.3000030517578,&#92;&quot;6&#92;&quot;:185.3000030517578,&#92;&quot;7&#92;&quot;:255.0},{&#92;&quot;&#92;&quot;:&#92;&quot;summer_capacity_mw&#92;&quot;,&#92;&quot;1&#92;&quot;:107.0,&#92;&quot;2&#92;&quot;:106.0,&#92;&quot;3&#92;&quot;:152.0,&#92;&quot;4&#92;&quot;:310.0,&#92;&quot;5&#92;&quot;:168.0,&#92;&quot;6&#92;&quot;:168.0,&#92;&quot;7&#92;&quot;:240.0},{&#92;&quot;&#92;&quot;:&#92;&quot;winter_capacity_mw&#92;&quot;,&#92;&quot;1&#92;&quot;:107.0,&#92;&quot;2&#92;&quot;:106.0,&#92;&quot;3&#92;&quot;:152.0,&#92;&quot;4&#92;&quot;:310.0,&#92;&quot;5&#92;&quot;:176.0,&#92;&quot;6&#92;&quot;:176.0,&#92;&quot;7&#92;&quot;:248.0},{&#92;&quot;&#92;&quot;:&#92;&quot;fuel_type_code_pudl&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;coal&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;coal&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;coal&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;gas&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;gas&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;gas&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;gas&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;prime_mover_code&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;ST&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;ST&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;ST&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;ST&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;CT&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;CT&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;CA&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;energy_source_code_1&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;BIT&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;BIT&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;BIT&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;NG&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;NG&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;NG&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;NG&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;associated_combined_heat_power&#92;&quot;,&#92;&quot;1&#92;&quot;:false,&#92;&quot;2&#92;&quot;:false,&#92;&quot;3&#92;&quot;:false,&#92;&quot;4&#92;&quot;:false,&#92;&quot;5&#92;&quot;:false,&#92;&quot;6&#92;&quot;:false,&#92;&quot;7&#92;&quot;:false},{&#92;&quot;&#92;&quot;:&#92;&quot;bypass_heat_recovery&#92;&quot;,&#92;&quot;1&#92;&quot;:false,&#92;&quot;2&#92;&quot;:false,&#92;&quot;3&#92;&quot;:false,&#92;&quot;4&#92;&quot;:false,&#92;&quot;5&#92;&quot;:true,&#92;&quot;6&#92;&quot;:true,&#92;&quot;7&#92;&quot;:false},{&#92;&quot;&#92;&quot;:&#92;&quot;duct_burners&#92;&quot;,&#92;&quot;1&#92;&quot;:false,&#92;&quot;2&#92;&quot;:false,&#92;&quot;3&#92;&quot;:false,&#92;&quot;4&#92;&quot;:false,&#92;&quot;5&#92;&quot;:false,&#92;&quot;6&#92;&quot;:false,&#92;&quot;7&#92;&quot;:true},{&#92;&quot;&#92;&quot;:&#92;&quot;fluidized_bed_tech&#92;&quot;,&#92;&quot;1&#92;&quot;:null,&#92;&quot;2&#92;&quot;:null,&#92;&quot;3&#92;&quot;:false,&#92;&quot;4&#92;&quot;:false,&#92;&quot;5&#92;&quot;:null,&#92;&quot;6&#92;&quot;:null,&#92;&quot;7&#92;&quot;:null},{&#92;&quot;&#92;&quot;:&#92;&quot;fuel_type_count&#92;&quot;,&#92;&quot;1&#92;&quot;:2,&#92;&quot;2&#92;&quot;:2,&#92;&quot;3&#92;&quot;:2,&#92;&quot;4&#92;&quot;:2,&#92;&quot;5&#92;&quot;:2,&#92;&quot;6&#92;&quot;:2,&#92;&quot;7&#92;&quot;:2},{&#92;&quot;&#92;&quot;:&#92;&quot;operational_status_code&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;RE&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;RE&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;RE&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;OP&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;OP&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;OP&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;OP&#92;&quot;},{&#92;&quot;&#92;&quot;:&#92;&quot;previously_canceled&#92;&quot;,&#92;&quot;1&#92;&quot;:null,&#92;&quot;2&#92;&quot;:null,&#92;&quot;3&#92;&quot;:null,&#92;&quot;4&#92;&quot;:null,&#92;&quot;5&#92;&quot;:false,&#92;&quot;6&#92;&quot;:false,&#92;&quot;7&#92;&quot;:false},{&#92;&quot;&#92;&quot;:&#92;&quot;pulverized_coal_tech&#92;&quot;,&#92;&quot;1&#92;&quot;:true,&#92;&quot;2&#92;&quot;:true,&#92;&quot;3&#92;&quot;:true,&#92;&quot;4&#92;&quot;:null,&#92;&quot;5&#92;&quot;:null,&#92;&quot;6&#92;&quot;:null,&#92;&quot;7&#92;&quot;:null},{&#92;&quot;&#92;&quot;:&#92;&quot;solid_fuel_gasification&#92;&quot;,&#92;&quot;1&#92;&quot;:false,&#92;&quot;2&#92;&quot;:false,&#92;&quot;3&#92;&quot;:false,&#92;&quot;4&#92;&quot;:false,&#92;&quot;5&#92;&quot;:false,&#92;&quot;6&#92;&quot;:false,&#92;&quot;7&#92;&quot;:false},{&#92;&quot;&#92;&quot;:&#92;&quot;subcritical_tech&#92;&quot;,&#92;&quot;1&#92;&quot;:true,&#92;&quot;2&#92;&quot;:true,&#92;&quot;3&#92;&quot;:true,&#92;&quot;4&#92;&quot;:true,&#92;&quot;5&#92;&quot;:null,&#92;&quot;6&#92;&quot;:null,&#92;&quot;7&#92;&quot;:null},{&#92;&quot;&#92;&quot;:&#92;&quot;topping_bottoming_code&#92;&quot;,&#92;&quot;1&#92;&quot;:&#92;&quot;X&#92;&quot;,&#92;&quot;2&#92;&quot;:&#92;&quot;X&#92;&quot;,&#92;&quot;3&#92;&quot;:&#92;&quot;X&#92;&quot;,&#92;&quot;4&#92;&quot;:&#92;&quot;X&#92;&quot;,&#92;&quot;5&#92;&quot;:&#92;&quot;X&#92;&quot;,&#92;&quot;6&#92;&quot;:&#92;&quot;X&#92;&quot;,&#92;&quot;7&#92;&quot;:&#92;&quot;X&#92;&quot;}]&quot;' data-total-rows='23' data-total-columns='7' data-max-columns='50' data-banner-text='&quot;&quot;' data-pagination='false' data-page-size='50' data-field-types='[[&quot;1&quot;,[&quot;string&quot;,&quot;object&quot;]],[&quot;2&quot;,[&quot;string&quot;,&quot;object&quot;]],[&quot;3&quot;,[&quot;string&quot;,&quot;object&quot;]],[&quot;4&quot;,[&quot;string&quot;,&quot;object&quot;]],[&quot;5&quot;,[&quot;string&quot;,&quot;object&quot;]],[&quot;6&quot;,[&quot;string&quot;,&quot;object&quot;]],[&quot;7&quot;,[&quot;string&quot;,&quot;object&quot;]]]' data-show-filters='true' data-show-download='true' data-show-column-summaries='true' data-show-data-types='true' data-show-page-size-selector='true' data-show-column-explorer='true' data-show-chart-builder='true' data-row-headers='[[&quot;&quot;,[&quot;string&quot;,&quot;object&quot;]]]' data-has-stable-row-id='false' data-lazy='false' data-preload='false' data-download-file-name='&quot;download&quot;'></marimo-table></marimo-ui-element></div>"
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
