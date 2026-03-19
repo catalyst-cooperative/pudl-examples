@@ -4,6 +4,14 @@ __generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Plant Explorer
+    """)
+    return
+
+
 @app.cell
 def _():
     import marimo as mo
@@ -44,7 +52,8 @@ def _(pd):
 
 @app.function
 def pretty_plant_name(row):
-    return f"{row.plant_name_eia} (EIA id={row.plant_id_eia})"
+    return row.plant_name_eia
+    # return f"{row.plant_name_eia} (EIA id={row.plant_id_eia})"
 
 
 @app.function
@@ -135,7 +144,8 @@ def _(mo, out_eia__yearly_plants, selected_county, selected_state):
 
 @app.cell
 def _(mo, selected_county, selected_plant, selected_state):
-    mo.hstack([selected_state, selected_county, selected_plant])
+    mo.output.append(mo.md("Pick a plant to explore:"))
+    mo.output.append(mo.hstack([selected_state, selected_county, selected_plant]))
     return
 
 
@@ -261,15 +271,16 @@ def _(
 
     mo.vstack(
         [
-            mo.md(f"# {this_plant.name}"),
-            selected_year,
+            mo.md(f"## {this_plant.name} (EIA id={this_plant.plant_id_eia})"),
+            mo.hstack([selected_year, mo.md("""<div data-tooltip="This is a tooltip">::lucide:rocket::</div>""")]),
             selected_timeseries_start,
             mo.md("----"),
+            mo.md("Plant attributes:"),
             mo.hstack(
                 [
                     mo.vstack(
                         [
-                            mo.md("## Grid"),
+                            mo.md("### Grid"),
                             mo.plain(
                                 this_plant[
                                     [
@@ -287,7 +298,7 @@ def _(
                     ),
                     mo.vstack(
                         [
-                            mo.md("## Location"),
+                            mo.md("### Location"),
                             mo.plain(
                                 this_plant[
                                     [
@@ -304,7 +315,7 @@ def _(
                             ),
                         ]
                     ),
-                    mo.vstack([mo.md("## Function"), mo.plain(this_plant__summary)]),
+                    mo.vstack([mo.md("### Function"), mo.plain(this_plant__summary)]),
                 ],
                 justify="space-around",
                 widths=[1.2, 0.9, 1],
