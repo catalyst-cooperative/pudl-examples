@@ -570,16 +570,22 @@ def _(
                 widths="equal",
             )
         )
-    selected__generators = this_plant__generators[
-        functools.reduce(
-            lambda accum, update: accum & update,
-            [
-                this_plant__generators[k].isin(v.value["multiselect"])
-                for k, v in filters.items()
-                if v.value["multiselect"]
-            ],
-        )
+
+    filter_selections = [
+        this_plant__generators[k].isin(v.value["multiselect"])
+        for k, v in filters.items()
+        if v.value["multiselect"]
     ]
+    selected__generators = (
+        this_plant__generators[
+            functools.reduce(
+                lambda accum, update: accum & update,
+                filter_selections,
+            )
+        ]
+        if filter_selections
+        else this_plant__generators
+    )
     if this_plant__generators.shape[0] > 1:
         mo.output.append(
             mo.md(
