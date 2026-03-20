@@ -4,10 +4,17 @@ __generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
 
+@app.cell
+def _(mo, selected_county, selected_plant, selected_state):
+    mo.output.append(mo.md("# Plant Explorer"))
+    mo.output.append(mo.hstack([selected_state, selected_county, selected_plant]))
+    return
+
+
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    # Plant Explorer
+def _(mo, selected_plant, this_plant):
+    mo.md(f"""
+    # {"{} (EIA id={})".format(this_plant.name, this_plant.plant_id_eia) if selected_plant.value is not None else ""}
     """)
     return
 
@@ -59,6 +66,11 @@ def pretty_plant_name(row):
 @app.function
 def pretty_value_counts(series):
     return ", ".join(f"{k} ({v})" for k, v in series.value_counts().to_dict().items())
+
+
+@app.function
+def table_preview_href(name):
+    return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}">{name}</a>"""
 
 
 @app.cell
@@ -143,13 +155,6 @@ def _(mo, out_eia__yearly_plants, selected_county, selected_state):
 
 
 @app.cell
-def _(mo, selected_county, selected_plant, selected_state):
-    mo.output.append(mo.md("Pick a plant to explore:"))
-    mo.output.append(mo.hstack([selected_state, selected_county, selected_plant]))
-    return
-
-
-@app.cell
 def _(mo, out_eia__yearly_plants, selected_plant):
     available_years = (
         out_eia__yearly_plants.loc[
@@ -160,7 +165,7 @@ def _(mo, out_eia__yearly_plants, selected_plant):
     )
     selected_year = mo.ui.dropdown(
         options={str(i): i for i in available_years},
-        label="Plant facts from year:",
+        label="Plant attributes from year:",
         value=str(available_years.iloc[0]),
     )
     return available_years, selected_year
@@ -170,7 +175,7 @@ def _(mo, out_eia__yearly_plants, selected_plant):
 def _(available_years, mo, selected_year):
     selected_timeseries_start = mo.ui.dropdown(
         options={str(i): i for i in available_years if i <= selected_year.value},
-        label="Timeseries going back to:",
+        label="Generation timeseries going back to:",
         value=str(available_years.min()),
     )
     return (selected_timeseries_start,)
@@ -271,16 +276,31 @@ def _(
 
     mo.vstack(
         [
-            mo.md(f"## {this_plant.name} (EIA id={this_plant.plant_id_eia})"),
-            mo.hstack([selected_year, mo.md("""<div data-tooltip="This is a tooltip">::lucide:rocket::</div>""")]),
-            selected_timeseries_start,
+            mo.hstack(
+                [
+                    mo.md(f"""<div data-tooltip="By default we show you plant attributes from the most recent year of data available.
+                If you want to see plant attributes from a previous year, select here.">{mo.icon("lucide:info")}</div>"""),
+                    selected_year,
+                ],
+                justify="start",
+            ),
+            mo.hstack(
+                [
+                    mo.md(f"""<div data-tooltip="By default we extend the timeseries plots below as far back as we have data available.
+                To prune to a more recent year, select here.">{mo.icon("lucide:info")}</div>"""),
+                    selected_timeseries_start,
+                ],
+                justify="start",
+            ),
             mo.md("----"),
-            mo.md("Plant attributes:"),
+            mo.md(
+                "Here is what we know about how this plant is situated within the grid, its physical location in space, and what functional generation capabilities it has."
+            ),
             mo.hstack(
                 [
                     mo.vstack(
                         [
-                            mo.md("### Grid"),
+                            mo.md("## Grid Attributes"),
                             mo.plain(
                                 this_plant[
                                     [
@@ -292,13 +312,18 @@ def _(
                                         "utility_id_eia",
                                         "utility_id_pudl",
                                     ]
-                                ].dropna()
+                                ]
+                                .dropna()
+                                .rename("")
+                            ),
+                            mo.md(
+                                f"via {table_preview_href('out_eia__yearly_plants')}"
                             ),
                         ]
                     ),
                     mo.vstack(
                         [
-                            mo.md("### Location"),
+                            mo.md("## Location Attributes"),
                             mo.plain(
                                 this_plant[
                                     [
@@ -311,11 +336,26 @@ def _(
                                         "latitude",
                                         "longitude",
                                     ]
-                                ].dropna()
+                                ]
+                                .dropna()
+                                .rename("")
+                            ),
+                            mo.md(
+                                f"via {table_preview_href('out_eia__yearly_plants')}"
                             ),
                         ]
                     ),
-                    mo.vstack([mo.md("### Function"), mo.plain(this_plant__summary)]),
+                    mo.vstack(
+                        [
+                            mo.md("## Function Attributes"),
+                            mo.plain(this_plant__summary.rename("")),
+                            mo.md(
+                                f"via {table_preview_href('out_eia__yearly_generators')};<br/>"
+                                f"via {table_preview_href('out_eia923__monthly_generation_fuel_combined')}"
+                                ""
+                            ),
+                        ]
+                    ),
                 ],
                 justify="space-around",
                 widths=[1.2, 0.9, 1],
@@ -332,41 +372,59 @@ def _(
 
 @app.cell
 def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
-    if this_plant__monthly_generation_fuel_combined.shape[0] == 0:
-        mo.output.append(
-            mo.callout("No generation data available for this plant.", kind="warn")
-        )
-    else:
-        plant_netgen_chart = (
-            alt.Chart(this_plant__monthly_generation_fuel_combined)
-            .mark_line()
-            .encode(
-                alt.X("report_date").title("Report date"),
-                alt.Y("net_generation_mwh", aggregate="sum").title(
-                    "Net Generation (MWh)"
-                ),
-            )
-            .properties(
-                title=f"Total: {this_plant.name}, {this_plant['city'] or this_plant['county']}, {this_plant['state']}"
-            )
-        )
-        mo.output.append(mo.ui.altair_chart(plant_netgen_chart))
+    mo.output.append(mo.md("## Plant-level generation"))
+    mo.stop(
+        this_plant__monthly_generation_fuel_combined.shape[0] == 0,
+        mo.md("No plant-level generation data available for this plant.").style(
+            {"background": "#fee"}
+        ),
+    )
+    mo.output.append(
+        mo.md("Here is a timeseries view of the electricity produced at this plant.")
+    )
 
-        plant_netgen_bysource_chart = (
-            alt.Chart(this_plant__monthly_generation_fuel_combined)
-            .mark_line()
-            .encode(
-                alt.X("report_date").title("Report date"),
-                alt.Y("net_generation_mwh", aggregate="sum").title(
-                    "Net Generation (MWh)"
-                ),
-                color="fuel_type_code_pudl",
-            )
-            .properties(
-                title=f"By fuel type: {this_plant.name}, {this_plant['city'] or this_plant['county']}, {this_plant['state']}"
-            )
+    plant_netgen_chart = (
+        alt.Chart(
+            this_plant__monthly_generation_fuel_combined,
+            title=alt.Title(
+                f"Net Generation: {this_plant.name}, {this_plant['city'] or this_plant['county']}, {this_plant['state']}",
+                subtitle="Total",
+            ),
         )
-        mo.output.append(mo.ui.altair_chart(plant_netgen_bysource_chart))
+        .mark_line()
+        .encode(
+            alt.X("report_date").title("Report date"),
+            alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
+        )
+    )
+    mo.output.append(mo.ui.altair_chart(plant_netgen_chart))
+    mo.output.append(
+        mo.md(
+            f"via {table_preview_href('out_eia923__monthly_generation_fuel_combined')}"
+        ).style({"margin-bottom": "2rem"})
+    )
+
+    plant_netgen_bysource_chart = (
+        alt.Chart(
+            this_plant__monthly_generation_fuel_combined,
+            title=alt.Title(
+                f"Net Generation: {this_plant.name}, {this_plant['city'] or this_plant['county']}, {this_plant['state']}",
+                subtitle="By fuel type",
+            ),
+        )
+        .mark_line()
+        .encode(
+            alt.X("report_date").title("Report date"),
+            alt.Y("net_generation_mwh", aggregate="sum").title("Net Generation (MWh)"),
+            color="fuel_type_code_pudl",
+        )
+    )
+    mo.output.append(mo.ui.altair_chart(plant_netgen_bysource_chart))
+    mo.output.append(
+        mo.md(
+            f"via {table_preview_href('out_eia923__monthly_generation_fuel_combined')}"
+        )
+    )
     return
 
 
@@ -379,35 +437,46 @@ def _(
     this_plant__generators,
     this_plant__monthly_generation,
 ):
-    if selected_plant.value is not None:
-        mo.output.append(mo.md("# Generators"))
-    if this_plant__monthly_generation.shape[0] == 0:
+    mo.stop(not selected_plant.value)
+    mo.stop(
+        this_plant__monthly_generation.shape[0] == 0,
+        mo.md("No generator-level generation data available for this plant.").style(
+            {"background": "#fee"}
+        ),
+    )
+    mo.output.append(mo.md("## Generator-level generation"))
+    mo.output.append(
+        mo.md(
+            "Here is a timeseries view of the most granular data we have available on the electricity produced by each generator at this plant. Be aware, the plot below may not account for all of the electricity reported above, because different types and sizes of generators have different reporting requirements."
+        ).style({"margin-bottom": "2rem"})
+    )
+
+    n_monthly_gens = len(this_plant__monthly_generation.generator_id.unique())
+    if n_monthly_gens < this_plant__generators.shape[0]:
         mo.output.append(
             mo.md(
-                "No generation data available at the generator level for this plant."
-            ).style({"background": "#fee"})
+                f"Generation data available for {n_monthly_gens} of {this_plant__generators.shape[0]} generators for this plant."
+            ).style({"background": "#eee"})
         )
-    else:
-        n_monthly_gens = len(this_plant__monthly_generation.generator_id.unique())
-        if n_monthly_gens < this_plant__generators.shape[0]:
-            mo.output.append(
-                mo.md(
-                    f"Generation data available for {n_monthly_gens} of {this_plant__generators.shape[0]} generators for this plant."
-                ).style({"background": "#eee"})
-            )
-        bygen_chart = (
-            alt.Chart(this_plant__monthly_generation)
-            .mark_line()
-            .encode(
-                alt.X("report_date").title("Report date"),
-                alt.Y("net_generation_mwh").title("Net Generation (MWh)"),
-                color="generator_id",
-            )
-            .properties(
-                title=f"By generator: {this_plant.name}, {this_plant['city'] or this_plant['county']}, {this_plant['state']}"
-            )
+    bygen_chart = (
+        alt.Chart(
+            this_plant__monthly_generation,
+            title=alt.Title(
+                f"Net generation: {this_plant.name}, {this_plant['city'] or this_plant['county']}, {this_plant['state']}",
+                subtitle="By generator",
+            ),
         )
-        mo.output.append(mo.ui.altair_chart(bygen_chart))
+        .mark_line()
+        .encode(
+            alt.X("report_date").title("Report date"),
+            alt.Y("net_generation_mwh").title("Net Generation (MWh)"),
+            color="generator_id",
+        )
+    )
+    mo.output.append(mo.ui.altair_chart(bygen_chart))
+    mo.output.append(
+        mo.md(f"via {table_preview_href('out_eia923__monthly_generation')}")
+    )
     return
 
 
@@ -476,13 +545,20 @@ def _(
     mo,
     this_plant__generators,
 ):
-    if len(filters) == 0:
-        mo.output.append(
-            mo.md("No other information about generators for this plant.").style(
-                {"background": "#fee"}
-            )
+    mo.stop(
+        len(filters) == 0,
+        mo.md("No other information about generators for this plant.").style(
+            {"background": "#fee"}
+        ),
+    )
+    mo.output.append(mo.md("## Generator Attributes"))
+    mo.output.append(
+        mo.md(
+            f"Here is what we know about each generator at this plant.{' You can review attributes of all generators at once, or use the filters to focus on generators that meet particular criteria.' if this_plant__generators.shape[0] > 1 else ''}"
         )
-    else:
+    )
+
+    if this_plant__generators.shape[0] > 1:
         mo.output.append(
             mo.hstack(
                 [
@@ -494,32 +570,28 @@ def _(
                 widths="equal",
             )
         )
-        selected__generators = this_plant__generators[
-            functools.reduce(
-                lambda accum, update: accum & update,
-                [
-                    this_plant__generators[k].isin(v.value["multiselect"])
-                    for k, v in filters.items()
-                    if v.value["multiselect"]
-                ],
-            )
-        ]
+    selected__generators = this_plant__generators[
+        functools.reduce(
+            lambda accum, update: accum & update,
+            [
+                this_plant__generators[k].isin(v.value["multiselect"])
+                for k, v in filters.items()
+                if v.value["multiselect"]
+            ],
+        )
+    ]
+    if this_plant__generators.shape[0] > 1:
         mo.output.append(
-            mo.hstack(
-                [
-                    mo.md(
-                        (
-                            "All"
-                            if selected__generators.shape[0]
-                            == this_plant__generators.shape[0]
-                            else f"{selected__generators.shape[0]} of"
-                        )
-                        + f" {this_plant__generators.shape[0]} generators selected"
-                    ),
-                ],
-                justify="start",
+            mo.md(
+                (
+                    "All"
+                    if selected__generators.shape[0] == this_plant__generators.shape[0]
+                    else f"{selected__generators.shape[0]} of"
+                )
+                + f" {this_plant__generators.shape[0]} generators selected"
             ).style(background="#eee")
         )
+
     return (selected__generators,)
 
 
@@ -563,18 +635,17 @@ def _(
     remaining_columns,
     selected__generators,
 ):
-    if filters.value:
-        mo.ui.table.default_page_size = 50
-        mo.output.append(
-            mo.ui.table(
-                selected__generators[
-                    ops_columns + nrg_columns[1:] + remaining_columns[1:]
-                ]
-                .set_index("generator_id")
-                .T.dropna(thresh=1),
-                selection=None,
-            )
+    mo.stop(not filters.value)
+    mo.ui.table.default_page_size = 50
+    mo.output.append(
+        mo.ui.table(
+            selected__generators[ops_columns + nrg_columns[1:] + remaining_columns[1:]]
+            .set_index("generator_id")
+            .T.dropna(thresh=1),
+            selection=None,
         )
+    )
+    mo.output.append(mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"))
     return
 
 
