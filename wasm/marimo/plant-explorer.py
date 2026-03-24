@@ -7,7 +7,11 @@ app = marimo.App(width="medium")
 @app.cell
 def _(mo, selected_county, selected_plant, selected_state):
     mo.output.append(mo.md("# Plant Explorer"))
-    mo.output.append(mo.md('Explore attributes of any plant that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia860.html" target="_blank">EIA-860</a> or <a href="https://docs.catalyst.coop/pudl/data_sources/eia923.html" target="_blank">EIA-923</a>. Select a state, county and specific plant to explore its attributes, generation over time and generators.'))
+    mo.output.append(
+        mo.md(
+            'Explore attributes of any plant that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia860.html" target="_blank">EIA-860</a> or <a href="https://docs.catalyst.coop/pudl/data_sources/eia923.html" target="_blank">EIA-923</a>. Select a state, county and specific plant to explore its attributes, generation over time and generators.'
+        )
+    )
     mo.output.append(mo.hstack([selected_state, selected_county, selected_plant]))
     return
 
@@ -70,7 +74,7 @@ def pretty_value_counts(series):
 
 @app.function
 def table_preview_href(name):
-    return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>""" 
+    return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>"""
 
 
 @app.cell
