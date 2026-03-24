@@ -298,7 +298,7 @@ def _(
             ),
             mo.md("----"),
             mo.md(
-                "Here is what we know about how this plant is situated within the grid, its physical location in space, and what functional generation capabilities it has."
+                "Here is what we know about how this plant is situated within the grid, its physical location in space, and what operational generation capabilities it has."
             ),
             mo.hstack(
                 [
