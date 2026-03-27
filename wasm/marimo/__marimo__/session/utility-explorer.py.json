@@ -1,43 +1,169 @@
 {
   "version": "1",
   "metadata": {
-    "marimo_version": "0.20.4",
+    "marimo_version": "0.21.1",
     "script_metadata_hash": null
   },
   "cells": [
     {
       "id": "Hbol",
       "code_hash": "1c8422ac3aa5d3983d7d8f067112bb9f",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
-      "id": "MJUe",
-      "code_hash": "e353e8cf78f42ab0b4b54c22b50b0a69",
-      "outputs": [],
+      "id": "qhyS",
+      "code_hash": "5e0992f51b8017758f634d3035eda3e5",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "LJNU",
+      "code_hash": "fab8af0debe323b9b029c04d8b1df31c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aMyW",
+      "code_hash": "5b58b8daf09cee18683cae239ea0161c",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "vblA",
-      "code_hash": "33e122cf5afbf9bee3fe0f982925e821",
-      "outputs": [],
+      "code_hash": "ffa199e1301175b5cba084808c900eb7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
-      "id": "bkHC",
-      "code_hash": "1c9598ec64a5dd4fa251c494d0cea505",
-      "outputs": [],
+      "id": "dCQP",
+      "code_hash": "fd522f8aec5ad5c3d8b0089251628f96",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iKmP",
+      "code_hash": "05a417d8409e3d47810d7fc5bd696179",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "lEQa",
-      "code_hash": "3a7613cb7ea1f39f094d59d17aed6c6e",
-      "outputs": [],
+      "code_hash": "5b1dec78ca48f2844f341e6ddc40ef01",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "PKri",
-      "code_hash": "a8c25a514c7b7e9f43d6e5440c092ddd",
+      "code_hash": "5bd4e56355c04ed2d9b443d4e982e644",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "655379dc46c2d0fe365d748539b5b041",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><marimo-ui-element object-id='dCQP-0' random-id='185b4670-5482-41f2-7274-56a70910c58b'><marimo-dropdown data-initial-value='[&quot;CO&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select a state:&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;AK&quot;,&quot;AL&quot;,&quot;AR&quot;,&quot;AZ&quot;,&quot;CA&quot;,&quot;CO&quot;,&quot;CT&quot;,&quot;DC&quot;,&quot;DE&quot;,&quot;FL&quot;,&quot;GA&quot;,&quot;GU&quot;,&quot;HI&quot;,&quot;IA&quot;,&quot;ID&quot;,&quot;IL&quot;,&quot;IN&quot;,&quot;KS&quot;,&quot;KY&quot;,&quot;LA&quot;,&quot;MA&quot;,&quot;MD&quot;,&quot;ME&quot;,&quot;MI&quot;,&quot;MN&quot;,&quot;MO&quot;,&quot;MS&quot;,&quot;MT&quot;,&quot;NC&quot;,&quot;ND&quot;,&quot;NE&quot;,&quot;NH&quot;,&quot;NJ&quot;,&quot;NM&quot;,&quot;NV&quot;,&quot;NY&quot;,&quot;OH&quot;,&quot;OK&quot;,&quot;OR&quot;,&quot;PA&quot;,&quot;PR&quot;,&quot;RI&quot;,&quot;SC&quot;,&quot;SD&quot;,&quot;TN&quot;,&quot;TX&quot;,&quot;UT&quot;,&quot;VA&quot;,&quot;VI&quot;,&quot;VT&quot;,&quot;WA&quot;,&quot;WI&quot;,&quot;WV&quot;,&quot;WY&quot;]' data-allow-select-none='false' data-searchable='true' data-full-width='false'></marimo-dropdown></marimo-ui-element><marimo-ui-element object-id='iKmP-0' random-id='c6b5849f-ddc8-91be-7443-13781c274e21'><marimo-dropdown data-initial-value='[&quot;Akiachak Native Community Electric Co (id=192)&quot;]' data-label='&quot;&lt;span class=&#92;&quot;markdown prose dark:prose-invert contents&#92;&quot;&gt;&lt;span class=&#92;&quot;paragraph&#92;&quot;&gt;Select a Utility:&lt;/span&gt;&lt;/span&gt;&quot;' data-options='[&quot;Akiachak Native Community Electric Co (id=192)&quot;,&quot;Alaska Electric Light&amp;Power Co (id=213)&quot;,&quot;Alaska Power and Telephone Co (id=219)&quot;,&quot;Alaska Village Elec Coop, Inc (id=221)&quot;,&quot;Anchorage Municipal Light and Power (id=599)&quot;,&quot;Andreanof Electric Corp (id=653)&quot;,&quot;Aniak Light &amp; Power Co Inc (id=4959)&quot;,&quot;Arctic Utilities Inc (id=409)&quot;,&quot;Atmautluak Tribal Utilities (id=878)&quot;,&quot;Barrow Utils &amp; Elec Coop, Inc (id=1276)&quot;,&quot;Bethel Utilities Corp (id=1651)&quot;,&quot;Birch Creek Village Elec Util (id=1747)&quot;,&quot;Central Electric Inc (id=6111)&quot;,&quot;Chitina Electric Inc (id=3465)&quot;,&quot;Chugach Electric Assn Inc (id=3522)&quot;,&quot;City &amp; Borough of Sitka - (AK) (id=17271)&quot;,&quot;City of Akutan (id=24486)&quot;,&quot;City of Atka (id=56256)&quot;,&quot;City of Chefornak (id=3422)&quot;,&quot;City of Chignik (id=3421)&quot;,&quot;City of Elfin Cove (id=5721)&quot;,&quot;City of King Cove (id=9897)&quot;,&quot;City of Kotlik (id=9898)&quot;,&quot;City of Larsen Bay (id=10716)&quot;,&quot;City of Manokotak (id=26317)&quot;,&quot;City of Ouzinkie (id=14234)&quot;,&quot;City of Saint Paul (id=17898)&quot;,&quot;City of Seward - (AK) (id=16955)&quot;,&quot;City of Tenakee Springs (id=18541)&quot;,&quot;City of Unalaska - (AK) (id=19454)&quot;,&quot;City of White Mountain (id=20535)&quot;,&quot;City of Wrangell - (AK) (id=21015)&quot;,&quot;Copper Valley Elec Assn, Inc (id=4329)&quot;,&quot;Cordova Electric Coop, Inc (id=40215)&quot;,&quot;Egegik Light &amp; Power Co (id=5553)&quot;,&quot;G &amp; K, Inc (id=6866)&quot;,&quot;Galena Electric Utility (id=6915)&quot;,&quot;Golden Valley Elec Assn Inc (id=7353)&quot;,&quot;Gustavus Electric Inc (id=7822)&quot;,&quot;Gwitchyaa Zhee Utility Co (id=7833)&quot;,&quot;Homer Electric Assn Inc (id=19558)&quot;,&quot;Hughes Power &amp; Light Co (id=9000)&quot;,&quot;I-N-N Electric Coop, Inc (id=9188)&quot;,&quot;Igiugig Electric Company (id=9192)&quot;,&quot;Inside Passage Elec Coop, Inc (id=18963)&quot;,&quot;Ipnatchiaq Electric Company (id=9416)&quot;,&quot;Ketchikan Public Utilities (id=10210)&quot;,&quot;Kodiak Electric Assn Inc (id=10433)&quot;,&quot;Kokhanok Village Council (id=10455)&quot;,&quot;Kotzebue Electric Assn Inc (id=10451)&quot;,&quot;Kuiggluum Kallugvia (id=9832)&quot;,&quot;Kwig Power Company (id=10491)&quot;,&quot;Manley Utility Co Inc (id=11591)&quot;,&quot;Matanuska Electric Assn Inc (id=11824)&quot;,&quot;McGrath Light &amp; Power Co (id=12119)&quot;,&quot;Metlakatla Power &amp; Light (id=12385)&quot;,&quot;Middle Kuskokwim Elec Coop Inc (id=12485)&quot;,&quot;Naknek Electric Assn, Inc (id=13201)&quot;,&quot;Napakiak Ircinraq Power Co (id=13211)&quot;,&quot;Native Village of Perryville (id=14832)&quot;,&quot;Nelson Lagoon Elec Coop Inc (id=13477)&quot;,&quot;Nome Joint Utility Systems (id=13642)&quot;,&quot;North Slope Borough Power &amp; Light (id=26616)&quot;,&quot;Nushagak Electric Coop, Inc (id=13870)&quot;,&quot;Paxson Inn &amp; Lodge (id=26754)&quot;,&quot;Pedro Bay Village Council (id=14633)&quot;,&quot;Pelican Utility (id=29297)&quot;,&quot;Petersburg Borough - (AK) (id=14856)&quot;,&quot;TDX Manley Generating LLC (id=56503)&quot;,&quot;Tanana Power Co Inc (id=18474)&quot;,&quot;Tatitlek Electric Utility (id=18480)&quot;,&quot;Teller Power Company, Inc (id=18521)&quot;,&quot;Thorne Bay City of (id=18877)&quot;,&quot;Tuntutuliak Comm Services Assn (id=19267)&quot;,&quot;U S Army-Ft Wainwright (id=22200)&quot;,&quot;Unalakleet Valley Elec Coop (id=40548)&quot;,&quot;Yakutat Power Inc (id=30150)&quot;]' data-allow-select-none='false' data-searchable='false' data-full-width='false'></marimo-dropdown></marimo-ui-element><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Utility ID EIA: 878</span></span><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Address: Nothing Reported (last reported in N/A)</span></span></div>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "212cf6036bce3e9fe386fa3537bf6b93",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "ef8e55a0e006d6cec49e26e49489b88d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/html": "<marimo-ui-element object-id='BYtC-0' random-id='cd717170-bf38-c1f5-0e37-d7b1eea57a0d'><marimo-plotly data-initial-value='{}' data-label='null' data-figure='{&quot;data&quot;:[{&quot;fillcolor&quot;:&quot;#636EFA&quot;,&quot;legendgroup&quot;:&quot;net_generation_mwh&quot;,&quot;line&quot;:{&quot;color&quot;:&quot;#636EFA&quot;},&quot;name&quot;:&quot;net_generation_mwh&quot;,&quot;showlegend&quot;:true,&quot;stackgroup&quot;:&quot;positive&quot;,&quot;x&quot;:[&quot;2001-01-01T00:00:00&quot;,&quot;2002-01-01T00:00:00&quot;,&quot;2003-01-01T00:00:00&quot;,&quot;2004-01-01T00:00:00&quot;,&quot;2005-01-01T00:00:00&quot;,&quot;2006-01-01T00:00:00&quot;,&quot;2007-01-01T00:00:00&quot;,&quot;2008-01-01T00:00:00&quot;,&quot;2009-01-01T00:00:00&quot;,&quot;2010-01-01T00:00:00&quot;,&quot;2011-01-01T00:00:00&quot;],&quot;y&quot;:{&quot;dtype&quot;:&quot;f4&quot;,&quot;bdata&quot;:&quot;AEBVRAAATEQAgCVEAIAcRACAB0QAgCxEAMACRAAAwH8AwClEAMBRRACADEQ=&quot;},&quot;type&quot;:&quot;scatter&quot;},{&quot;fillcolor&quot;:&quot;#EF553B&quot;,&quot;legendgroup&quot;:&quot;wholesale_power_purchases_mwh&quot;,&quot;line&quot;:{&quot;color&quot;:&quot;#EF553B&quot;},&quot;name&quot;:&quot;wholesale_power_purchases_mwh&quot;,&quot;showlegend&quot;:true,&quot;stackgroup&quot;:&quot;positive&quot;,&quot;x&quot;:[&quot;2001-01-01T00:00:00&quot;,&quot;2002-01-01T00:00:00&quot;,&quot;2003-01-01T00:00:00&quot;,&quot;2004-01-01T00:00:00&quot;,&quot;2005-01-01T00:00:00&quot;,&quot;2006-01-01T00:00:00&quot;,&quot;2007-01-01T00:00:00&quot;,&quot;2008-01-01T00:00:00&quot;,&quot;2009-01-01T00:00:00&quot;,&quot;2010-01-01T00:00:00&quot;,&quot;2011-01-01T00:00:00&quot;],&quot;y&quot;:{&quot;dtype&quot;:&quot;f4&quot;,&quot;bdata&quot;:&quot;AADAfwAAwH8AAMB/AADAfwAAwH8AAMB/AADAfwAAKkQAAMB/AADAfwAAwH8=&quot;},&quot;type&quot;:&quot;scatter&quot;}],&quot;layout&quot;:{&quot;template&quot;:{&quot;data&quot;:{&quot;histogram2dcontour&quot;:[{&quot;type&quot;:&quot;histogram2dcontour&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;},&quot;colorscale&quot;:[[0.0,&quot;#0d0887&quot;],[0.1111111111111111,&quot;#46039f&quot;],[0.2222222222222222,&quot;#7201a8&quot;],[0.3333333333333333,&quot;#9c179e&quot;],[0.4444444444444444,&quot;#bd3786&quot;],[0.5555555555555556,&quot;#d8576b&quot;],[0.6666666666666666,&quot;#ed7953&quot;],[0.7777777777777778,&quot;#fb9f3a&quot;],[0.8888888888888888,&quot;#fdca26&quot;],[1.0,&quot;#f0f921&quot;]]}],&quot;choropleth&quot;:[{&quot;type&quot;:&quot;choropleth&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}],&quot;histogram2d&quot;:[{&quot;type&quot;:&quot;histogram2d&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;},&quot;colorscale&quot;:[[0.0,&quot;#0d0887&quot;],[0.1111111111111111,&quot;#46039f&quot;],[0.2222222222222222,&quot;#7201a8&quot;],[0.3333333333333333,&quot;#9c179e&quot;],[0.4444444444444444,&quot;#bd3786&quot;],[0.5555555555555556,&quot;#d8576b&quot;],[0.6666666666666666,&quot;#ed7953&quot;],[0.7777777777777778,&quot;#fb9f3a&quot;],[0.8888888888888888,&quot;#fdca26&quot;],[1.0,&quot;#f0f921&quot;]]}],&quot;heatmap&quot;:[{&quot;type&quot;:&quot;heatmap&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;},&quot;colorscale&quot;:[[0.0,&quot;#0d0887&quot;],[0.1111111111111111,&quot;#46039f&quot;],[0.2222222222222222,&quot;#7201a8&quot;],[0.3333333333333333,&quot;#9c179e&quot;],[0.4444444444444444,&quot;#bd3786&quot;],[0.5555555555555556,&quot;#d8576b&quot;],[0.6666666666666666,&quot;#ed7953&quot;],[0.7777777777777778,&quot;#fb9f3a&quot;],[0.8888888888888888,&quot;#fdca26&quot;],[1.0,&quot;#f0f921&quot;]]}],&quot;contourcarpet&quot;:[{&quot;type&quot;:&quot;contourcarpet&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}],&quot;contour&quot;:[{&quot;type&quot;:&quot;contour&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;},&quot;colorscale&quot;:[[0.0,&quot;#0d0887&quot;],[0.1111111111111111,&quot;#46039f&quot;],[0.2222222222222222,&quot;#7201a8&quot;],[0.3333333333333333,&quot;#9c179e&quot;],[0.4444444444444444,&quot;#bd3786&quot;],[0.5555555555555556,&quot;#d8576b&quot;],[0.6666666666666666,&quot;#ed7953&quot;],[0.7777777777777778,&quot;#fb9f3a&quot;],[0.8888888888888888,&quot;#fdca26&quot;],[1.0,&quot;#f0f921&quot;]]}],&quot;surface&quot;:[{&quot;type&quot;:&quot;surface&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;},&quot;colorscale&quot;:[[0.0,&quot;#0d0887&quot;],[0.1111111111111111,&quot;#46039f&quot;],[0.2222222222222222,&quot;#7201a8&quot;],[0.3333333333333333,&quot;#9c179e&quot;],[0.4444444444444444,&quot;#bd3786&quot;],[0.5555555555555556,&quot;#d8576b&quot;],[0.6666666666666666,&quot;#ed7953&quot;],[0.7777777777777778,&quot;#fb9f3a&quot;],[0.8888888888888888,&quot;#fdca26&quot;],[1.0,&quot;#f0f921&quot;]]}],&quot;mesh3d&quot;:[{&quot;type&quot;:&quot;mesh3d&quot;,&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}],&quot;scatter&quot;:[{&quot;fillpattern&quot;:{&quot;fillmode&quot;:&quot;overlay&quot;,&quot;size&quot;:10,&quot;solidity&quot;:0.2},&quot;type&quot;:&quot;scatter&quot;}],&quot;parcoords&quot;:[{&quot;type&quot;:&quot;parcoords&quot;,&quot;line&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;scatterpolargl&quot;:[{&quot;type&quot;:&quot;scatterpolargl&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;bar&quot;:[{&quot;error_x&quot;:{&quot;color&quot;:&quot;#2a3f5f&quot;},&quot;error_y&quot;:{&quot;color&quot;:&quot;#2a3f5f&quot;},&quot;marker&quot;:{&quot;line&quot;:{&quot;color&quot;:&quot;#E5ECF6&quot;,&quot;width&quot;:0.5},&quot;pattern&quot;:{&quot;fillmode&quot;:&quot;overlay&quot;,&quot;size&quot;:10,&quot;solidity&quot;:0.2}},&quot;type&quot;:&quot;bar&quot;}],&quot;scattergeo&quot;:[{&quot;type&quot;:&quot;scattergeo&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;scatterpolar&quot;:[{&quot;type&quot;:&quot;scatterpolar&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;histogram&quot;:[{&quot;marker&quot;:{&quot;pattern&quot;:{&quot;fillmode&quot;:&quot;overlay&quot;,&quot;size&quot;:10,&quot;solidity&quot;:0.2}},&quot;type&quot;:&quot;histogram&quot;}],&quot;scattergl&quot;:[{&quot;type&quot;:&quot;scattergl&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;scatter3d&quot;:[{&quot;type&quot;:&quot;scatter3d&quot;,&quot;line&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}},&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;scattermap&quot;:[{&quot;type&quot;:&quot;scattermap&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;scattermapbox&quot;:[{&quot;type&quot;:&quot;scattermapbox&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;scatterternary&quot;:[{&quot;type&quot;:&quot;scatterternary&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;scattercarpet&quot;:[{&quot;type&quot;:&quot;scattercarpet&quot;,&quot;marker&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}}}],&quot;carpet&quot;:[{&quot;aaxis&quot;:{&quot;endlinecolor&quot;:&quot;#2a3f5f&quot;,&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;minorgridcolor&quot;:&quot;white&quot;,&quot;startlinecolor&quot;:&quot;#2a3f5f&quot;},&quot;baxis&quot;:{&quot;endlinecolor&quot;:&quot;#2a3f5f&quot;,&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;minorgridcolor&quot;:&quot;white&quot;,&quot;startlinecolor&quot;:&quot;#2a3f5f&quot;},&quot;type&quot;:&quot;carpet&quot;}],&quot;table&quot;:[{&quot;cells&quot;:{&quot;fill&quot;:{&quot;color&quot;:&quot;#EBF0F8&quot;},&quot;line&quot;:{&quot;color&quot;:&quot;white&quot;}},&quot;header&quot;:{&quot;fill&quot;:{&quot;color&quot;:&quot;#C8D4E3&quot;},&quot;line&quot;:{&quot;color&quot;:&quot;white&quot;}},&quot;type&quot;:&quot;table&quot;}],&quot;barpolar&quot;:[{&quot;marker&quot;:{&quot;line&quot;:{&quot;color&quot;:&quot;#E5ECF6&quot;,&quot;width&quot;:0.5},&quot;pattern&quot;:{&quot;fillmode&quot;:&quot;overlay&quot;,&quot;size&quot;:10,&quot;solidity&quot;:0.2}},&quot;type&quot;:&quot;barpolar&quot;}],&quot;pie&quot;:[{&quot;automargin&quot;:true,&quot;type&quot;:&quot;pie&quot;}]},&quot;layout&quot;:{&quot;autotypenumbers&quot;:&quot;strict&quot;,&quot;colorway&quot;:[&quot;#636efa&quot;,&quot;#EF553B&quot;,&quot;#00cc96&quot;,&quot;#ab63fa&quot;,&quot;#FFA15A&quot;,&quot;#19d3f3&quot;,&quot;#FF6692&quot;,&quot;#B6E880&quot;,&quot;#FF97FF&quot;,&quot;#FECB52&quot;],&quot;font&quot;:{&quot;color&quot;:&quot;#2a3f5f&quot;},&quot;hovermode&quot;:&quot;closest&quot;,&quot;hoverlabel&quot;:{&quot;align&quot;:&quot;left&quot;},&quot;paper_bgcolor&quot;:&quot;white&quot;,&quot;plot_bgcolor&quot;:&quot;#E5ECF6&quot;,&quot;polar&quot;:{&quot;bgcolor&quot;:&quot;#E5ECF6&quot;,&quot;angularaxis&quot;:{&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;ticks&quot;:&quot;&quot;},&quot;radialaxis&quot;:{&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;ticks&quot;:&quot;&quot;}},&quot;ternary&quot;:{&quot;bgcolor&quot;:&quot;#E5ECF6&quot;,&quot;aaxis&quot;:{&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;ticks&quot;:&quot;&quot;},&quot;baxis&quot;:{&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;ticks&quot;:&quot;&quot;},&quot;caxis&quot;:{&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;ticks&quot;:&quot;&quot;}},&quot;coloraxis&quot;:{&quot;colorbar&quot;:{&quot;outlinewidth&quot;:0,&quot;ticks&quot;:&quot;&quot;}},&quot;colorscale&quot;:{&quot;sequential&quot;:[[0.0,&quot;#0d0887&quot;],[0.1111111111111111,&quot;#46039f&quot;],[0.2222222222222222,&quot;#7201a8&quot;],[0.3333333333333333,&quot;#9c179e&quot;],[0.4444444444444444,&quot;#bd3786&quot;],[0.5555555555555556,&quot;#d8576b&quot;],[0.6666666666666666,&quot;#ed7953&quot;],[0.7777777777777778,&quot;#fb9f3a&quot;],[0.8888888888888888,&quot;#fdca26&quot;],[1.0,&quot;#f0f921&quot;]],&quot;sequentialminus&quot;:[[0.0,&quot;#0d0887&quot;],[0.1111111111111111,&quot;#46039f&quot;],[0.2222222222222222,&quot;#7201a8&quot;],[0.3333333333333333,&quot;#9c179e&quot;],[0.4444444444444444,&quot;#bd3786&quot;],[0.5555555555555556,&quot;#d8576b&quot;],[0.6666666666666666,&quot;#ed7953&quot;],[0.7777777777777778,&quot;#fb9f3a&quot;],[0.8888888888888888,&quot;#fdca26&quot;],[1.0,&quot;#f0f921&quot;]],&quot;diverging&quot;:[[0,&quot;#8e0152&quot;],[0.1,&quot;#c51b7d&quot;],[0.2,&quot;#de77ae&quot;],[0.3,&quot;#f1b6da&quot;],[0.4,&quot;#fde0ef&quot;],[0.5,&quot;#f7f7f7&quot;],[0.6,&quot;#e6f5d0&quot;],[0.7,&quot;#b8e186&quot;],[0.8,&quot;#7fbc41&quot;],[0.9,&quot;#4d9221&quot;],[1,&quot;#276419&quot;]]},&quot;xaxis&quot;:{&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;ticks&quot;:&quot;&quot;,&quot;title&quot;:{&quot;standoff&quot;:15},&quot;zerolinecolor&quot;:&quot;white&quot;,&quot;automargin&quot;:true,&quot;zerolinewidth&quot;:2},&quot;yaxis&quot;:{&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;ticks&quot;:&quot;&quot;,&quot;title&quot;:{&quot;standoff&quot;:15},&quot;zerolinecolor&quot;:&quot;white&quot;,&quot;automargin&quot;:true,&quot;zerolinewidth&quot;:2},&quot;scene&quot;:{&quot;xaxis&quot;:{&quot;backgroundcolor&quot;:&quot;#E5ECF6&quot;,&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;showbackground&quot;:true,&quot;ticks&quot;:&quot;&quot;,&quot;zerolinecolor&quot;:&quot;white&quot;,&quot;gridwidth&quot;:2},&quot;yaxis&quot;:{&quot;backgroundcolor&quot;:&quot;#E5ECF6&quot;,&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;showbackground&quot;:true,&quot;ticks&quot;:&quot;&quot;,&quot;zerolinecolor&quot;:&quot;white&quot;,&quot;gridwidth&quot;:2},&quot;zaxis&quot;:{&quot;backgroundcolor&quot;:&quot;#E5ECF6&quot;,&quot;gridcolor&quot;:&quot;white&quot;,&quot;linecolor&quot;:&quot;white&quot;,&quot;showbackground&quot;:true,&quot;ticks&quot;:&quot;&quot;,&quot;zerolinecolor&quot;:&quot;white&quot;,&quot;gridwidth&quot;:2}},&quot;shapedefaults&quot;:{&quot;line&quot;:{&quot;color&quot;:&quot;#2a3f5f&quot;}},&quot;annotationdefaults&quot;:{&quot;arrowcolor&quot;:&quot;#2a3f5f&quot;,&quot;arrowhead&quot;:0,&quot;arrowwidth&quot;:1},&quot;geo&quot;:{&quot;bgcolor&quot;:&quot;white&quot;,&quot;landcolor&quot;:&quot;#E5ECF6&quot;,&quot;subunitcolor&quot;:&quot;white&quot;,&quot;showland&quot;:true,&quot;showlakes&quot;:true,&quot;lakecolor&quot;:&quot;white&quot;},&quot;title&quot;:{&quot;x&quot;:0.05},&quot;mapbox&quot;:{&quot;style&quot;:&quot;light&quot;}}},&quot;xaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Date&quot;},&quot;dtick&quot;:&quot;M12&quot;,&quot;tickformat&quot;:&quot;%Y&quot;},&quot;title&quot;:{&quot;text&quot;:&quot;Power Profile for Atmautluak Tribal Utilities (id=878)&quot;},&quot;yaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;MWh&quot;}}}}' data-config='{}'></marimo-plotly></marimo-ui-element>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": null,
       "outputs": [],
       "console": []
     }
