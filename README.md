@@ -10,7 +10,7 @@ We have multiple categories of notebooks in this repository:
 | Category | File location | Description | Live view | Local dev env |
 | --- | --- | --- | --- | --- |
 | [Kaggle notebooks](#kaggle-notebooks) | repository root | Mirrored from the [Kaggle notebooks](https://www.kaggle.com/code/catalystcooperative/). Any changes made to these notebooks directly in this repository will be overwritten. | [Kaggle](https://www.kaggle.com/code/catalystcooperative/) | `pixi run -e kaggle jupyter lab` |
-| [WebAssembly Marimo notebooks](#webassembly-marimo-notebooks) | `wasm/marimo` | Marimo notebooks designed for exporting as interactive browser dashboards. | [PUDL Data Viewer](https://data.catalyst.coop/secret-gallery) | `pixi run -e wasm marimo edit` |
+| [WebAssembly Marimo notebooks](#webassembly-marimo-notebooks) | `wasm/marimo` | Marimo notebooks designed for exporting as interactive browser dashboards. | [PUDL Data Viewer](https://data.catalyst.coop/dashboards) | `pixi run -e wasm marimo edit` |
 
 ## General development notes
 
@@ -27,7 +27,7 @@ planning on making changes to the notebooks, the repository infrastructure, or
 anything else that might require you to commit something.
 
 ```
-$ pixi run -e dev pre-commit install
+$ pixi run -e dev prek install
 ```
 
 ## Kaggle notebooks
@@ -103,7 +103,7 @@ interactive dashboard or visualization.
 ### Viewing in-browser
 
 These are currently viewable on the [PUDL Data
-Viewer](https://data.catalyst.coop/secret-gallery). Click through and play
+Viewer](https://data.catalyst.coop/dashboards). Click through and play
 around!
 
 ### Running locally
