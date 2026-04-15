@@ -27,7 +27,7 @@ planning on making changes to the notebooks, the repository infrastructure, or
 anything else that might require you to commit something.
 
 ```
-$ pixi run -e dev pre-commit install
+$ pixi run -e dev prek install
 ```
 
 ## Kaggle notebooks
