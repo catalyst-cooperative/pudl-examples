@@ -5,21 +5,29 @@ app = marimo.App(width="medium")
 
 
 @app.cell
-def _(mo, selected_county, selected_plant, selected_state):
+def _(mo, selection):
     mo.output.append(mo.md("# Plant Explorer"))
     mo.output.append(
         mo.md(
             'Explore attributes of any plant that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia860.html" target="_blank">EIA-860</a> or <a href="https://docs.catalyst.coop/pudl/data_sources/eia923.html" target="_blank">EIA-923</a>. Select a state, county and specific plant to explore its attributes, generation over time and generators.'
         )
     )
-    mo.output.append(mo.hstack([selected_state, selected_county, selected_plant]))
+    mo.output.append(
+        mo.hstack(
+            [
+                selection.state_selector,
+                selection.county_selector,
+                selection.plant_selector,
+            ]
+        )
+    )
     return
 
 
 @app.cell(hide_code=True)
-def _(mo, selected_plant, this_plant):
+def _(mo, selection, this_plant):
     mo.md(f"""
-    # {"{} (EIA id={})".format(this_plant.name, this_plant.plant_id_eia) if selected_plant.value is not None else ""}
+    # {"{} (EIA id={})".format(this_plant.name, this_plant.plant_id_eia) if selection.plant is not None else ""}
     """)
     return
 
@@ -113,76 +121,190 @@ def _(mo, pudl):
 
 
 @app.cell
-def _(mo, out_eia__yearly_plants):
-    selected_state = mo.ui.dropdown.from_series(
-        out_eia__yearly_plants.state.drop_duplicates().sort_values(),
-        label="Select a state:",
-        value="CO",
-    )
-    return (selected_state,)
+def _(mo, out_eia__yearly_plants, pd):
+    class Options:
+        @classmethod
+        @mo.cache
+        def available_states(cls) -> pd.Series:
+            return out_eia__yearly_plants.state.drop_duplicates().sort_values()
+
+        @classmethod
+        @mo.cache
+        def available_counties(cls, state: str) -> pd.Series:
+            return (
+                out_eia__yearly_plants.loc[
+                    out_eia__yearly_plants.state == state, "county"
+                ]
+                .drop_duplicates()
+                .sort_values()
+            )
+
+        @classmethod
+        @mo.cache
+        def available_plants(cls, state, county) -> pd.DataFrame:
+            return (
+                out_eia__yearly_plants.loc[
+                    (out_eia__yearly_plants.state == state)
+                    & (out_eia__yearly_plants.county == county),
+                    ["plant_id_eia", "plant_name_eia"],
+                ]
+                .drop_duplicates()
+                .sort_values(by="plant_id_eia")
+                .set_index("plant_id_eia")
+            )
+
+        @classmethod
+        @mo.cache
+        def available_years(cls, plant) -> pd.Series:
+            return (
+                out_eia__yearly_plants.loc[
+                    (out_eia__yearly_plants.plant_id_eia == plant)
+                ]
+                .report_date.dt.year.drop_duplicates()
+                .sort_values(ascending=False)
+            )
+
+    return (Options,)
 
 
 @app.cell
-def _(mo, out_eia__yearly_plants, selected_state):
-    in_state_counties = (
-        out_eia__yearly_plants.loc[
-            out_eia__yearly_plants.state == selected_state.value, "county"
-        ]
-        .drop_duplicates()
-        .sort_values()
-    )
-    selected_county = mo.ui.dropdown.from_series(
-        in_state_counties, label="Select a county:", value=in_state_counties.iloc[0]
-    )
-    return (selected_county,)
+def _(Options, mo):
+    # this has to be in a cell other than the cell where `selection` is defined
+    query_params = mo.query_params()
+
+    def initialize_default_params():
+        if "state" not in query_params or query_params["state"] not in set(
+            Options.available_states()
+        ):
+            query_params["state"] = "CO"
+            mo.output.append("Fixed state")
+        if "county" not in query_params or query_params["county"] not in set(
+            Options.available_counties(query_params["state"])
+        ):
+            query_params["county"] = Options.available_counties(
+                query_params["state"]
+            ).iloc[0]
+            mo.output.append("Fixed county")
+        if "plant" not in query_params or query_params["plant"] not in set(
+            Options.available_plants(
+                query_params["state"], query_params["county"]
+            ).index
+        ):
+            query_params["plant"] = int(
+                Options.available_plants(query_params["state"], query_params["county"])
+                .iloc[0]
+                .name
+            )
+            mo.output.append("Fixed plant")
+        if "year" not in query_params or query_params["year"] not in set(
+            Options.available_years(query_params["plant"])
+        ):
+            query_params["year"] = int(
+                Options.available_years(query_params["plant"]).max()
+            )
+            mo.output.append("Fixed year")
+        if "timeseries_start" not in query_params or query_params[
+            "timeseries_start"
+        ] not in set(Options.available_years(query_params["plant"])):
+            query_params["timeseries_start"] = int(
+                Options.available_years(query_params["plant"]).min()
+            )
+            mo.output.append("Fixed timeseries_start")
+
+    initialize_default_params()
+
+    return initialize_default_params, query_params
 
 
 @app.cell
-def _(mo, out_eia__yearly_plants, selected_county, selected_state):
-    in_county_plants = (
-        out_eia__yearly_plants.loc[
-            (out_eia__yearly_plants.state == selected_state.value)
-            & (out_eia__yearly_plants.county == selected_county.value),
-            ["plant_id_eia", "plant_name_eia"],
-        ]
-        .drop_duplicates()
-        .sort_values(by="plant_id_eia")
-        .set_index("plant_id_eia")
-    )
-    default_plant = in_county_plants.iloc[0]
-    selected_plant = mo.ui.dropdown(
-        options={f"{name} (id={id})": id for id, name in in_county_plants.to_records()},
-        value=f"{default_plant.plant_name_eia} (id={default_plant.name})",
-        label="Select a plant:",
-    )
-    return (selected_plant,)
+def _(initialize_default_params, query_params):
+    def reset_params(**kwargs):
+        for param, value in kwargs.items():
+            query_params.set(param, value)
+        initialize_default_params()
+
+    return (reset_params,)
 
 
 @app.cell
-def _(mo, out_eia__yearly_plants, selected_plant):
-    available_years = (
-        out_eia__yearly_plants.loc[
-            (out_eia__yearly_plants.plant_id_eia == selected_plant.value)
-        ]
-        .report_date.dt.year.drop_duplicates()
-        .sort_values(ascending=False)
-    )
-    selected_year = mo.ui.dropdown(
-        options={str(i): i for i in available_years},
-        label="Plant attributes from year:",
-        value=str(available_years.iloc[0]),
-    )
-    return available_years, selected_year
+def _(Options, mo, query_params, reset_params):
+    from pydantic import BaseModel, Field, computed_field
+    from functools import cached_property
 
+    class Selection(BaseModel):
+        state: str = Field("CO")
+        county: str
+        plant: int
+        year: int
+        timeseries_start: int
 
-@app.cell
-def _(available_years, mo, selected_year):
-    selected_timeseries_start = mo.ui.dropdown(
-        options={str(i): i for i in available_years if i <= selected_year.value},
-        label="Generation timeseries going back to:",
-        value=str(available_years.min()),
-    )
-    return (selected_timeseries_start,)
+        @computed_field
+        @cached_property
+        def state_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown.from_series(
+                Options.available_states(),
+                label="Select a state:",
+                value=self.state,
+                on_change=lambda value: reset_params(state=value),
+            )
+
+        @computed_field
+        @cached_property
+        def county_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown.from_series(
+                Options.available_counties(self.state),
+                label="Select a county:",
+                value=self.county,
+                on_change=lambda value: reset_params(county=value),
+            )
+
+        @computed_field
+        @cached_property
+        def plant_selector(self) -> mo.ui.dropdown:
+            def as_default_plant_value(plant_id):
+                plant_record = Options.available_plants(self.state, self.county).loc[
+                    plant_id
+                ]
+                return f"{plant_record.plant_name_eia} (id={plant_record.name})"
+
+            return mo.ui.dropdown(
+                options={
+                    f"{name} (id={id})": id
+                    for id, name in Options.available_plants(
+                        self.state, self.county
+                    ).to_records()
+                },
+                value=as_default_plant_value(self.plant),
+                label="Select a plant:",
+                on_change=lambda value: reset_params(plant=int(value)),
+            )
+
+        @computed_field
+        @cached_property
+        def year_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options={str(i): i for i in Options.available_years(self.plant)},
+                label="Plant attributes from year:",
+                value=str(self.year),
+                on_change=lambda value: reset_params(year=int(value)),
+            )
+
+        @computed_field
+        @cached_property
+        def timeseries_start_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options={
+                    str(i): i
+                    for i in Options.available_years(self.plant)
+                    if i <= self.year
+                },
+                label="Generation timeseries going back to:",
+                value=str(self.timeseries_start),
+                on_change=lambda value: reset_params(timeseries_start=int(value)),
+            )
+
+    selection = Selection(**query_params.to_dict())
+    return (selection,)
 
 
 @app.cell
@@ -193,13 +315,11 @@ def _(
     out_eia__yearly_generators,
     out_eia__yearly_plants,
     pd,
-    selected_plant,
-    selected_timeseries_start,
-    selected_year,
+    selection,
 ):
     this_plant = out_eia__yearly_plants.loc[
-        (out_eia__yearly_plants.plant_id_eia == selected_plant.value)
-        & (out_eia__yearly_plants.report_date.dt.year == selected_year.value)
+        (out_eia__yearly_plants.plant_id_eia == selection.plant)
+        & (out_eia__yearly_plants.report_date.dt.year == selection.year)
     ].iloc[0]
     this_plant = this_plant.rename(pretty_plant_name(this_plant))
 
@@ -207,31 +327,31 @@ def _(
         out_eia923__monthly_generation_fuel_combined.loc[
             (
                 out_eia923__monthly_generation_fuel_combined.plant_id_eia
-                == selected_plant.value
+                == selection.plant
             )
             & (
                 out_eia923__monthly_generation_fuel_combined.report_date.dt.year
-                <= selected_year.value
+                <= selection.year
             )
             & (
                 out_eia923__monthly_generation_fuel_combined.report_date.dt.year
-                >= selected_timeseries_start.value
+                >= selection.timeseries_start
             )
         ]
     )
 
     this_plant__monthly_generation = out_eia923__monthly_generation.loc[
-        (out_eia923__monthly_generation.plant_id_eia == selected_plant.value)
-        & (out_eia923__monthly_generation.report_date.dt.year <= selected_year.value)
+        (out_eia923__monthly_generation.plant_id_eia == selection.plant)
+        & (out_eia923__monthly_generation.report_date.dt.year <= selection.year)
         & (
             out_eia923__monthly_generation.report_date.dt.year
-            >= selected_timeseries_start.value
+            >= selection.timeseries_start
         )
     ]
 
     this_plant__generators = (
         out_eia__yearly_generators.loc[
-            (out_eia__yearly_generators.plant_id_eia == selected_plant.value)
+            (out_eia__yearly_generators.plant_id_eia == selection.plant)
             & (out_eia__yearly_generators.report_date == this_plant.report_date)
         ]
         .drop(
@@ -284,7 +404,7 @@ def _(
                 [
                     mo.md(f"""<div data-tooltip="By default we show you plant attributes from the most recent year of data available.
                 If you want to see plant attributes from a previous year, select here.">{mo.icon("lucide:info")}</div>"""),
-                    selected_year,
+                    selection.year_selector,
                 ],
                 justify="start",
             ),
@@ -292,7 +412,7 @@ def _(
                 [
                     mo.md(f"""<div data-tooltip="By default we extend the timeseries plots below as far back as we have data available.
                 To prune to a more recent year, select here.">{mo.icon("lucide:info")}</div>"""),
-                    selected_timeseries_start,
+                    selection.timeseries_start_selector,
                 ],
                 justify="start",
             ),
@@ -436,12 +556,12 @@ def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
 def _(
     alt,
     mo,
-    selected_plant,
+    selection,
     this_plant,
     this_plant__generators,
     this_plant__monthly_generation,
 ):
-    mo.stop(not selected_plant.value)
+    mo.stop(not selection.plant)
     mo.stop(
         this_plant__monthly_generation.shape[0] == 0,
         mo.md("No generator-level generation data available for this plant.").style(
@@ -601,7 +721,6 @@ def _(
                 + f" {this_plant__generators.shape[0]} generators selected"
             ).style(background="#eee")
         )
-
     return (selected__generators,)
 
 
