@@ -1,40 +1,51 @@
 import marimo
 
-__generated_with = "0.21.1"
+__generated_with = "0.23.5"
 app = marimo.App(width="medium")
 
 
 @app.cell
-def _(mo, selected_state, selected_util):
+def _():
+    # Imports
+    import pandas as pd
+    import marimo as mo
+    import plotly.graph_objects as go
+    import plotly
+    import altair as alt
+    import json
+    from urllib.request import urlopen
+    import plotly.express as px
+
+    return alt, go, json, mo, pd, px, urlopen
+
+
+@app.cell
+def _(mo, selected_state_full, selected_util):
     mo.output.append(mo.md("# Utility Explorer"))
     mo.output.append(
         mo.md(
             'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time and generators.'
         )
     )
-    mo.output.append(mo.vstack([selected_state, selected_util]))
+    mo.output.append(mo.vstack([selected_state_full, selected_util]))
     return
 
 
-@app.cell
-def _():
-    import pandas as pd
-    import marimo as mo
-    import plotly.graph_objects as go
-    import plotly
-
-    return go, mo, pd, plotly
-
-
 @app.function
-def path(name):
-    return (
-        f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet"
-    )
+# Preview tables
+def table_preview_href(name):
+    return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>"""
 
 
 @app.cell
 def _(pd):
+    # Retreive tables func
+    def path(name):
+        return (
+            f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet"
+        )
+
+    # Read tables func
     def pudl(name, columns=None):
         return pd.read_parquet(
             path(name),
@@ -42,50 +53,53 @@ def _(pd):
             **({"columns": columns} if columns else {}),
         )
 
-    return (pudl,)
-
-
-@app.cell
-def _(pudl):
+    # Grab tables
     st_df = pudl("out_eia861__yearly_utility_service_territory")
     yu_df = pudl("out_eia__yearly_utilities")
     od_df = pudl("core_eia861__yearly_operational_data_misc")
     s_df = pudl("core_eia861__yearly_sales")
-    return od_df, s_df, st_df, yu_df
+    gen_df = pudl("out_eia__yearly_generators")
+    gen_fuel_df = pudl("out_eia923__generation_fuel_combined")
+    return gen_df, gen_fuel_df, od_df, s_df, st_df, yu_df
 
 
 @app.cell
 def _(mo, st_df):
+    # State selection
     selected_state = mo.ui.dropdown.from_series(
         st_df.state.drop_duplicates().sort_values(),
         label="Select a state:",
         value="CO",
         searchable=True,
+        allow_select_none=True,
     )
 
-    # Could add a feature that selects no states...
-    return (selected_state,)
+
+    selected_state_full = mo.hstack([
+        mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
+        selected_state
+    ], justify="start",)
+    return selected_state, selected_state_full
 
 
 @app.cell
 def _(mo, selected_state, st_df, yu_df):
-    in_state_utils = (
-        st_df.loc[st_df.state == selected_state.value, "utility_id_eia"]
-        .drop_duplicates()
-        .to_list()
-    )
-
+    # Utility selection
     in_state_utils_stats = (
-        yu_df[yu_df["utility_id_eia"].isin(in_state_utils)][
-            ["utility_id_eia", "utility_name_eia"]
-        ]
+        (
+            yu_df[yu_df["utility_id_eia"].isin(
+                st_df.loc[st_df.state == selected_state.value, "utility_id_eia"]
+                .drop_duplicates()
+                .to_list()
+            )]
+            if selected_state.value
+            else yu_df
+        )[["utility_id_eia", "utility_name_eia"]]
         .drop_duplicates()
         .sort_values(by="utility_name_eia")
         .set_index("utility_id_eia")
     )
-
     default_util = in_state_utils_stats.iloc[0]
-
     selected_util = mo.ui.dropdown(
         options={
             f"{name} (id={id})": id for id, name in in_state_utils_stats.to_records()
@@ -99,6 +113,7 @@ def _(mo, selected_state, st_df, yu_df):
 
 @app.cell
 def _(selected_util, st_df):
+    # County selection
     util_counties = st_df[st_df["utility_id_eia"] == selected_util.value]
     max_year = util_counties.report_date.dt.year.max()
     util_counties_year = util_counties[util_counties["report_date"].dt.year == max_year]
@@ -107,66 +122,257 @@ def _(selected_util, st_df):
 
 @app.cell
 def _(selected_util):
+    # Function to grab specific utility information from the most recent year.
     def show_static_value(df, col):
         out_df = (
             df[df["utility_id_eia"] == selected_util.value]
             .sort_values(["report_date"], ascending=False)
             .dropna(subset=[col])
         )
+        recent_report_date = out_df.report_date.iloc[0]
 
         if out_df.empty:
             value = "Nothing Reported"
             year = "N/A"
         else:
-            value = out_df[col].iloc[0]
-            year = out_df.report_date.iloc[0].year
+            value_list = out_df[out_df["report_date"]==recent_report_date][col].unique().tolist()
+            value = ", ".join(str(x) for x in value_list)
+            year = recent_report_date.year
         return value, year
 
     return (show_static_value,)
 
 
 @app.cell
-def _(show_static_value, yu_df):
-    address1, year1 = show_static_value(yu_df, "street_address")
-    return address1, year1
+def _(show_static_value, st_df, yu_df):
+    # Grab utility stats
+    address, address_year = show_static_value(yu_df, "street_address")
+    states, states_year = show_static_value(st_df, "state")
+
+    # Grab capacity stats
+
+    return address, address_year, states, states_year
 
 
 @app.cell
-def _(address1, mo, selected_util, year1):
-    # out_df = df_dict["out_eia__yearly_utilities"]
-    # util_df = out_df[out_df["utility_id_eia"]==selected_util.value].sort_values(["report_date"], ascending=False)
-    # # Selecting the most recent year with data
-    # address_df = util_df.dropna(subset=["street_address"])
-    # if address_df.empty:
-    #     address = "No Address Reported"
-    #     year = "N/A"
-    # else:
-    #     address = address_df.street_address.iloc[0]
-    #     year = address_df.report_date.iloc[0].year
+def _():
+    return
 
-    mo.vstack(
-        [
-            # selected_state,
-            # selected_util,
-            mo.md(f"Utility ID EIA: {selected_util.value}"),
-            mo.md(f"Address: {address1} (last reported in {year1})"),
+
+@app.cell
+def _(
+    address,
+    address_year,
+    mo,
+    num_plants_owned,
+    pd,
+    selected_util,
+    st_fig,
+    states,
+    states_year,
+    total_cap,
+):
+    stats_table = mo.ui.table(
+        pd.DataFrame([
+            {
+                "Value": str(selected_util.value),
+                "Last Reported": "",
+                "Reference Table": "",
+            },
+            {
+                "Value": address,
+                "Last Reported": str(address_year),
+                "Reference Table": mo.md(table_preview_href('out_eia__yearly_utilities')),
+            },
+            {
+                "Value": states,
+                "Last Reported": str(states_year),
+                "Reference Table": mo.md(table_preview_href('out_eia861__yearly_utility_service_territory')),
+            },
+            {
+                "Value": num_plants_owned,
+                "Last Reported": "",
+                "Reference Table": mo.md(table_preview_href('out_eia__yearly_generators')),
+            },
+            {
+                "Value": round(total_cap),
+                "Last Reported": "",
+                "Reference Table": mo.md(table_preview_href('out_eia__yearly_generators')),
+            },
+        ], index=["Utility ID EIA", "Address", "States", "Total Plants Owned", "Total Owned Capacity (MW)"])
+    )
+
+    util_stats = (
+        mo.vstack([
+            mo.md("## Basic Information"),
+            mo.hstack([
+                mo.vstack([
+                    mo.md("### Utility Stats"),
+                    mo.Html(f'<div style="width: 600px">{stats_table.text}</div>'),
+                ]),
+                mo.vstack([
+                    mo.md("### Service Territory"),
+                    mo.ui.plotly(st_fig.update_layout(width=500, height=300)),
+                ]),
+            ], justify="space-between"),
+        ])
+    )
+    return (util_stats,)
+
+
+@app.cell
+def _(util_stats):
+    util_stats
+    return
+
+
+@app.cell
+def _(gen_df, selected_util):
+    util_gen = gen_df[gen_df["utility_id_eia"]==selected_util.value].sort_values("report_date", ascending=False)
+
+    recent_report_date = util_gen["report_date"].iloc[0]
+
+    util_gen_existing = (
+        util_gen[
+            (util_gen["report_date"]==recent_report_date) 
+            & (util_gen["operational_status"]=="existing")
         ]
     )
-    return
+
+    # For util stats table
+    num_plants_owned = len(util_gen_existing.plant_id_eia.unique())
+    total_cap = util_gen_existing.capacity_mw.sum()
+
+    recent_util_gen = util_gen[
+        (util_gen["report_date"]==recent_report_date)
+    ]
+
+    def agg_plant_values(df, op_status):
+
+        df = df[df["operational_status"]== op_status]
+    
+        plant_cols = [
+            "generator_id", # aggregate into list
+            "plant_name_eia", # choose first
+            "technology_description", # aggregate into list
+            "fuel_type_code_pudl", # list
+            "capacity_mw", # sum
+            "city", # list
+        ]
+    
+        util_plant_df = df.groupby(["report_date", "plant_id_eia"])[plant_cols].agg({
+            "generator_id": lambda x: ", ".join(v for v in x.unique() if v is not None),
+            "plant_name_eia": "first",
+            "technology_description": lambda x: ", ".join(v for v in x.unique() if v is not None),
+            "fuel_type_code_pudl": lambda x: ", ".join(v for v in x.unique() if v is not None),
+            "capacity_mw": lambda x: f"{x.sum():.2f}",
+            "city": lambda x: ", ".join(v for v in x.unique() if v is not None)
+        }).reset_index()
+    
+        util_plant_df["report_year"] = util_plant_df["report_date"].dt.year.astype("str")
+        util_plant_df = util_plant_df.drop(columns=["report_date"])
+        return util_plant_df
+
+    return (
+        agg_plant_values,
+        num_plants_owned,
+        recent_report_date,
+        recent_util_gen,
+        total_cap,
+    )
 
 
 @app.cell
 def _(mo):
-    mo.output.append(mo.md("## Service Territory"))
+    # Create drop down for selecting which plant table to show
+    selected_status = mo.ui.dropdown(
+        options=["existing", "proposed", "retired"],
+        value="existing",
+        label="Select generator status:",
+    )
+    #selected_status
+    return (selected_status,)
+
+
+@app.cell
+def _(
+    agg_plant_values,
+    fuel_chart,
+    mo,
+    recent_report_date,
+    recent_util_gen,
+    selected_status,
+    selected_year,
+):
+    # Display selected plant table
+    status_df = agg_plant_values(recent_util_gen, selected_status.value)
+
+    owned_gen = (
+        mo.vstack([
+            mo.md("## Owned Generation"),
+            mo.hstack([
+                mo.vstack([
+                    mo.md(f"### Plant Profiles From Most Recent Year: {recent_report_date.year}"),
+                    selected_status,
+                    mo.Html(f'<div style="max-width: 500px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'),
+                    mo.md(f"via {table_preview_href('out_eia__yearly_generators')}")
+                ]),
+                mo.vstack([
+                    mo.md("### Generation by Fuel Type"),
+                    selected_year,
+                    mo.ui.altair_chart(fuel_chart.properties(width=350, height=250)),
+                    mo.md(f"via {table_preview_href('out_eia923__generation_fuel_combined')}")
+                ]),
+            ]),
+        ])
+    )
+    owned_gen
     return
 
 
 @app.cell
-def _(go, mo, pd, util_counties_year):
-    import json
-    from urllib.request import urlopen
-    import plotly.express as px
+def _(gen_fuel_df, mo, selected_util):
+    util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"]==selected_util.value]
 
+    available_years = sorted(util_gen_fuel["report_date"].dt.year.unique(), reverse=True)
+
+    selected_year = mo.ui.dropdown(
+        options=[str(y) for y in available_years],
+        value=str(available_years[0]),
+        label="Select year:",
+    )
+    return selected_year, util_gen_fuel
+
+
+@app.cell
+def _(alt, selected_year, util_gen_fuel):
+    year_df = util_gen_fuel[util_gen_fuel["report_date"].dt.year == int(selected_year.value)]
+
+    fuel_long = year_df.groupby(["report_date", "fuel_type_code_pudl"])["net_generation_mwh"].sum().reset_index()
+
+    fuel_chart = alt.Chart(fuel_long).mark_area().encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%b", tickCount="month"), title="Month"),
+        y=alt.Y("net_generation_mwh:Q", stack="zero", title="Net Generation (MWh)", axis=alt.Axis(format=",.0f")),
+        color=alt.Color(
+            "fuel_type_code_pudl:N",
+            scale=alt.Scale(scheme="tableau10"),
+            legend=alt.Legend(title="Fuel Type"),
+        ),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
+            alt.Tooltip("net_generation_mwh:Q", title="Net Generation (MWh)", format=",.0f"),
+        ],
+    ).properties(
+        width=700,
+        height=400,
+    )
+    return (fuel_chart,)
+
+
+@app.cell
+def _(go, json, pd, px, urlopen, util_counties_year):
+    # Generate map for service territory
     with urlopen(
         "https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json"
     ) as _r:
@@ -188,7 +394,7 @@ def _(go, mo, pd, util_counties_year):
         }
     )
 
-    _fig = px.choropleth(
+    st_fig = px.choropleth(
         _plot_df,
         geojson=_geojson,
         locations="fips",
@@ -207,7 +413,7 @@ def _(go, mo, pd, util_counties_year):
         )
         for _poly in _polys:
             _lons, _lats = zip(*_poly[0])
-            _fig.add_trace(
+            st_fig.add_trace(
                 go.Scattergeo(
                     lon=list(_lons) + [None],
                     lat=list(_lats) + [None],
@@ -218,8 +424,8 @@ def _(go, mo, pd, util_counties_year):
                 )
             )
 
-    _fig.update_traces(marker_line_color="black", marker_line_width=0.3)
-    _fig.update_layout(
+    st_fig.update_traces(marker_line_color="black", marker_line_width=0.3)
+    st_fig.update_layout(
         margin={"r": 0, "t": 0, "l": 0, "b": 0},
         coloraxis_showscale=False,
         geo=dict(
@@ -230,9 +436,8 @@ def _(go, mo, pd, util_counties_year):
             subunitwidth=1.5,
         ),
     )
-    mo.ui.plotly(_fig)
-
-    return
+    None
+    return (st_fig,)
 
 
 @app.cell
@@ -248,11 +453,8 @@ def _(mo):
 
 
 @app.cell
-def _(go, mo, plotly, selected_util, util_od_df):
-    colors = plotly.colors.qualitative.Plotly  # default color cycle
-
-    fig1 = go.Figure()
-
+def _(alt, mo, selected_util, util_od_df):
+    # Define value cols
     value_cols = [
         "net_generation_mwh",
         "wholesale_power_purchases_mwh",
@@ -260,100 +462,81 @@ def _(go, mo, plotly, selected_util, util_od_df):
         "net_wheeled_power_mwh",
         "transmission_by_other_losses_mwh",
     ]
-    legend_shown = set()
 
-    for i, col in enumerate(value_cols):
-        if (util_od_df[col] == 0).all():
-            continue
-        color = colors[i % len(colors)]
-        neg_vals = util_od_df[col].where(util_od_df[col] < 0, other=None)
-        pos_vals = util_od_df[col].where(util_od_df[col] > 0, other=None)
+    # Melt to long format for Altair
+    od_long = util_od_df[["report_date"] + value_cols].melt(
+        id_vars="report_date",
+        value_vars=value_cols,
+        var_name="source",
+        value_name="mwh",
+    )
 
-        if pos_vals.notna().any():
-            fig1.add_trace(
-                go.Scatter(
-                    x=util_od_df["report_date"],
-                    y=pos_vals,
-                    name=col,
-                    stackgroup="positive",
-                    legendgroup=col,
-                    showlegend=col not in legend_shown,
-                    line=dict(color=color),
-                    fillcolor=color,
-                )
-            )
-            legend_shown.add(col)
+    # Remove all-zero columns
+    nonzero_sources = [
+        col for col in value_cols if not (util_od_df[col] == 0).all()
+    ]
+    od_long = od_long[od_long["source"].isin(nonzero_sources)]
 
-        if (
-            neg_vals.notna().any()
-        ):  # only add negative trace if there are actual negatives
-            fig1.add_trace(
-                go.Scatter(
-                    x=util_od_df["report_date"],
-                    y=neg_vals,
-                    name=col,
-                    stackgroup="negative",
-                    legendgroup=col,
-                    showlegend=col not in legend_shown,
-                    line=dict(color=color),
-                    fillcolor=color,
-                )
-            )
-            legend_shown.add(col)
+    # Split into positive and negative
+    od_pos = od_long[od_long["mwh"] > 0]
+    od_neg = od_long[od_long["mwh"] < 0]
 
-    fig1.update_layout(
+    base = alt.Chart().encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Date"),
+        color=alt.Color("source:N", scale=alt.Scale(scheme="tableau10")),
+    )
+
+    pos_chart = base.mark_area().encode(
+        y=alt.Y("sum(mwh):Q", stack="zero", title="MWh"),
+    ).properties(data=od_pos)
+
+    neg_chart = base.mark_area().encode(
+        y=alt.Y("sum(mwh):Q", stack="zero"),
+    ).properties(data=od_neg)
+
+    chart = alt.layer(pos_chart, neg_chart).properties(
         title=f"Sources of Electricity for {selected_util.selected_key}",
-        xaxis_title="Date",
-        yaxis_title="MWh",
-        xaxis=dict(
-            dtick="M12",
-            tickformat="%Y",
+        width=700,
+        height=400,
+    )
+
+    mo.ui.altair_chart(chart)
+    return
+
+
+@app.cell
+def _(alt, mo, util_od_df):
+    peak_long = util_od_df[["report_date", "summer_peak_demand_mw", "winter_peak_demand_mw"]].melt(
+        id_vars="report_date",
+        var_name="season",
+        value_name="mw",
+    )
+
+    chart2 = alt.Chart(peak_long).mark_line(strokeWidth=2).encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Report Date"),
+        y=alt.Y("mw:Q", title="MW"),
+        color=alt.Color(
+            "season:N",
+            scale=alt.Scale(
+                domain=["summer_peak_demand_mw", "winter_peak_demand_mw"],
+                range=["#e05c2a", "#4a90d9"],
+            ),
+            legend=alt.Legend(orient="top-right"),
         ),
-    )
-    mo.ui.plotly(fig1)
-    return
-
-
-@app.cell
-def _(go, mo, util_od_df):
-    fig2 = go.Figure()
-
-    fig2.add_trace(
-        go.Scatter(
-            x=util_od_df["report_date"],
-            y=util_od_df["summer_peak_demand_mw"],
-            mode="lines",
-            name="Summer Peak Demand",
-            line=dict(color="#e05c2a", width=2),
-        )
-    )
-
-    fig2.add_trace(
-        go.Scatter(
-            x=util_od_df["report_date"],
-            y=util_od_df["winter_peak_demand_mw"],
-            mode="lines",
-            name="Winter Peak Demand",
-            line=dict(color="#4a90d9", width=2),
-        )
-    )
-
-    fig2.update_layout(
+        tooltip=["report_date:T", "season:N", "mw:Q"],
+    ).properties(
         title="Summer vs. Winter Peak Demand",
-        xaxis_title="Report Date",
-        yaxis_title="MW",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        hovermode="x unified",
+        width=700,
+        height=400,
     )
 
-    mo.ui.plotly(fig2)
+    mo.ui.altair_chart(chart2)
     return
 
 
 @app.cell
-def _(go, mo, s_df, selected_util):
+def _(alt, mo, s_df, selected_util):
     s_df_util = s_df[s_df["utility_id_eia"] == selected_util.value]
-
     pivot = (
         s_df_util.pivot_table(
             index="report_date",
@@ -364,66 +547,42 @@ def _(go, mo, s_df, selected_util):
         .sort_index()
         .reset_index()
     )
-
-    COLORS = [
-        "#1f77b4",
-        "#ff7f0e",
-        "#2ca02c",
-        "#d62728",
-        "#9467bd",
-        "#8c564b",
-        "#e377c2",
-        "#7f7f7f",
-    ]
-
     customer_classes = [c for c in pivot.columns if c != "report_date"]
 
-    traces = []
-    for ii, cc in enumerate(customer_classes):
-        traces.append(
-            go.Scatter(
-                x=pivot["report_date"],
-                y=pivot[cc],
-                name=cc,
-                mode="lines",
-                stackgroup="one",
-                line=dict(width=0.5, color=COLORS[ii % len(COLORS)]),
-                fillcolor=COLORS[ii % len(COLORS)],
-                hovertemplate=(
-                    "<b>%{fullData.name}</b><br>"
-                    "Date: %{x|%Y-%m-%d}<br>"
-                    "Sales: %{y:,.0f} MWh<extra></extra>"
-                ),
-            )
-        )
-
-    fig = go.Figure(traces)
-    fig.update_layout(
-        title=dict(text="Electricity Sales by Customer Class", font_size=18),
-        xaxis=dict(title="Report Date", showgrid=True, gridcolor="#e0e0e0"),
-        yaxis=dict(
-            title="Sales (MWh)", showgrid=True, gridcolor="#e0e0e0", tickformat=",.0f"
-        ),
-        legend=dict(
-            title="Customer Class",
-            orientation="v",
-            yanchor="middle",
-            y=0.5,
-            xanchor="left",
-            x=1.02,
-        ),
-        hovermode="x unified",
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(t=80, b=60, l=80, r=160),
+    sales_long = pivot.melt(
+        id_vars="report_date",
+        value_vars=customer_classes,
+        var_name="customer_class",
+        value_name="sales_mwh",
     )
 
-    mo.ui.plotly(fig)
+    chart3 = alt.Chart(sales_long).mark_area().encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Report Date"),
+        y=alt.Y("sales_mwh:Q", stack="zero", title="Sales (MWh)", axis=alt.Axis(format=",.0f")),
+        color=alt.Color(
+            "customer_class:N",
+            scale=alt.Scale(scheme="tableau10"),
+            legend=alt.Legend(title="Customer Class", orient="right"),
+        ),
+        order=alt.Order("customer_class:N"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("customer_class:N", title="Customer Class"),
+            alt.Tooltip("sales_mwh:Q", title="Sales (MWh)", format=",.0f"),
+        ],
+    ).properties(
+        title=alt.TitleParams("Electricity Sales by Customer Class", fontSize=18),
+        width=700,
+        height=400,
+    )
+
+    mo.ui.altair_chart(chart3)
     return
 
 
 @app.cell
 def _():
+    # 
     return
 
 

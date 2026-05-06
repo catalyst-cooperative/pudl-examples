@@ -60,3 +60,4 @@ wasm = ["wasm", "wasm-test"]
 
 [dependencies]
 pre-commit = ">=4.5.1,<5"
+plotly = ">=6.6.0,<7"
