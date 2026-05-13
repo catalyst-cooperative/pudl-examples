@@ -26,9 +26,10 @@ def _(mo, selection):
 
 @app.cell(hide_code=True)
 def _(mo, selection, this_plant):
-    mo.md(f"""
-    # {"{} (EIA id={})".format(this_plant.name, this_plant.plant_id_eia) if selection.plant is not None else ""}
-    """)
+    if selection.plant is not None:
+        mo.md(f"# {this_plant.name} (EIA id={this_plant.plant_id_eia})")
+    else:
+        mo.md("# ")
     return
 
 
@@ -131,21 +132,26 @@ def _(mo, out_eia__yearly_plants, pd):
         @classmethod
         @mo.cache
         def available_counties(cls, state: str) -> pd.Series:
-            return (
-                out_eia__yearly_plants.loc[
-                    out_eia__yearly_plants.state == state, "county"
+            return pd.concat(
+                [
+                    pd.Series(["All"]),
+                    out_eia__yearly_plants.loc[
+                        out_eia__yearly_plants.state == state, "county"
+                    ]
+                    .drop_duplicates()
+                    .sort_values(),
                 ]
-                .drop_duplicates()
-                .sort_values()
             )
 
         @classmethod
         @mo.cache
         def available_plants(cls, state, county) -> pd.DataFrame:
+            select = out_eia__yearly_plants.state == state
+            if county != "All":
+                select = select & (out_eia__yearly_plants.county == county)
             return (
                 out_eia__yearly_plants.loc[
-                    (out_eia__yearly_plants.state == state)
-                    & (out_eia__yearly_plants.county == county),
+                    select,
                     ["plant_id_eia", "plant_name_eia"],
                 ]
                 .drop_duplicates()
@@ -177,14 +183,14 @@ def _(Options, mo):
             Options.available_states()
         ):
             query_params["state"] = "CO"
-            mo.output.append("Fixed state")
+            # mo.output.append("Fixed state")
         if "county" not in query_params or query_params["county"] not in set(
             Options.available_counties(query_params["state"])
         ):
             query_params["county"] = Options.available_counties(
                 query_params["state"]
             ).iloc[0]
-            mo.output.append("Fixed county")
+            # mo.output.append("Fixed county")
         if "plant" not in query_params or query_params["plant"] not in set(
             Options.available_plants(
                 query_params["state"], query_params["county"]
@@ -195,24 +201,23 @@ def _(Options, mo):
                 .iloc[0]
                 .name
             )
-            mo.output.append("Fixed plant")
+            # mo.output.append("Fixed plant")
         if "year" not in query_params or query_params["year"] not in set(
             Options.available_years(query_params["plant"])
         ):
             query_params["year"] = int(
                 Options.available_years(query_params["plant"]).max()
             )
-            mo.output.append("Fixed year")
+            # mo.output.append("Fixed year")
         if "timeseries_start" not in query_params or query_params[
             "timeseries_start"
         ] not in set(Options.available_years(query_params["plant"])):
             query_params["timeseries_start"] = int(
                 Options.available_years(query_params["plant"]).min()
             )
-            mo.output.append("Fixed timeseries_start")
+            # mo.output.append("Fixed timeseries_start")
 
     initialize_default_params()
-
     return initialize_default_params, query_params
 
 
