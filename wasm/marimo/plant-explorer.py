@@ -236,7 +236,8 @@ def _(Options, mo, query_params, reset_params):
     from pydantic import BaseModel, Field, computed_field
     from functools import cached_property
 
-    class Selection(BaseModel):
+    PLANT_SELECTION_PARAMS = {"state", "county", "plant", "year", "timeseries_start"}
+    class PlantSelection(BaseModel):
         state: str = Field("CO")
         county: str
         plant: int
@@ -308,8 +309,8 @@ def _(Options, mo, query_params, reset_params):
                 on_change=lambda value: reset_params(timeseries_start=int(value)),
             )
 
-    selection = Selection(**query_params.to_dict())
-    return (selection,)
+    selection = PlantSelection(**{k:v for k, v in query_params.to_dict().items() if k in PLANT_SELECTION_PARAMS})
+    return BaseModel, cached_property, computed_field, selection
 
 
 @app.cell
@@ -610,7 +611,120 @@ def _(
 
 
 @app.cell
-def _(mo, this_plant__generators):
+def _():
+    GENERATOR_PARAMS = [
+        "generator_id",
+        "unit_id_pudl",
+        "technology_description",
+        "energy_source_code_1",
+        "prime_mover_code",
+        "operational_status",
+        "fuel_type_code_pudl",
+        "associated_combined_heat_power",
+        "operational_status_code",
+    ]
+    return (GENERATOR_PARAMS,)
+
+
+@app.cell
+def _(BaseModel, GENERATOR_PARAMS, mo, this_plant__generators):
+    class Filter(BaseModel):
+        options: dict
+        defaults: list | None
+        only_option: bool
+
+    class FilterStats(BaseModel):
+        max_label: int
+        max_input: int
+        columns: int
+
+    class GeneratorOptions:
+        @classmethod
+        @mo.cache
+        def available_filter(cls, column: str) -> Filter:
+            available = this_plant__generators[column].value_counts(dropna=False)
+            available = available.loc[available > 0].index
+            only_option = available.shape[0] == 1
+            return Filter(
+                options = {str(x): x for x in available},
+                defaults = [str(available[0])] if only_option else None,
+                only_option = only_option
+            )
+        @classmethod
+        @mo.cache
+        def active_filters(cls) -> list[str]:
+            filter_counts = this_plant__generators[GENERATOR_PARAMS].nunique()
+            filter_counts = filter_counts.loc[filter_counts > 0]
+            return list(filter_counts.to_dict().keys())
+        @classmethod
+        @mo.cache
+        def stats(cls) -> FilterStats:
+            import math
+
+            option_lengths = {k: [len(vk) for vk in cls.available_filter(k).options] for k in cls.active_filters()}
+            max_column = max(
+                (len(k) + max(option_lengths[k])) for k in cls.active_filters()
+            )
+            return FilterStats(
+                max_label=max(len(k) for k in cls.active_filters()),
+                max_input=max(max(v) for v in option_lengths.values()),
+                columns=math.ceil(80 / max_column)
+            )
+        
+
+    return (GeneratorOptions,)
+
+
+@app.cell
+def _(
+    BaseModel,
+    GeneratorOptions,
+    cached_property,
+    computed_field,
+    mo,
+    query_params,
+):
+    class GeneratorSelection(BaseModel):
+        generator_id: list[str] | None
+        unit_id_pudl: list[str] | None
+        # todo: add on_change=lambda value: reset_params(**{column: value}),
+        @computed_field
+        @cached_property
+        def generator_id_selector(self) -> mo.ui.batch:
+            return GeneratorSelection.any_selector("generator_id")
+        @computed_field
+        @cached_property
+        def unit_id_pudl_selector(self) -> mo.ui.batch:
+            return GeneratorSelection.any_selector("unit_id_pudl")
+        def selectors(self) -> list[mo.ui.batch]:
+            return [
+                getattr(self, f"{column}_selector")
+                for column in ["generator_id","unit_id_pudl"]#GeneratorOptions.active_filters()
+            ]
+        @classmethod
+        def any_selector(cls, column: str)-> mo.ui.batch:        
+            filter = GeneratorOptions.available_filter(column)
+            stats = GeneratorOptions.stats()
+            return mo.Html(
+                f"""<div data-testid="genselect-{column}" style="display: flex; gap: 0.5rem; {"color: #bbbbbb" if filter.only_option else ""}">
+         <label style="flex: {stats.max_label / stats.max_input} 1 0%; text-align: end;">{column}</label>
+         <div style="flex: 1 1 0%;">{{multiselect}}</div>
+     </div>"""
+            ).batch(
+                multiselect=mo.ui.multiselect(
+                    options=filter.options,
+                    value=filter.defaults,
+                    # label=k,
+                )
+            )
+
+    # todo: this default should take .only_option into account
+    generator_selection = GeneratorSelection(**{k:query_params.to_dict().get(k, GeneratorOptions.available_filter(k).defaults) for k in GeneratorOptions.active_filters()})
+    return (generator_selection,)
+
+
+@app.cell
+def generator_filters(mo, this_plant__generators):
     filter_columns = [
         "generator_id",
         "unit_id_pudl",
@@ -662,6 +776,26 @@ def _(mo, this_plant__generators):
             )
     filters = mo.ui.dictionary(filters)
     return columns, filters, math
+
+
+@app.cell
+def _(GeneratorOptions, generator_selection, itertools, math, mo):
+    mo.hstack(
+        [
+            mo.vstack([f for f in row if f is not None])
+            for row in itertools.batched(
+                generator_selection.selectors(), math.ceil(len(GeneratorOptions.active_filters()) / GeneratorOptions.stats().columns)
+            )
+        ],
+        widths="equal",
+    )
+    return
+
+
+@app.cell
+def _(generator_selection):
+    generator_selection.generator_id_selector.value["multiselect"]
+    return
 
 
 @app.cell
