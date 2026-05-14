@@ -41,7 +41,7 @@ def _chart_png(page: Page) -> bytes:
     expect(chart).to_be_visible(timeout=5_000)
     # without this sleep, sometimes the chart isn't attached to the DOM when
     # we try to take a screenshot
-    time.sleep(0.2)
+    time.sleep(0.3)
     return chart.screenshot()
 
 
