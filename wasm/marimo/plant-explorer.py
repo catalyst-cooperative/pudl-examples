@@ -124,6 +124,13 @@ def _(mo, pudl):
 @app.cell
 def _(mo, out_eia__yearly_plants, pd):
     class Options:
+        """Compute valid plant selection options based on partial selections.
+
+        Caches the results so we're not constantly repeating dataframe queries.
+
+        Used by marimo ui widgets in constructing dropdown options; used by
+        selection initialization in validating/filling gaps in url params."""
+
         @classmethod
         @mo.cache
         def available_states(cls) -> pd.Series:
@@ -175,7 +182,8 @@ def _(mo, out_eia__yearly_plants, pd):
 
 @app.cell
 def _(Options, mo):
-    # this has to be in a cell other than the cell where `selection` is defined
+    # this has to be in a cell other than the cell where `selection` is defined,
+    # otherwise updates won't propagate correctly.
     query_params = mo.query_params()
 
     def initialize_default_params():
@@ -183,14 +191,12 @@ def _(Options, mo):
             Options.available_states()
         ):
             query_params["state"] = "CO"
-            # mo.output.append("Fixed state")
         if "county" not in query_params or query_params["county"] not in set(
             Options.available_counties(query_params["state"])
         ):
             query_params["county"] = Options.available_counties(
                 query_params["state"]
             ).iloc[0]
-            # mo.output.append("Fixed county")
         if "plant" not in query_params or query_params["plant"] not in set(
             Options.available_plants(
                 query_params["state"], query_params["county"]
@@ -201,21 +207,18 @@ def _(Options, mo):
                 .iloc[0]
                 .name
             )
-            # mo.output.append("Fixed plant")
         if "year" not in query_params or query_params["year"] not in set(
             Options.available_years(query_params["plant"])
         ):
             query_params["year"] = int(
                 Options.available_years(query_params["plant"]).max()
             )
-            # mo.output.append("Fixed year")
         if "timeseries_start" not in query_params or query_params[
             "timeseries_start"
         ] not in set(Options.available_years(query_params["plant"])):
             query_params["timeseries_start"] = int(
                 Options.available_years(query_params["plant"]).min()
             )
-            # mo.output.append("Fixed timeseries_start")
 
     initialize_default_params()
     return initialize_default_params, query_params
@@ -224,6 +227,10 @@ def _(Options, mo):
 @app.cell
 def _(initialize_default_params, query_params):
     def reset_params(**kwargs):
+        """Persist selection parameters into the URL.
+
+        Should be called whenever the user makes a change to their selection.
+        Automatically updates downstream selections to valid defaults."""
         for param, value in kwargs.items():
             query_params.set(param, value)
         initialize_default_params()
@@ -237,6 +244,14 @@ def _(Options, mo, query_params, reset_params):
     from functools import cached_property
 
     class Selection(BaseModel):
+        """Store/represent the user's current plant selection.
+
+        The direct values (state, county, plant, etc) are pulled from
+        and persisted to the corresponding URL parameters.
+
+        The selector views (state_selector, county_selector, etc) are
+        computed based on the values and cached for display in the dashboard."""
+
         state: str = Field("CO")
         county: str
         plant: int
@@ -683,7 +698,7 @@ def _(
     mo.output.append(mo.md("## Generator Attributes"))
     mo.output.append(
         mo.md(
-            f"Here is what we know about each generator at this plant.{' You can review attributes of all generators at once, or use the filters to focus on generators that meet particular criteria.' if this_plant__generators.shape[0] > 1 else ''}"
+            f"Here is what we know about each generator at this plant.{' You can review attributes of all generators at once, or use the filters to focus on generators that meet particular criteria. *If you share this page, know that these selections are not yet included in the URL.*' if this_plant__generators.shape[0] > 1 else ''}"
         )
     )
 
