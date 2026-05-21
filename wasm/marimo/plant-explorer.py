@@ -171,7 +171,7 @@ def _(mo, out_eia__yearly_plants, pd):
         def available_years(cls, plant) -> pd.Series:
             return (
                 out_eia__yearly_plants.loc[
-                    (out_eia__yearly_plants.plant_id_eia == plant)
+                    (out_eia__yearly_plants.plant_id_eia == int(plant))
                 ]
                 .report_date.dt.year.drop_duplicates()
                 .sort_values(ascending=False)
@@ -197,26 +197,26 @@ def _(Options, mo):
             query_params["county"] = Options.available_counties(
                 query_params["state"]
             ).iloc[0]
-        if "plant" not in query_params or query_params["plant"] not in set(
+        if "plant" not in query_params or int(query_params["plant"]) not in set(
             Options.available_plants(
                 query_params["state"], query_params["county"]
             ).index
         ):
-            query_params["plant"] = int(
+            query_params["plant"] = str(
                 Options.available_plants(query_params["state"], query_params["county"])
                 .iloc[0]
                 .name
             )
-        if "year" not in query_params or query_params["year"] not in set(
+        if "year" not in query_params or int(query_params["year"]) not in set(
             Options.available_years(query_params["plant"])
         ):
-            query_params["year"] = int(
+            query_params["year"] = str(
                 Options.available_years(query_params["plant"]).max()
             )
-        if "timeseries_start" not in query_params or query_params[
-            "timeseries_start"
-        ] not in set(Options.available_years(query_params["plant"])):
-            query_params["timeseries_start"] = int(
+        if "timeseries_start" not in query_params or int(
+            query_params["timeseries_start"]
+        ) not in set(Options.available_years(query_params["plant"])):
+            query_params["timeseries_start"] = str(
                 Options.available_years(query_params["plant"]).min()
             )
 
@@ -296,7 +296,7 @@ def _(Options, mo, query_params, reset_params):
                 },
                 value=as_default_plant_value(self.plant),
                 label="Select a plant:",
-                on_change=lambda value: reset_params(plant=int(value)),
+                on_change=lambda value: reset_params(plant=str(value)),
             )
 
         @computed_field
@@ -306,7 +306,7 @@ def _(Options, mo, query_params, reset_params):
                 options={str(i): i for i in Options.available_years(self.plant)},
                 label="Plant attributes from year:",
                 value=str(self.year),
-                on_change=lambda value: reset_params(year=int(value)),
+                on_change=lambda value: reset_params(year=str(value)),
             )
 
         @computed_field
@@ -320,7 +320,7 @@ def _(Options, mo, query_params, reset_params):
                 },
                 label="Generation timeseries going back to:",
                 value=str(self.timeseries_start),
-                on_change=lambda value: reset_params(timeseries_start=int(value)),
+                on_change=lambda value: reset_params(timeseries_start=str(value)),
             )
 
     selection = Selection(**query_params.to_dict())
@@ -698,7 +698,7 @@ def _(
     mo.output.append(mo.md("## Generator Attributes"))
     mo.output.append(
         mo.md(
-            f"Here is what we know about each generator at this plant.{' You can review attributes of all generators at once, or use the filters to focus on generators that meet particular criteria. *If you share this page, know that these selections are not yet included in the URL.*' if this_plant__generators.shape[0] > 1 else ''}"
+            f"Here is what we know about each generator at this plant.{' You can review attributes of all generators at once, or use the filters to focus on generators that meet particular criteria. (If you share this page, know that these generator-level selections are not included in the URL)' if this_plant__generators.shape[0] > 1 else ''}"
         )
     )
 
