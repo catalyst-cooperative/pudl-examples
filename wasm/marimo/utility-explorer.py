@@ -57,10 +57,35 @@ def _(pd):
     st_df = pudl("out_eia861__yearly_utility_service_territory")
     yu_df = pudl("out_eia__yearly_utilities")
     od_df = pudl("core_eia861__yearly_operational_data_misc")
+    odr_df = pudl("core_eia861__yearly_operational_data_revenue")
     s_df = pudl("core_eia861__yearly_sales")
     gen_df = pudl("out_eia__yearly_generators")
     gen_fuel_df = pudl("out_eia923__generation_fuel_combined")
-    return gen_df, gen_fuel_df, od_df, s_df, st_df, yu_df
+    mfrc_df = pudl("out_eia923__monthly_fuel_receipts_costs")
+    r_df = pudl("core_eia861__yearly_reliability")
+    return (
+        gen_df,
+        gen_fuel_df,
+        mfrc_df,
+        od_df,
+        odr_df,
+        r_df,
+        s_df,
+        st_df,
+        yu_df,
+    )
+
+
+@app.cell
+def _(end_year, selected_util, start_year):
+    # Get desired year/util func
+    def get_util_years(df):
+        return df[
+            (df["utility_id_eia"]==selected_util.value)
+            & (df["report_date"].dt.year.isin(range(start_year.value, end_year.value+1)))
+        ]   
+
+    return (get_util_years,)
 
 
 @app.cell
@@ -73,7 +98,6 @@ def _(mo, st_df):
         searchable=True,
         allow_select_none=True,
     )
-
 
     selected_state_full = mo.hstack([
         mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
@@ -113,7 +137,7 @@ def _(mo, selected_state, st_df, yu_df):
 
 @app.cell
 def _(selected_util, st_df):
-    # County selection
+    # County selection (for service ter)
     util_counties = st_df[st_df["utility_id_eia"] == selected_util.value]
     max_year = util_counties.report_date.dt.year.max()
     util_counties_year = util_counties[util_counties["report_date"].dt.year == max_year]
@@ -144,62 +168,62 @@ def _(selected_util):
 
 
 @app.cell
-def _(show_static_value, st_df, yu_df):
+def _(gen_df, od_df, show_static_value, st_df, yu_df):
     # Grab utility stats
+    util_name, util_name_year = show_static_value(yu_df, "utility_name_eia")
     address, address_year = show_static_value(yu_df, "street_address")
     states, states_year = show_static_value(st_df, "state")
+    entity_type, entity_year = show_static_value(od_df, "entity_type")
+    ba, ba_year = show_static_value(gen_df, "balancing_authority_code_eia")
 
     # Grab capacity stats
-
-    return address, address_year, states, states_year
-
-
-@app.cell
-def _():
-    return
+    return address, ba, entity_type, states
 
 
 @app.cell
 def _(
     address,
-    address_year,
+    ba,
+    entity_type,
     mo,
     num_plants_owned,
     pd,
     selected_util,
     st_fig,
     states,
-    states_year,
     total_cap,
 ):
     stats_table = mo.ui.table(
         pd.DataFrame([
             {
                 "Value": str(selected_util.value),
-                "Last Reported": "",
                 "Reference Table": "",
             },
             {
+                "Value": entity_type,
+                "Reference Table": mo.md(table_preview_href('core_eia861__yearly_operational_data_misc')),
+            },
+            {
                 "Value": address,
-                "Last Reported": str(address_year),
                 "Reference Table": mo.md(table_preview_href('out_eia__yearly_utilities')),
             },
             {
                 "Value": states,
-                "Last Reported": str(states_year),
                 "Reference Table": mo.md(table_preview_href('out_eia861__yearly_utility_service_territory')),
             },
             {
+                "Value": ba,
+                "Reference Table": mo.md(table_preview_href('out_eia__yearly_generators'))
+            },
+            {
                 "Value": num_plants_owned,
-                "Last Reported": "",
                 "Reference Table": mo.md(table_preview_href('out_eia__yearly_generators')),
             },
             {
                 "Value": round(total_cap),
-                "Last Reported": "",
                 "Reference Table": mo.md(table_preview_href('out_eia__yearly_generators')),
             },
-        ], index=["Utility ID EIA", "Address", "States", "Total Plants Owned", "Total Owned Capacity (MW)"])
+        ], index=["Utility ID EIA", "Business Type", "Address", "States", "Balancing Authority", "Total Plants Owned", "Total Owned Capacity (MW)"])
     )
 
     util_stats = (
@@ -243,14 +267,10 @@ def _(gen_df, selected_util):
     num_plants_owned = len(util_gen_existing.plant_id_eia.unique())
     total_cap = util_gen_existing.capacity_mw.sum()
 
-    recent_util_gen = util_gen[
-        (util_gen["report_date"]==recent_report_date)
-    ]
-
     def agg_plant_values(df, op_status):
 
         df = df[df["operational_status"]== op_status]
-    
+
         plant_cols = [
             "generator_id", # aggregate into list
             "plant_name_eia", # choose first
@@ -259,7 +279,7 @@ def _(gen_df, selected_util):
             "capacity_mw", # sum
             "city", # list
         ]
-    
+
         util_plant_df = df.groupby(["report_date", "plant_id_eia"])[plant_cols].agg({
             "generator_id": lambda x: ", ".join(v for v in x.unique() if v is not None),
             "plant_name_eia": "first",
@@ -268,18 +288,46 @@ def _(gen_df, selected_util):
             "capacity_mw": lambda x: f"{x.sum():.2f}",
             "city": lambda x: ", ".join(v for v in x.unique() if v is not None)
         }).reset_index()
-    
+
         util_plant_df["report_year"] = util_plant_df["report_date"].dt.year.astype("str")
         util_plant_df = util_plant_df.drop(columns=["report_date"])
         return util_plant_df
 
-    return (
-        agg_plant_values,
-        num_plants_owned,
-        recent_report_date,
-        recent_util_gen,
-        total_cap,
+    return agg_plant_values, num_plants_owned, total_cap, util_gen
+
+
+@app.cell
+def _(gen_fuel_df, mo, selected_util):
+    # Drop down for selecting which year of plants to show
+
+    util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"]==selected_util.value]
+
+    available_years = sorted(util_gen_fuel["report_date"].dt.year.unique(), reverse=True)
+
+    selected_plant_year = mo.ui.dropdown(
+        options=[int(y) for y in available_years],
+        value=int(available_years[0]),
+        label="Select year:",
     )
+    return available_years, selected_plant_year, util_gen_fuel
+
+
+@app.cell
+def _(available_years, mo):
+    available_years_ascending = available_years[::-1]
+
+    start_year = mo.ui.dropdown(
+        options=[int(y) for y in available_years_ascending],
+        value=int(available_years_ascending[0]),
+        label="Start year:",
+    )
+
+    end_year = mo.ui.dropdown(
+        options=[int(y) for y in available_years_ascending],
+        value=int(available_years_ascending[-1]),
+        label="End year:",
+    )
+    return end_year, start_year
 
 
 @app.cell
@@ -290,40 +338,27 @@ def _(mo):
         value="existing",
         label="Select generator status:",
     )
-    #selected_status
     return (selected_status,)
 
 
 @app.cell
-def _(
-    agg_plant_values,
-    fuel_chart,
-    mo,
-    recent_report_date,
-    recent_util_gen,
-    selected_status,
-    selected_year,
-):
+def _(agg_plant_values, mo, selected_plant_year, selected_status, util_gen):
     # Display selected plant table
-    status_df = agg_plant_values(recent_util_gen, selected_status.value)
+    selected_year_util_gen = util_gen[util_gen["report_date"].dt.year==selected_plant_year.value]
+
+    status_df = agg_plant_values(selected_year_util_gen, selected_status.value)
 
     owned_gen = (
         mo.vstack([
-            mo.md("## Owned Generation"),
-            mo.hstack([
+            mo.md(f"## Owned Capacity"),
                 mo.vstack([
-                    mo.md(f"### Plant Profiles From Most Recent Year: {recent_report_date.year}"),
-                    selected_status,
-                    mo.Html(f'<div style="max-width: 500px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'),
+                    mo.hstack([
+                        selected_plant_year,
+                        selected_status,
+                    ], justify="start"),
+                    mo.Html(f'<div style="max-width: 1000px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'),
                     mo.md(f"via {table_preview_href('out_eia__yearly_generators')}")
                 ]),
-                mo.vstack([
-                    mo.md("### Generation by Fuel Type"),
-                    selected_year,
-                    mo.ui.altair_chart(fuel_chart.properties(width=350, height=250)),
-                    mo.md(f"via {table_preview_href('out_eia923__generation_fuel_combined')}")
-                ]),
-            ]),
         ])
     )
     owned_gen
@@ -331,24 +366,10 @@ def _(
 
 
 @app.cell
-def _(gen_fuel_df, mo, selected_util):
-    util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"]==selected_util.value]
+def _(alt, end_year, start_year, util_gen_fuel):
+    fuel_year_df = util_gen_fuel[util_gen_fuel["report_date"].dt.year.isin(range(start_year.value, end_year.value+1))]
 
-    available_years = sorted(util_gen_fuel["report_date"].dt.year.unique(), reverse=True)
-
-    selected_year = mo.ui.dropdown(
-        options=[str(y) for y in available_years],
-        value=str(available_years[0]),
-        label="Select year:",
-    )
-    return selected_year, util_gen_fuel
-
-
-@app.cell
-def _(alt, selected_year, util_gen_fuel):
-    year_df = util_gen_fuel[util_gen_fuel["report_date"].dt.year == int(selected_year.value)]
-
-    fuel_long = year_df.groupby(["report_date", "fuel_type_code_pudl"])["net_generation_mwh"].sum().reset_index()
+    fuel_long = fuel_year_df.groupby(["report_date", "fuel_type_code_pudl"])["net_generation_mwh"].sum().reset_index()
 
     fuel_chart = alt.Chart(fuel_long).mark_area().encode(
         x=alt.X("report_date:T", axis=alt.Axis(format="%b", tickCount="month"), title="Month"),
@@ -447,13 +468,7 @@ def _(od_df, selected_util):
 
 
 @app.cell
-def _(mo):
-    mo.output.append(mo.md("## Source of Electricity"))  # better name...
-    return
-
-
-@app.cell
-def _(alt, mo, selected_util, util_od_df):
+def _(alt, end_year, start_year, util_od_df):
     # Define value cols
     value_cols = [
         "net_generation_mwh",
@@ -463,8 +478,12 @@ def _(alt, mo, selected_util, util_od_df):
         "transmission_by_other_losses_mwh",
     ]
 
+    # Get year of interest
+    source_year_df = util_od_df[util_od_df["report_date"].dt.year.isin(range(start_year.value, end_year.value+1))]
+    #source_year_df["report_date"] = source_year_df.report_date.dt.year
+
     # Melt to long format for Altair
-    od_long = util_od_df[["report_date"] + value_cols].melt(
+    od_long = source_year_df[["report_date"] + value_cols].melt(
         id_vars="report_date",
         value_vars=value_cols,
         var_name="source",
@@ -473,7 +492,7 @@ def _(alt, mo, selected_util, util_od_df):
 
     # Remove all-zero columns
     nonzero_sources = [
-        col for col in value_cols if not (util_od_df[col] == 0).all()
+        col for col in value_cols if not (source_year_df[col] == 0).all()
     ]
     od_long = od_long[od_long["source"].isin(nonzero_sources)]
 
@@ -482,25 +501,416 @@ def _(alt, mo, selected_util, util_od_df):
     od_neg = od_long[od_long["mwh"] < 0]
 
     base = alt.Chart().encode(
-        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Date"),
+        x=alt.X("year(report_date):T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
         color=alt.Color("source:N", scale=alt.Scale(scheme="tableau10")),
     )
-
-    pos_chart = base.mark_area().encode(
+    pos_chart = base.mark_bar(width={"band": 0.8}).encode(
         y=alt.Y("sum(mwh):Q", stack="zero", title="MWh"),
     ).properties(data=od_pos)
-
-    neg_chart = base.mark_area().encode(
+    neg_chart = base.mark_bar(width={"band": 0.8}).encode(
         y=alt.Y("sum(mwh):Q", stack="zero"),
     ).properties(data=od_neg)
 
-    chart = alt.layer(pos_chart, neg_chart).properties(
-        title=f"Sources of Electricity for {selected_util.selected_key}",
-        width=700,
-        height=400,
+    source_chart = alt.layer(pos_chart, neg_chart)
+    return (source_chart,)
+
+
+@app.cell
+def _(end_year, fuel_chart, mo, source_chart, start_year):
+    electricity_source = mo.vstack([
+            mo.md("## Electricity Source"),
+            mo.hstack([start_year, end_year], justify="start"),
+            mo.hstack([
+                mo.vstack([
+                    mo.md("### Owned Generation by Fuel Type"),
+                    mo.ui.altair_chart(fuel_chart.properties(width=350, height=250)),
+                    mo.md(f"via {table_preview_href('out_eia923__generation_fuel_combined')}")
+                ]),
+                mo.vstack([
+                    mo.md("### Owned vs. Purchased Generation"),
+                    mo.ui.altair_chart(source_chart.properties(width=350, height=250)),
+                    mo.md(f"via {table_preview_href('core_eia861__yearly_operational_data_misc')}")
+                ])
+            ]),
+        ])
+    electricity_source
+    return
+
+
+@app.cell
+def _(end_year, gen_fuel_df, mfrc_df, selected_util, start_year):
+    util_mfrc_df = mfrc_df[
+        (mfrc_df["utility_id_eia"]==selected_util.value)
+        & (mfrc_df["report_date"].dt.year.isin(range(start_year.value, end_year.value+1)))
+    ]
+
+    util_year_gen_fuel_df = gen_fuel_df[
+        (gen_fuel_df["utility_id_eia"]==selected_util.value)
+        & (gen_fuel_df["report_date"].dt.year.isin(range(start_year.value, end_year.value+1))) 
+    ]
+
+    fuel_plus_gen_df = util_year_gen_fuel_df.groupby(["report_date", "fuel_type_code_pudl"])[[
+        "net_generation_mwh", "fuel_consumed_mmbtu"
+    ]].sum()
+    return fuel_plus_gen_df, util_mfrc_df, util_year_gen_fuel_df
+
+
+@app.cell
+def _(util_year_gen_fuel_df):
+    util_year_gen_fuel_df
+    return
+
+
+@app.cell
+def _(util_year_gen_fuel_df):
+    util_year_gen_fuel_df[util_year_gen_fuel_df["plant_id_eia"]==469]
+    return
+
+
+@app.cell
+def _(util_mfrc_df):
+    util_mfrc_df.sort_values("report_date")
+    util_mfrc_df["fuel_consumed_units"] = util_mfrc_df.fuel_consumed_mmbtu/util_mfrc_df.fuel_mmbtu_per_unit
+    return
+
+
+@app.cell
+def _(util_mfrc_df):
+    fuel_cost_df = util_mfrc_df.groupby(["report_date", "fuel_type_code_pudl"])[[
+        "fuel_received_units",
+        "fuel_mmbtu_per_unit",
+        "fuel_cost_per_mmbtu",
+        "fuel_consumed_mmbtu",
+    ]].sum()
+
+    fuel_cost_df["fuel_received_mmbtu"] = fuel_cost_df.fuel_received_units * fuel_cost_df.fuel_mmbtu_per_unit
+    fuel_cost_df["fuel_consumed_cost"] = fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_consumed_mmbtu
+    fuel_cost_df["fuel_received_cost"] = fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_received_mmbtu
+    return (fuel_cost_df,)
+
+
+@app.cell
+def _(fuel_cost_df, fuel_plus_gen_df, pd):
+    # For some reason, fuel_consumed_mmbtu is really off when you aggregate up...
+    fuel_cost_net_gen = pd.merge(fuel_plus_gen_df, fuel_cost_df, on=["report_date", "fuel_type_code_pudl"], suffixes=["_gen", "_cost"]).reset_index()
+
+    fuel_cost_net_gen = fuel_cost_net_gen[fuel_cost_net_gen["fuel_received_units"]>0]
+    fuel_cost_net_gen["fuel_consumed_cost_per_net_gen"] = fuel_cost_net_gen.fuel_consumed_cost / fuel_cost_net_gen.net_generation_mwh
+    return (fuel_cost_net_gen,)
+
+
+@app.cell
+def _(fuel_cost_df):
+    fuel_cost_df
+    return
+
+
+@app.cell
+def _(fuel_plus_gen_df):
+    fuel_plus_gen_df
+    return
+
+
+@app.cell
+def _(alt, fuel_cost_net_gen):
+    fuel_cost_mmbtu_chart = alt.Chart(fuel_cost_net_gen).mark_line(strokeWidth=2).encode(
+        x=alt.X("report_date:T", title="Report Date"),
+        y=alt.Y("fuel_cost_per_mmbtu:Q", title="Fuel Cost ($/MMBtu)"),
+        color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date"),
+            alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
+            alt.Tooltip("fuel_cost_per_mmbtu:Q", title="$/MMBtu", format="$.3f"),
+        ],
+    ).properties(
+        title="Fuel Cost per MMBtu Over Time",
+    )
+    return (fuel_cost_mmbtu_chart,)
+
+
+@app.cell
+def _(alt, fuel_cost_net_gen):
+    fuel_consumed_mmbtu_chart = alt.Chart(fuel_cost_net_gen).mark_line(strokeWidth=2).encode(
+        x=alt.X("report_date:T", title="Report Date"),
+        y=alt.Y("fuel_consumed_mmbtu_gen:Q", title="Fuel Consumed (MMBtu)"),
+        color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date"),
+            alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
+            alt.Tooltip("sum(fuel_consumed_mmbtu):Q", title="MMBtu", format=",.0f"),
+        ],
+    ).properties(
+        title="Fuel Consumed (MMBtu) Over Time",
+    )
+    return (fuel_consumed_mmbtu_chart,)
+
+
+@app.cell
+def _(alt, fuel_cost_net_gen):
+    fuel_cost_mer_mwh_chart = alt.Chart(fuel_cost_net_gen).mark_line(strokeWidth=2).encode(
+        x=alt.X("report_date:T", title="Report Date"),
+        y=alt.Y("fuel_consumed_cost_per_net_gen:Q", title="Fuel Cost ($) / Net Generation (MWh)"),
+        color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date"),
+            alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
+            alt.Tooltip("fuel_consumed_cost_per_net_gen:Q", title="Total Cost ($)", format=",.0f"),
+        ],
+    ).properties(
+        title="Fuel Cost per MWH over Time",
+    )
+    return (fuel_cost_mer_mwh_chart,)
+
+
+@app.cell
+def _(
+    alt,
+    fuel_consumed_mmbtu_chart,
+    fuel_cost_mer_mwh_chart,
+    fuel_cost_mmbtu_chart,
+):
+    combined_chart = alt.hconcat(
+        fuel_cost_mmbtu_chart.encode(
+            color=alt.Color(
+                "fuel_type_code_pudl:N",
+                title="Fuel Type",
+                legend=alt.Legend(orient="bottom", legendX=0, legendY=-30)
+            ),
+        ),
+        fuel_consumed_mmbtu_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
+        fuel_cost_mer_mwh_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
+    ).resolve_scale(
+        color="shared"
+    )
+    return (combined_chart,)
+
+
+@app.cell
+def _(combined_chart, mo):
+    fuel_cost = mo.vstack([
+        mo.md("### Fuel Stats"),
+        mo.ui.altair_chart(combined_chart), 
+    ])
+
+    fuel_cost
+    return
+
+
+@app.cell
+def _(end_year, s_df, selected_util, start_year):
+    # PIVOT TABLE FOR SALES and REV CHART
+
+    s_df_util = s_df[
+        (s_df["utility_id_eia"] == selected_util.value)
+        & (s_df["report_date"].dt.year.isin(range(start_year.value, end_year.value+1)))
+    ]
+    pivot = (
+        s_df_util.pivot_table(
+            index="report_date",
+            columns="customer_class",
+            values=["sales_mwh", "sales_revenue"],
+            aggfunc="sum",
+        )
+        .sort_index()
+        .reset_index()
+    )
+    customer_classes = [c for c in pivot.columns if c != "report_date"]
+
+    sales_long = (
+        pivot.set_index("report_date")
+        .stack(level="customer_class")
+        .reset_index()
+        .rename_axis(None, axis=1)
+    )
+    return (sales_long,)
+
+
+@app.cell
+def _(alt, sales_long):
+    # SALES MWH CHART
+
+    sales_mwh_chart = alt.Chart(sales_long).mark_area().encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
+        y=alt.Y("sales_mwh:Q", stack="zero", title="Sales (MWh)", axis=alt.Axis(format=",.0f")),
+        color=alt.Color(
+            "customer_class:N",
+            scale=alt.Scale(scheme="tableau10"),
+            legend=alt.Legend(title="Customer Class", orient="right"),
+        ),
+        order=alt.Order("customer_class:N"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("customer_class:N", title="Customer Class"),
+            alt.Tooltip("sales_mwh:Q", title="Sales (MWh)", format=",.0f"),
+        ],
+    ).properties(
+        title="Retail Sales (MWh) by Customer Class",
+    )
+    return (sales_mwh_chart,)
+
+
+@app.cell
+def _(alt, sales_long):
+    # REVENUE CHART
+
+    sales_revenue_chart = alt.Chart(sales_long).mark_area().encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
+        y=alt.Y("sales_revenue:Q", stack="zero", title="Revenue ($)", axis=alt.Axis(format=",.0f")),
+        color=alt.Color(
+            "customer_class:N",
+            scale=alt.Scale(scheme="tableau10"),
+            legend=alt.Legend(title="Customer Class", orient="right"),
+        ),
+        order=alt.Order("customer_class:N"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("customer_class:N", title="Customer Class"),
+            alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
+        ],
+    ).properties(
+        title="Retail Revenue ($) by Customer Class",
+    )
+    return (sales_revenue_chart,)
+
+
+@app.cell
+def _(alt, sales_mwh_chart, sales_revenue_chart):
+    combined_sales_chart = alt.hconcat(
+        sales_mwh_chart.encode(
+            color=alt.Color(
+                "customer_class:N",
+                title="Customer Class",
+                legend=alt.Legend(orient="bottom", legendX=0, legendY=-30)
+            ),
+        ),
+        sales_revenue_chart.encode(color=alt.Color("customer_class:N", legend=None)),
+    ).resolve_scale(
+        color="shared"
+    )
+    return (combined_sales_chart,)
+
+
+@app.cell
+def _(alt, get_util_years, odr_df):
+    # REVENUE CHART
+
+    odr_year_util_df = get_util_years(odr_df)
+
+    revenue_class_chart = alt.Chart(odr_year_util_df).mark_area().encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
+        y=alt.Y("revenue:Q", stack="zero", title="Revenue ($)", axis=alt.Axis(format=",.0f")),
+        color=alt.Color(
+            "revenue_class:N",
+            scale=alt.Scale(scheme="tableau10"),
+            legend=alt.Legend(title="Revenue Class", orient="right"),
+        ),
+        order=alt.Order("revenue_class:N"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("revenue_class:N", title="Revenue Class"),
+            alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
+        ],
+    ).properties(
+        title="Revenue ($) by Type",
+    )
+    return (revenue_class_chart,)
+
+
+@app.cell
+def _(get_util_years, r_df):
+    # RELIABILITY 
+
+    r_util_year_df = get_util_years(r_df)
+    r_util_year_df = r_util_year_df[r_util_year_df["standard"]=="ieee_standard"]
+
+    caidi_cols = [c for c in r_util_year_df.columns if c.startswith("caidi")] + ["report_date"]
+    caidi_df = r_util_year_df[caidi_cols]
+    saidi_cols = [c for c in r_util_year_df.columns if c.startswith("saidi")] + ["report_date"]
+    saidi_df = r_util_year_df[saidi_cols]
+    saifi_cols = [c for c in r_util_year_df.columns if c.startswith("saifi")] + ["report_date"]
+    saifi_df = r_util_year_df[saifi_cols]
+    return r_util_year_df, saidi_df
+
+
+@app.cell
+def _(alt, saidi_df):
+    saidi_long = saidi_df.melt(
+        id_vars="report_date",
+        value_vars=[c for c in saidi_df.columns if c.startswith("saidi")],
+        var_name="metric",
+        value_name="value",
     )
 
-    mo.ui.altair_chart(chart)
+    saidi = alt.Chart(saidi_long).mark_bar().encode(
+        x=alt.X("report_date:O", title="Year"),
+        y=alt.Y("value:Q", title="SAIDI"),
+        xOffset=alt.XOffset("metric:N"),
+        color=alt.Color("metric:N", title="Metric"),
+        tooltip=[
+            alt.Tooltip("report_date:O", title="Date"),
+            alt.Tooltip("metric:N", title="Metric"),
+            alt.Tooltip("value:Q", title="Value", format=",.2f"),
+        ],
+    ).properties(
+        title="SAIDI Metrics by Year",
+    )
+    return (saidi,)
+
+
+@app.cell
+def _(mo, saidi):
+    mo.ui.altair_chart(saidi)
+    return
+
+
+@app.cell
+def _(alt, r_util_year_df):
+    # RELIABILITY CHART
+    reliability_class_chart = alt.Chart(r_util_year_df).mark_area().encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
+        y=alt.Y("revenue:Q", stack="zero", title="Revenue ($)", axis=alt.Axis(format=",.0f")),
+        color=alt.Color(
+            "revenue_class:N",
+            scale=alt.Scale(scheme="tableau10"),
+            legend=alt.Legend(title="Revenue Class", orient="right"),
+        ),
+        order=alt.Order("revenue_class:N"),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("revenue_class:N", title="Revenue Class"),
+            alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
+        ],
+    ).properties(
+        title="Revenue ($) by Type",
+    )
+    return
+
+
+@app.cell
+def _(combined_sales_chart, mo, revenue_class_chart):
+    customer_facing = mo.vstack([
+        mo.md("## Customer-Facing"),
+        mo.md("### Sales"),
+        mo.hstack([
+            combined_sales_chart,
+            mo.ui.altair_chart(revenue_class_chart)
+        ]),
+        mo.md("### Reliability")
+
+    ])
+
+    customer_facing
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
+    ## Utility Programs drop down menu
     return
 
 
@@ -531,52 +941,6 @@ def _(alt, mo, util_od_df):
     )
 
     mo.ui.altair_chart(chart2)
-    return
-
-
-@app.cell
-def _(alt, mo, s_df, selected_util):
-    s_df_util = s_df[s_df["utility_id_eia"] == selected_util.value]
-    pivot = (
-        s_df_util.pivot_table(
-            index="report_date",
-            columns="customer_class",
-            values="sales_mwh",
-            aggfunc="sum",
-        )
-        .sort_index()
-        .reset_index()
-    )
-    customer_classes = [c for c in pivot.columns if c != "report_date"]
-
-    sales_long = pivot.melt(
-        id_vars="report_date",
-        value_vars=customer_classes,
-        var_name="customer_class",
-        value_name="sales_mwh",
-    )
-
-    chart3 = alt.Chart(sales_long).mark_area().encode(
-        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Report Date"),
-        y=alt.Y("sales_mwh:Q", stack="zero", title="Sales (MWh)", axis=alt.Axis(format=",.0f")),
-        color=alt.Color(
-            "customer_class:N",
-            scale=alt.Scale(scheme="tableau10"),
-            legend=alt.Legend(title="Customer Class", orient="right"),
-        ),
-        order=alt.Order("customer_class:N"),
-        tooltip=[
-            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
-            alt.Tooltip("customer_class:N", title="Customer Class"),
-            alt.Tooltip("sales_mwh:Q", title="Sales (MWh)", format=",.0f"),
-        ],
-    ).properties(
-        title=alt.TitleParams("Electricity Sales by Customer Class", fontSize=18),
-        width=700,
-        height=400,
-    )
-
-    mo.ui.altair_chart(chart3)
     return
 
 
