@@ -501,8 +501,8 @@ def _(alt, end_year, start_year, util_od_df):
     od_neg = od_long[od_long["mwh"] < 0]
 
     base = alt.Chart().encode(
-        x=alt.X("year(report_date):T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
-        color=alt.Color("source:N", scale=alt.Scale(scheme="tableau10")),
+        x=alt.X("year(report_date):O", title="Year"),
+        color=alt.Color("source:N", scale=alt.Scale(scheme="tableau10"), legend=alt.Legend(orient="right", columns=1, labelLimit=300, offset=10)),
     )
     pos_chart = base.mark_bar(width={"band": 0.8}).encode(
         y=alt.Y("sum(mwh):Q", stack="zero", title="MWh"),
@@ -552,19 +552,7 @@ def _(end_year, gen_fuel_df, mfrc_df, selected_util, start_year):
     fuel_plus_gen_df = util_year_gen_fuel_df.groupby(["report_date", "fuel_type_code_pudl"])[[
         "net_generation_mwh", "fuel_consumed_mmbtu"
     ]].sum()
-    return fuel_plus_gen_df, util_mfrc_df, util_year_gen_fuel_df
-
-
-@app.cell
-def _(util_year_gen_fuel_df):
-    util_year_gen_fuel_df
-    return
-
-
-@app.cell
-def _(util_year_gen_fuel_df):
-    util_year_gen_fuel_df[util_year_gen_fuel_df["plant_id_eia"]==469]
-    return
+    return fuel_plus_gen_df, util_mfrc_df
 
 
 @app.cell
@@ -592,23 +580,11 @@ def _(util_mfrc_df):
 @app.cell
 def _(fuel_cost_df, fuel_plus_gen_df, pd):
     # For some reason, fuel_consumed_mmbtu is really off when you aggregate up...
-    fuel_cost_net_gen = pd.merge(fuel_plus_gen_df, fuel_cost_df, on=["report_date", "fuel_type_code_pudl"], suffixes=["_gen", "_cost"]).reset_index()
+    fuel_cost_net_gen = pd.merge(fuel_plus_gen_df, fuel_cost_df, on=["report_date", "fuel_type_code_pudl"], suffixes=["_gen_df", "_cost_df"]).reset_index()
 
     fuel_cost_net_gen = fuel_cost_net_gen[fuel_cost_net_gen["fuel_received_units"]>0]
     fuel_cost_net_gen["fuel_consumed_cost_per_net_gen"] = fuel_cost_net_gen.fuel_consumed_cost / fuel_cost_net_gen.net_generation_mwh
     return (fuel_cost_net_gen,)
-
-
-@app.cell
-def _(fuel_cost_df):
-    fuel_cost_df
-    return
-
-
-@app.cell
-def _(fuel_plus_gen_df):
-    fuel_plus_gen_df
-    return
 
 
 @app.cell
@@ -632,7 +608,7 @@ def _(alt, fuel_cost_net_gen):
 def _(alt, fuel_cost_net_gen):
     fuel_consumed_mmbtu_chart = alt.Chart(fuel_cost_net_gen).mark_line(strokeWidth=2).encode(
         x=alt.X("report_date:T", title="Report Date"),
-        y=alt.Y("fuel_consumed_mmbtu_gen:Q", title="Fuel Consumed (MMBtu)"),
+        y=alt.Y("fuel_consumed_mmbtu_gen_df:Q", title="Fuel Consumed (MMBtu)"),
         color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
         tooltip=[
             alt.Tooltip("report_date:T", title="Date"),
@@ -657,39 +633,35 @@ def _(alt, fuel_cost_net_gen):
             alt.Tooltip("fuel_consumed_cost_per_net_gen:Q", title="Total Cost ($)", format=",.0f"),
         ],
     ).properties(
-        title="Fuel Cost per MWH over Time",
+        title="Fuel Cost per MWh Over Time",
     )
-    return (fuel_cost_mer_mwh_chart,)
+    return
 
 
 @app.cell
-def _(
-    alt,
-    fuel_consumed_mmbtu_chart,
-    fuel_cost_mer_mwh_chart,
-    fuel_cost_mmbtu_chart,
-):
-    combined_chart = alt.hconcat(
+def _(alt, fuel_consumed_mmbtu_chart, fuel_cost_mmbtu_chart):
+    combined_fuel_chart = alt.hconcat(
         fuel_cost_mmbtu_chart.encode(
             color=alt.Color(
                 "fuel_type_code_pudl:N",
                 title="Fuel Type",
-                legend=alt.Legend(orient="bottom", legendX=0, legendY=-30)
+                legend=alt.Legend(orient="right", legendX=0, legendY=-30)
             ),
         ),
         fuel_consumed_mmbtu_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
-        fuel_cost_mer_mwh_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
+        #fuel_cost_mer_mwh_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
     ).resolve_scale(
         color="shared"
     )
-    return (combined_chart,)
+    return (combined_fuel_chart,)
 
 
 @app.cell
-def _(combined_chart, mo):
+def _(combined_fuel_chart, mo):
     fuel_cost = mo.vstack([
         mo.md("### Fuel Stats"),
-        mo.ui.altair_chart(combined_chart), 
+        mo.ui.altair_chart(combined_fuel_chart),
+        mo.md(f"via {table_preview_href("out_eia923__monthly_fuel_receipts_costs")} and {table_preview_href("out_eia923__generation_fuel_combined")}")
     ])
 
     fuel_cost
@@ -716,7 +688,7 @@ def _(end_year, s_df, selected_util, start_year):
     )
     customer_classes = [c for c in pivot.columns if c != "report_date"]
 
-    sales_long = (
+    sales_long = make_report_date_report_year(
         pivot.set_index("report_date")
         .stack(level="customer_class")
         .reset_index()
@@ -729,8 +701,8 @@ def _(end_year, s_df, selected_util, start_year):
 def _(alt, sales_long):
     # SALES MWH CHART
 
-    sales_mwh_chart = alt.Chart(sales_long).mark_area().encode(
-        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
+    sales_mwh_chart = alt.Chart(sales_long).mark_bar().encode(
+        x=alt.X("report_year:O", title="Year"),
         y=alt.Y("sales_mwh:Q", stack="zero", title="Sales (MWh)", axis=alt.Axis(format=",.0f")),
         color=alt.Color(
             "customer_class:N",
@@ -739,12 +711,13 @@ def _(alt, sales_long):
         ),
         order=alt.Order("customer_class:N"),
         tooltip=[
-            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("report_year:T", title="Year", format="%Y"),
             alt.Tooltip("customer_class:N", title="Customer Class"),
             alt.Tooltip("sales_mwh:Q", title="Sales (MWh)", format=",.0f"),
         ],
     ).properties(
         title="Retail Sales (MWh) by Customer Class",
+        width=300
     )
     return (sales_mwh_chart,)
 
@@ -753,8 +726,8 @@ def _(alt, sales_long):
 def _(alt, sales_long):
     # REVENUE CHART
 
-    sales_revenue_chart = alt.Chart(sales_long).mark_area().encode(
-        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
+    sales_revenue_chart = alt.Chart(sales_long).mark_bar().encode(
+        x=alt.X("report_year:O", title="Year"),
         y=alt.Y("sales_revenue:Q", stack="zero", title="Revenue ($)", axis=alt.Axis(format=",.0f")),
         color=alt.Color(
             "customer_class:N",
@@ -763,12 +736,13 @@ def _(alt, sales_long):
         ),
         order=alt.Order("customer_class:N"),
         tooltip=[
-            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("report_year:T", title="Year", format="%Y"),
             alt.Tooltip("customer_class:N", title="Customer Class"),
             alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
         ],
     ).properties(
         title="Retail Revenue ($) by Customer Class",
+        width=300
     )
     return (sales_revenue_chart,)
 
@@ -780,7 +754,7 @@ def _(alt, sales_mwh_chart, sales_revenue_chart):
             color=alt.Color(
                 "customer_class:N",
                 title="Customer Class",
-                legend=alt.Legend(orient="bottom", legendX=0, legendY=-30)
+                legend=alt.Legend(orient="right", legendX=0, legendY=-30)
             ),
         ),
         sales_revenue_chart.encode(color=alt.Color("customer_class:N", legend=None)),
@@ -794,10 +768,10 @@ def _(alt, sales_mwh_chart, sales_revenue_chart):
 def _(alt, get_util_years, odr_df):
     # REVENUE CHART
 
-    odr_year_util_df = get_util_years(odr_df)
+    odr_year_util_df = make_report_date_report_year(get_util_years(odr_df))
 
-    revenue_class_chart = alt.Chart(odr_year_util_df).mark_area().encode(
-        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
+    revenue_class_chart = alt.Chart(odr_year_util_df).mark_bar().encode(
+        x=alt.X("report_year:O", title="Year"),
         y=alt.Y("revenue:Q", stack="zero", title="Revenue ($)", axis=alt.Axis(format=",.0f")),
         color=alt.Color(
             "revenue_class:N",
@@ -806,14 +780,21 @@ def _(alt, get_util_years, odr_df):
         ),
         order=alt.Order("revenue_class:N"),
         tooltip=[
-            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+            alt.Tooltip("report_year:T", title="Year", format="%Y"),
             alt.Tooltip("revenue_class:N", title="Revenue Class"),
             alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
         ],
     ).properties(
-        title="Revenue ($) by Type",
+        title="Total Revenue ($) by Type",
+        width=300,
     )
     return (revenue_class_chart,)
+
+
+@app.function
+def make_report_date_report_year(df):
+    df["report_year"] = df["report_date"].dt.year
+    return df
 
 
 @app.cell
@@ -823,88 +804,134 @@ def _(get_util_years, r_df):
     r_util_year_df = get_util_years(r_df)
     r_util_year_df = r_util_year_df[r_util_year_df["standard"]=="ieee_standard"]
 
-    caidi_cols = [c for c in r_util_year_df.columns if c.startswith("caidi")] + ["report_date"]
-    caidi_df = r_util_year_df[caidi_cols]
-    saidi_cols = [c for c in r_util_year_df.columns if c.startswith("saidi")] + ["report_date"]
-    saidi_df = r_util_year_df[saidi_cols]
-    saifi_cols = [c for c in r_util_year_df.columns if c.startswith("saifi")] + ["report_date"]
-    saifi_df = r_util_year_df[saifi_cols]
-    return r_util_year_df, saidi_df
+    caidi_cols = [c for c in r_util_year_df.columns if c.startswith("caidi")] + ["report_year"]
+    caidi_df = make_report_date_report_year(r_util_year_df)[caidi_cols]
+    saidi_cols = [c for c in r_util_year_df.columns if c.startswith("saidi")] + ["report_year"]
+    saidi_df = make_report_date_report_year(r_util_year_df)[saidi_cols]
+    saifi_cols = [c for c in r_util_year_df.columns if c.startswith("saifi")] + ["report_year"]
+    saifi_df = make_report_date_report_year(r_util_year_df)[saifi_cols]
+    return caidi_df, saidi_df, saifi_df
 
 
 @app.cell
 def _(alt, saidi_df):
-    saidi_long = saidi_df.melt(
-        id_vars="report_date",
+    # SAIDI CHART
+
+    saidi_long = saidi_df.copy().melt(
+        id_vars="report_year",
         value_vars=[c for c in saidi_df.columns if c.startswith("saidi")],
         var_name="metric",
         value_name="value",
     )
 
     saidi = alt.Chart(saidi_long).mark_bar().encode(
-        x=alt.X("report_date:O", title="Year"),
-        y=alt.Y("value:Q", title="SAIDI"),
+        x=alt.X("report_year:O", title="Year"),
+        y=alt.Y("value:Q", title="Minutes Without Power"),
         xOffset=alt.XOffset("metric:N"),
-        color=alt.Color("metric:N", title="Metric"),
+        color=alt.Color("metric:N", title="Metric", legend=alt.Legend(orient="bottom", columns=1, labelLimit=300, offset=10)),
         tooltip=[
-            alt.Tooltip("report_date:O", title="Date"),
+            alt.Tooltip("report_year:O", title="Year"),
             alt.Tooltip("metric:N", title="Metric"),
             alt.Tooltip("value:Q", title="Value", format=",.2f"),
         ],
     ).properties(
-        title="SAIDI Metrics by Year",
+        title=alt.TitleParams(
+            text="System Average Interruption Duration Index (SAIDI)",
+            subtitle="Total length of time (minutes) an average customer is without power per year",
+        ),
+        width=500,
     )
     return (saidi,)
 
 
 @app.cell
-def _(mo, saidi):
-    mo.ui.altair_chart(saidi)
-    return
+def _(alt, caidi_df):
+    # CAIDI CHART
 
+    caidi_long = caidi_df.melt(
+        id_vars="report_year",
+        value_vars=[c for c in caidi_df.columns if c.startswith("caidi")],
+        var_name="metric",
+        value_name="value",
+    )
 
-@app.cell
-def _(alt, r_util_year_df):
-    # RELIABILITY CHART
-    reliability_class_chart = alt.Chart(r_util_year_df).mark_area().encode(
-        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
-        y=alt.Y("revenue:Q", stack="zero", title="Revenue ($)", axis=alt.Axis(format=",.0f")),
-        color=alt.Color(
-            "revenue_class:N",
-            scale=alt.Scale(scheme="tableau10"),
-            legend=alt.Legend(title="Revenue Class", orient="right"),
-        ),
-        order=alt.Order("revenue_class:N"),
+    caidi = alt.Chart(caidi_long).mark_bar().encode(
+        x=alt.X("report_year:O", title="Year"),
+        y=alt.Y("value:Q", title="Number of Interruptions"),
+        xOffset=alt.XOffset("metric:N"),
+        color=alt.Color("metric:N", title="Metric", legend=alt.Legend(orient="bottom", columns=1, labelLimit=300, offset=10)),
         tooltip=[
-            alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
-            alt.Tooltip("revenue_class:N", title="Revenue Class"),
-            alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
+            alt.Tooltip("report_year:O", title="Year"),
+            alt.Tooltip("metric:N", title="Metric"),
+            alt.Tooltip("value:Q", title="Value", format=",.2f"),
         ],
     ).properties(
-        title="Revenue ($) by Type",
+        title=alt.TitleParams(
+            text="Customer Average Interruption Duration Index (CAIDI)",
+            subtitle="Length of time (minutes) that an average customer is without power during an event",
+        ),
+        width=500
     )
-    return
+    return (caidi,)
 
 
 @app.cell
-def _(combined_sales_chart, mo, revenue_class_chart):
+def _(alt, saifi_df):
+    #SAIFI CHART
+
+    saifi_long = saifi_df.melt(
+        id_vars="report_year",
+        value_vars=[c for c in saifi_df.columns if c.startswith("saifi")],
+        var_name="metric",
+        value_name="value",
+    )
+
+    saifi = alt.Chart(saifi_long).mark_bar().encode(
+        x=alt.X("report_year:O", title="Year"),
+        y=alt.Y("value:Q", title="Number of Interruptions per Customer"),
+        xOffset=alt.XOffset("metric:N"),
+        color=alt.Color("metric:N", title="Metric", legend=alt.Legend(orient="bottom", columns=1, labelLimit=300, offset=10)),
+        tooltip=[
+            alt.Tooltip("report_year:O", title="Year"),
+            alt.Tooltip("metric:N", title="Metric"),
+            alt.Tooltip("value:Q", title="Value", format=",.2f"),
+        ],
+    ).properties(
+        title=alt.TitleParams(
+            text="System Average Interruption Frequency Index (SAIFI)",
+            subtitle="How often the average customer experiences interruptions per year",
+        ),
+        width=500
+    )
+    return (saifi,)
+
+
+@app.cell
+def _(caidi, combined_sales_chart, mo, revenue_class_chart, saidi, saifi):
     customer_facing = mo.vstack([
         mo.md("## Customer-Facing"),
         mo.md("### Sales"),
-        mo.hstack([
-            combined_sales_chart,
-            mo.ui.altair_chart(revenue_class_chart)
-        ]),
-        mo.md("### Reliability")
-
+        mo.Html(f"""
+        <div style="overflow-x: auto; width: 100%; display: block;">
+            <div style="min-width: max-content;">
+                {mo.hstack([combined_sales_chart, revenue_class_chart]).text}
+            </div>
+        </div>
+        """),
+        mo.md(f"via {table_preview_href('core_eia861__yearly_sales')}"),
+        mo.Html("<div style='margin-top: 2rem;'></div>"),
+        mo.md("### Reliability"),
+        mo.Html(f"""
+        <div style="overflow-x: auto; width: 100%; display: block;">
+            <div style="min-width: max-content;">
+                {mo.hstack([saidi, saifi, caidi]).text}
+            </div>
+        </div>
+        """),
+        mo.md(f"via {table_preview_href('core_eia861__yearly_reliability')}"),
     ])
 
     customer_facing
-    return
-
-
-@app.cell
-def _():
     return
 
 
@@ -915,15 +942,15 @@ def _():
 
 
 @app.cell
-def _(alt, mo, util_od_df):
+def _(alt, util_od_df):
     peak_long = util_od_df[["report_date", "summer_peak_demand_mw", "winter_peak_demand_mw"]].melt(
         id_vars="report_date",
         var_name="season",
         value_name="mw",
     )
 
-    chart2 = alt.Chart(peak_long).mark_line(strokeWidth=2).encode(
-        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Report Date"),
+    summer_v_winter_demand_chart = alt.Chart(peak_long).mark_line(strokeWidth=2).encode(
+        x=alt.X("report_date:T", axis=alt.Axis(format="%Y", tickCount="year"), title="Year"),
         y=alt.Y("mw:Q", title="MW"),
         color=alt.Color(
             "season:N",
@@ -931,7 +958,7 @@ def _(alt, mo, util_od_df):
                 domain=["summer_peak_demand_mw", "winter_peak_demand_mw"],
                 range=["#e05c2a", "#4a90d9"],
             ),
-            legend=alt.Legend(orient="top-right"),
+            legend=alt.Legend(orient="right"),
         ),
         tooltip=["report_date:T", "season:N", "mw:Q"],
     ).properties(
@@ -939,14 +966,22 @@ def _(alt, mo, util_od_df):
         width=700,
         height=400,
     )
+    return (summer_v_winter_demand_chart,)
 
-    mo.ui.altair_chart(chart2)
+
+@app.cell
+def _(mo, summer_v_winter_demand_chart):
+    demand = mo.vstack([
+        mo.md("## Demand"),
+        summer_v_winter_demand_chart
+    ])
+
+    demand
     return
 
 
 @app.cell
 def _():
-    # 
     return
 
 
