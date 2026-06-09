@@ -4,13 +4,141 @@ __generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Parent-Subsidiary Relationships
+
+    The dynamics of corporate ownership forms a web of relationships that can often skew behavior in unexpected ways.
+
+    Using parent-subsidiary relationships PUDL extracted from the SEC 10-K, you can use this dashboard to make those networks visible, and perhaps make better sense of why a company you're interested in behaves the way it does.
+
+    Locate a parent company directly using the [SEC CIK lookup tool](https://www.sec.gov/search-filings/cik-lookup), or search by utility name below. Then configure settings to display the relationship graph rooted at the company you selected. Beware! Parent-subsidiary relationship graphs can be very irregular, with cycles, self-edges, redundant edges, and duplicate entries, so you might have to fiddle with the settings to get something sensible.
+    """)
+    return
+
+
 @app.cell
 def _():
     import marimo as mo
-    import pandas as pd
-    import re
 
-    return mo, pd, re
+    with mo.status.progress_bar(
+        total=1, title="Loading subroutines", remove_on_exit=True
+    ) as do_imports:
+        from collections import defaultdict
+
+        import fastparquet as fp
+        import pandas as pd
+        import re
+
+        do_imports.update(subtitle="Done!")
+    return defaultdict, mo, pd, re
+
+
+@app.cell
+def _(mo, pd):
+    with mo.status.progress_bar(
+        total=1, title="Fetching parent-subsidiary data", remove_on_exit=True
+    ) as do_read_parquet:
+        out_sec10k__parents_and_subsidiaries = pd.read_parquet(
+            "https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_sec10k__parents_and_subsidiaries.parquet",
+            engine="fastparquet",
+            columns=[
+                "parent_company_name",
+                "parent_company_incorporation_state",
+                "parent_company_central_index_key",
+                "parent_company_utility_id_eia",
+                "parent_company_utility_name_eia",
+                "subsidiary_company_central_index_key",
+                "subsidiary_company_id_sec10k",
+                "report_date",
+            ],
+        )
+        do_read_parquet.update(subtitle="Done!")
+    return (out_sec10k__parents_and_subsidiaries,)
+
+
+@app.cell
+def _(Options, mo):
+    query_params = mo.query_params()
+
+    def initialize_default_params():
+        if "cik" not in query_params:
+            query_params["cik"] = "0000936340"
+        if "year" not in query_params or int(query_params["year"]) not in set(
+            Options.available_years(query_params["cik"])
+        ):
+            query_params["year"] = str(
+                Options.available_years(query_params["cik"]).max()
+            )
+
+    initialize_default_params()
+    return initialize_default_params, query_params
+
+
+@app.cell
+def _(initialize_default_params, query_params):
+    def reset_params(**kwargs):
+        """Persist selection parameters into the URL.
+
+        Should be called whenever the user makes a change to their selection.
+        Automatically updates downstream selections to valid defaults."""
+        for param, value in kwargs.items():
+            query_params.set(param, value)
+        initialize_default_params()
+
+    return (reset_params,)
+
+
+@app.cell
+def _(mo, out_sec10k__parents_and_subsidiaries, pd):
+    class Options:
+        @classmethod
+        @mo.cache
+        def available_years(cls, cik: str) -> pd.Series:
+            return (
+                out_sec10k__parents_and_subsidiaries.loc[
+                    out_sec10k__parents_and_subsidiaries.parent_company_central_index_key
+                    == cik
+                ]
+                .report_date.dropna()
+                .dt.year.drop_duplicates()
+                .sort_values(ascending=False)
+            )
+
+    return (Options,)
+
+
+@app.cell
+def _(Options, mo, query_params, reset_params):
+    from pydantic import BaseModel, computed_field
+    from functools import cached_property
+
+    class Selection(BaseModel):
+        cik: str
+        year: int
+
+        @computed_field
+        @cached_property
+        def enter_cik(self) -> mo.ui.text:
+            return mo.ui.text(
+                self.cik,
+                label="Parent company CIK",
+                on_change=lambda value: reset_params(cik=value),
+            )
+
+        @computed_field
+        @cached_property
+        def enter_year(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options={str(i): i for i in Options.available_years(self.cik)},
+                label="Filing year for parent-subsidiary relationships",
+                value=str(self.year),
+                on_change=lambda value: reset_params(year=str(value)),
+            )
+
+    selection = Selection(**query_params.to_dict())
+    return (selection,)
 
 
 @app.cell
@@ -21,7 +149,7 @@ def _(defaultdict, out_sec10k__parents_and_subsidiaries, pd, re):
     def clean(text):
         return SPACE.sub("_", PUNCT.sub("_", text))
 
-    def make_tree(root_cik, report_date):
+    def make_tree(root_cik, report_year):
         nodes = {}
         edges = defaultdict(list)
         unclean = {}
@@ -34,7 +162,10 @@ def _(defaultdict, out_sec10k__parents_and_subsidiaries, pd, re):
                     out_sec10k__parents_and_subsidiaries.parent_company_central_index_key
                     == cik
                 )
-                & (out_sec10k__parents_and_subsidiaries.report_date == report_date),
+                & (
+                    out_sec10k__parents_and_subsidiaries.report_date.dt.year
+                    == report_year
+                ),
                 [
                     "subsidiary_company_central_index_key",
                     "subsidiary_company_id_sec10k",
@@ -61,12 +192,12 @@ def _(defaultdict, out_sec10k__parents_and_subsidiaries, pd, re):
                 == root_cik,
                 ["parent_company_name", "parent_company_incorporation_state"],
             ]
-            .drop_duplicates()
-            .to_records(index=False)[0]
-        )
+            .value_counts()
+            .index[0]
+        )  # use most-frequent name & state
         max_depth = traverse(root_cik, root_label)
-        print(f"{root_cik} max depth: {max_depth}")
-        return nodes, edges, unclean
+        # print(f"{root_cik} max depth: {max_depth}")
+        return nodes, edges, unclean, max_depth
 
     return (make_tree,)
 
@@ -74,7 +205,7 @@ def _(defaultdict, out_sec10k__parents_and_subsidiaries, pd, re):
 @app.function
 def make_mermaid(nodes, edges, label, root, prune=True):
     def add_node(nodeid, nodelabel, graph):
-        graph.append(f"  {nodeid}[{nodelabel}]")
+        graph.append(f'  {nodeid}["{nodelabel}"]')
 
     def add_edge(fromid, toid, graph):
         graph.append(f"  {fromid} --> {toid}")
@@ -94,7 +225,7 @@ def make_mermaid(nodes, edges, label, root, prune=True):
 
     def add_edges(cik, level=0):
         seen[cik] = level
-        print(f"{level} {cik} {nodes[cik].partition('\n')[0]}")
+        # print(f"{level} {cik} {nodes[cik].partition('\n')[0]}")
         descendants = set(edges[cik])
         include = set()
         exclude = set()
@@ -181,23 +312,15 @@ def _(defaultdict):
 
 
 @app.cell
-def _(pd):
-    out_sec10k__parents_and_subsidiaries = pd.read_parquet(
-        "https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/out_sec10k__parents_and_subsidiaries.parquet"
-    )
-    return (out_sec10k__parents_and_subsidiaries,)
-
-
-@app.cell
-def _():
-    from collections import defaultdict
-
-    return (defaultdict,)
-
-
-@app.cell
-def _(mo, out_sec10k__parents_and_subsidiaries):
-    select_utility = mo.ui.dropdown(
+def _(mo, out_sec10k__parents_and_subsidiaries, query_params, reset_params):
+    select_utility_eia = mo.ui.dropdown(
+        value=out_sec10k__parents_and_subsidiaries.loc[
+            out_sec10k__parents_and_subsidiaries.parent_company_central_index_key
+            == query_params["cik"],
+            "parent_company_utility_name_eia",
+        ]
+        .dropna()
+        .iloc[0],  # "DTE Sustainable Generation", # CIK 0000936340
         options=(
             out_sec10k__parents_and_subsidiaries.loc[
                 out_sec10k__parents_and_subsidiaries.parent_company_utility_id_eia.notna(),
@@ -208,45 +331,162 @@ def _(mo, out_sec10k__parents_and_subsidiaries):
             .to_dict()["parent_company_central_index_key"]
         ),
         searchable=True,
-        full_width=True,
+        label="EIA utility name:",
     )
-    select_utility
-    return
+    use_utility_eia = mo.ui.button(
+        label="Use this EIA utility",
+        on_click=lambda value: reset_params(cik=select_utility_eia.value),
+    )
+    return select_utility_eia, use_utility_eia
+
+
+@app.function
+def select_rename(ser, mapping):
+    return ser[mapping.keys()].rename(mapping)
 
 
 @app.cell
 def _():
-    # todo: display basic info about selected utility
-    # make a button to use its CIK below
+    import altair as alt
+
+    return (alt,)
+
+
+@app.cell
+def _(alt, pd):
+    def available_years_sparkbar(report_dates):
+        years = report_dates.dt.year.value_counts().sort_index()
+        years = years.reindex(
+            range(min(years.index), max(years.index) + 1), fill_value=0
+        )
+        years = pd.DataFrame(
+            [{"year": y, "count": c} for y, c in years.to_dict().items()]
+        )
+        return (
+            alt.Chart(years)
+            .mark_bar()
+            .encode(
+                x=alt.X("year:O", axis=alt.Axis(title=None, ticks=False, domain=False)),
+                y=alt.Y("count", axis=None),
+            )
+            .properties(height=25)
+            .configure_view(stroke=None)
+        )
+
+    return (available_years_sparkbar,)
+
+
+@app.cell
+def _(
+    available_years_sparkbar,
+    mo,
+    out_sec10k__parents_and_subsidiaries,
+    select_utility_eia,
+    use_utility_eia,
+):
+    this_utility_eia = out_sec10k__parents_and_subsidiaries.loc[
+        out_sec10k__parents_and_subsidiaries.parent_company_central_index_key
+        == select_utility_eia.value,
+        [
+            "parent_company_name",
+            "parent_company_incorporation_state",
+            "parent_company_central_index_key",
+            "parent_company_utility_id_eia",
+            "parent_company_utility_name_eia",
+            "report_date",
+        ],
+    ]
+    this_utility_eia_years_spark = available_years_sparkbar(
+        this_utility_eia.report_date.dropna()
+    )
+    this_utility_eia = (
+        this_utility_eia.drop(columns=["report_date"])
+        .drop_duplicates()
+        .dropna()
+        .iloc[0]
+        .rename("")
+    )
+    mo.accordion(
+        {
+            "## Search by name": mo.vstack(
+                gap=2,
+                items=[
+                    select_utility_eia,
+                    mo.hstack(
+                        justify="start",
+                        gap=2,
+                        items=[
+                            mo.plain(
+                                select_rename(
+                                    this_utility_eia,
+                                    {
+                                        "parent_company_central_index_key": "SEC Central Index Key",
+                                        "parent_company_name": "SEC Company Name",
+                                        "parent_company_incorporation_state": "Incorporation State",
+                                    },
+                                )
+                            ),
+                            mo.plain(
+                                select_rename(
+                                    this_utility_eia,
+                                    {
+                                        "parent_company_utility_id_eia": "EIA Utility ID",
+                                        "parent_company_utility_name_eia": "EIA Utility Name",
+                                    },
+                                )
+                            ),
+                        ],
+                    ),
+                    mo.vstack(
+                        [
+                            mo.md("Subsidiary reports over time:"),
+                            this_utility_eia_years_spark,
+                        ]
+                    ),
+                    use_utility_eia,
+                ],
+            )
+        }
+    )
     return
 
 
 @app.cell
-def _(mo):
-    cik = mo.ui.text("0000936340", label="Parent company CIK")
-    filing_date = mo.ui.date(
-        "2023-01-01", label="Filing date for parent-subsidiary relationships"
+def _(mo, selection):
+    mo.vstack(
+        gap=2,
+        items=[
+            mo.md("## Configure relationship graph settings"),
+            mo.hstack(
+                justify="start",
+                items=[
+                    selection.enter_cik,
+                    selection.enter_year,
+                ],
+            ),
+        ],
     )
-    mo.hstack(
-        [
-            cik,
-            filing_date,
-        ]
-    )
-    return cik, filing_date
+    return
+
+
+@app.function
+def summarize_graph(nodes, edges, max_depth=None):
+    parts = [f"{len(nodes)} nodes, {sum(len(x) for x in edges.values())} edges"]
+    if max_depth:
+        parts.append(f"max traversal depth {max_depth}")
+    return "; ".join(parts)
 
 
 @app.cell
-def _(cik, filing_date, make_tree, mo):
-    nodes, edges, unclean = make_tree(cik.value, filing_date.value)
+def _(make_tree, mo, selection):
+    raw_nodes, raw_edges, unclean, max_depth = make_tree(selection.cik, selection.year)
     mo.md(f"""
-    **Raw graph**: {len(nodes)} nodes, {sum(len(x) for x in edges.values())} edges
+    **Raw graph**: {summarize_graph(raw_nodes, raw_edges, max_depth)}
     """)
     # print(f"{len(nodes)} nodes, {sum(len(x) for x in edges.values())} edges")
     # alt_nodes, alt_edges = collapse_matching_labels(nodes, drop_cycles(edges))
     # print(f"{len(alt_nodes)} nodes, {sum(len(x) for x in alt_edges.values())} edges")
-
-    return edges, nodes
+    return raw_edges, raw_nodes
 
 
 @app.cell
@@ -256,6 +496,7 @@ def _(mo):
     do_prune = mo.ui.checkbox(True, label="Auto prune?")
     mo.vstack(
         [
+            mo.md("Optional refinements:"),
             do_collapse,
             do_drop_cycles,
             do_prune,
@@ -265,48 +506,56 @@ def _(mo):
 
 
 @app.cell
-def _(cik, nodes):
-    nodes[cik.value]
-    return
-
-
-@app.cell
 def _(
     collapse_matching_labels,
     do_collapse,
     do_drop_cycles,
     drop_cycles,
-    edges,
     mo,
-    nodes,
+    raw_edges,
+    raw_nodes,
 ):
-    use_nodes, use_edges = nodes, edges
+    use_nodes, use_edges = raw_nodes, raw_edges
     if do_drop_cycles.value:
         use_edges = drop_cycles(use_edges)
     if do_collapse.value:
         use_nodes, use_edges = collapse_matching_labels(use_nodes, use_edges)
     mo.md(f"""
-    **Refined graph**: {len(use_nodes)} nodes, {sum(len(x) for x in use_edges.values())} edges
+    **Refined graph**: {summarize_graph(use_nodes, use_edges)}
     """)
     return use_edges, use_nodes
 
 
 @app.cell
-def _(cik, do_prune, mo, nodes, use_edges, use_nodes):
+def _(do_prune, raw_nodes, selection, use_edges, use_nodes):
     merm = make_mermaid(
         use_nodes,
         use_edges,
-        nodes[cik.value].split("\n", 1)[0],
-        cik.value,
+        raw_nodes[selection.cik].split("\n", 1)[0],
+        selection.cik,
         prune=do_prune.value,
     )
-    mo.mermaid(merm)
     return (merm,)
 
 
 @app.cell
-def _(merm):
-    print(merm)
+def _(merm, mo):
+    mo.output.append(mo.md("## Relationship Graph"))
+    mo.output.append(
+        mo.mermaid(
+            merm,
+        )
+    )
+    return
+
+
+@app.cell
+def _(merm, mo):
+    mo.accordion(
+        {
+            "View chart source (mermaid)": mo.md(f"```\n{merm}\n```"),
+        }
+    )
     return
 
 
