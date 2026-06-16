@@ -26,9 +26,10 @@ def _():
         import pandas as pd
         import pyarrow as pa
         import altair as alt
+        from textwrap import wrap
 
         do_imports.update(subtitle="Done!")
-    return alt, mo, pd
+    return alt, mo, pd, wrap
 
 
 @app.cell
@@ -57,16 +58,56 @@ def _(mo, pudl):
         subtitle="out_ferc1__yearly_rate_base",
         remove_on_exit=True,
     ) as do_fetch_data:
+        # glue
+        core_pudl__entity_utilities_pudl = pudl("core_pudl__entity_utilities_pudl")
+        do_fetch_data.update(subtitle="core_pudl__entity_utilities_pudl")
+        core_pudl__assn_ferc1_pudl_utilities = pudl(
+            "core_pudl__assn_ferc1_pudl_utilities"
+        )
+        do_fetch_data.update(subtitle="core_pudl__assn_ferc1_pudl_utilities")
+        core_pudl__assn_eia_pudl_utilities = pudl("core_pudl__assn_eia_pudl_utilities")
+        do_fetch_data.update(subtitle="core_pudl__assn_eia_pudl_utilities")
+        # data
         out_ferc1__yearly_rate_base = pudl("out_ferc1__yearly_rate_base")
         do_fetch_data.update(subtitle="out_ferc1__yearly_rate_base")
         core_eia861__yearly_sales = pudl("core_eia861__yearly_sales")
         do_fetch_data.update(subtitle="core_eia861__yearly_sales")
+        # done
         do_fetch_data.update(subtitle="Done!")
+
+    # glue
+    out_pudl__entity_utilities_pudl = core_pudl__entity_utilities_pudl.merge(
+        core_pudl__assn_ferc1_pudl_utilities,
+        on=["utility_id_pudl"],
+        how="outer",
+    ).merge(
+        core_pudl__assn_eia_pudl_utilities,
+        on=["utility_id_pudl"],
+        how="outer",
+    )
+
+    out_ferc1__yearly_rate_base = out_ferc1__yearly_rate_base.merge(
+        out_pudl__entity_utilities_pudl.drop_duplicates(
+            subset=["utility_id_pudl", "utility_id_ferc1"]
+        )[["utility_id_pudl", "utility_id_ferc1", "utility_name_pudl"]],
+        on=["utility_id_pudl", "utility_id_ferc1"],
+        how="left",
+        validate="m:1",
+    )
+
+    core_eia861__yearly_sales = core_eia861__yearly_sales.merge(
+        out_pudl__entity_utilities_pudl.drop_duplicates(subset=["utility_id_eia"])[
+            ["utility_id_pudl", "utility_id_eia", "utility_name_pudl"]
+        ],
+        on=["utility_id_eia"],
+        how="left",
+        validate="m:1",
+    )
     return core_eia861__yearly_sales, out_ferc1__yearly_rate_base
 
 
 @app.cell
-def _(out_ferc1__yearly_rate_base, pd):
+def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, pd):
     out_ferc1__yearly_rate_base.utility_id_ferc1_xbrl = (
         out_ferc1__yearly_rate_base.groupby(["report_year", "utility_id_ferc1"])[
             ["utility_id_ferc1_xbrl"]
@@ -81,6 +122,14 @@ def _(out_ferc1__yearly_rate_base, pd):
         out_ferc1__yearly_rate_base.plant_function.astype(pd.StringDtype()).fillna(
             "unclassified"
         )
+    )
+
+    core_eia861__yearly_sales.loc[:, "sales_revenue_by_mwh"] = (
+        core_eia861__yearly_sales.sales_revenue / core_eia861__yearly_sales.sales_mwh
+    )
+
+    core_eia861__yearly_sales.loc[:, "report_year"] = (
+        core_eia861__yearly_sales.report_date.dt.year
     )
     return
 
@@ -102,10 +151,10 @@ def _(mo, out_ferc1__yearly_rate_base, pd):
                 [
                     pd.Series(["ALL"]),
                     (
-                        out_ferc1__yearly_rate_base.loc[:, ["utility_name_ferc1"]]
+                        out_ferc1__yearly_rate_base.loc[:, ["utility_name_pudl"]]
                         .drop_duplicates()
-                        .sort_values(by="utility_name_ferc1")
-                        .utility_name_ferc1
+                        .sort_values(by="utility_name_pudl")
+                        .utility_name_pudl
                     ),
                 ]
             )
@@ -113,12 +162,12 @@ def _(mo, out_ferc1__yearly_rate_base, pd):
         @classmethod
         @mo.cache
         def available_years(cls, utilities) -> pd.Series:
-            if utilities == "ALL":
+            if utilities == {"ALL"} or utilities != "":
                 df = out_ferc1__yearly_rate_base
             else:
                 df = out_ferc1__yearly_rate_base.loc[
                     (
-                        out_ferc1__yearly_rate_base.utility_name_ferc1.isin(
+                        out_ferc1__yearly_rate_base.utility_name_pudl.isin(
                             list(utilities)
                         )
                     )
@@ -136,38 +185,40 @@ def _(OptionsFerc1, mo):
 
     def initialize_default_params():
         # print(query_params.keys())
-        if "utilities" not in query_params or query_params["utilities"] not in set(
-            OptionsFerc1.available_utilities()
-        ):
+        if "utilities" not in query_params:
             query_params["utilities"] = "ALL"
-        available_years = OptionsFerc1.available_years(query_params["utilities"])
+        util_set = set(query_params["utilities"].split("|"))
+        available_years = OptionsFerc1.available_years(util_set)
         if "start_year" not in query_params or (
-            query_params["start_year"] not in available_years
+            int(query_params["start_year"]) not in set(available_years)
         ):
             query_params["start_year"] = str(available_years.min())
         if "end_year" not in query_params or (
-            query_params["end_year"] not in available_years
+            int(query_params["end_year"]) not in set(available_years)
         ):
             query_params["end_year"] = str(available_years.max())
 
     initialize_default_params()
+    return initialize_default_params, query_params
 
+
+@app.cell
+def _(initialize_default_params, query_params):
     def reset_params(**kwargs):
         """Persist selection parameters into the URL.
 
         Should be called whenever the user makes a change to their selection.
         Automatically updates downstream selections to valid defaults."""
         for param, value in kwargs.items():
-            print(param)
             query_params.set(param, value)
         initialize_default_params()
 
-    return query_params, reset_params
+    return (reset_params,)
 
 
 @app.cell
 def _(OptionsFerc1, mo, query_params, reset_params):
-    from pydantic import BaseModel, Field, computed_field
+    from pydantic import BaseModel, Field, computed_field, field_validator
     from functools import cached_property
 
     class Selection(BaseModel):
@@ -179,27 +230,31 @@ def _(OptionsFerc1, mo, query_params, reset_params):
         The selector views (utilities_selector, years_selector, etc) are
         computed based on the values and cached for display in the dashboard."""
 
-        utilities: str | set[str] = Field("ALL")
-        start_year: int = 1994
-        end_year: int = 2024
+        utilities: set[str] = Field({"ALL"})
+        start_year: str = "1994"
+        end_year: str = "2024"
 
         @computed_field
         @cached_property
         def utilities_selector(self) -> mo.ui.multiselect:
             return mo.ui.multiselect(
                 options=list(OptionsFerc1.available_utilities()),
-                value=["ALL"],
+                value={"ALL"},
                 label="Choose Utilities or select ALL: ",
-                on_change=lambda value: reset_params(utilities=value),
+                max_selections=15,
+                on_change=lambda value: reset_params(utilities="|".join(value)),
             )
+
+        @field_validator("utilities", mode="before")
+        @classmethod
+        def deserialize(cls, value: str) -> set[str]:
+            return set(value.split("|"))
 
         @computed_field
         @cached_property
         def start_year_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options={
-                    str(i): i for i in OptionsFerc1.available_years(self.utilities)
-                },
+                options={str(i) for i in OptionsFerc1.available_years(self.utilities)},
                 label="Utility attributes starting from:",
                 value=str(self.start_year),
                 on_change=lambda value: reset_params(start_year=str(value)),
@@ -209,9 +264,7 @@ def _(OptionsFerc1, mo, query_params, reset_params):
         @cached_property
         def end_year_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options={
-                    str(i): i for i in OptionsFerc1.available_years(self.utilities)
-                },
+                options={str(i) for i in OptionsFerc1.available_years(self.utilities)},
                 label="Utility attributes ending:",
                 value=str(self.end_year),
                 on_change=lambda value: reset_params(end_year=str(value)),
@@ -252,7 +305,7 @@ def _(mo, selection):
             ),
             mo.md("----"),
             mo.md(
-                "Here is what we know about how this plant is situated within the grid, its physical location in space, and what operational generation capabilities it has."
+                "Here is what we know about utility costs. Not all utilities report to both FERC and EIA 861."
             ),
         ]
     )
@@ -260,21 +313,51 @@ def _(mo, selection):
 
 
 @app.cell
-def _(alt, mo, out_ferc1__yearly_rate_base, selection):
-    mask = out_ferc1__yearly_rate_base.report_year.between(
-        selection.start_year, selection.end_year
-    )
-    if selection.utilities != "ALL":
-        mask = mask & (
-            out_ferc1__yearly_rate_base.utility_name_ferc1.isin(selection.utilities)
-        )
-    filtered_rate_base = out_ferc1__yearly_rate_base[mask]
-
+def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, selection):
+    # Set default mask and title
     utility_selection_title_part = "All Utilities"
-    # if selection.utilities != "ALL":
-    #     if selection.utilities:
-    #         utility_selection_title_part = ""
+    utils_subtitle = ""
 
+    rate_mask = out_ferc1__yearly_rate_base.report_year.between(
+        int(selection.start_year), int(selection.end_year)
+    )
+
+    # Set default mask
+    sales_mask = core_eia861__yearly_sales.report_year.between(
+        int(selection.start_year), int(selection.end_year)
+    )
+
+    if selection.utilities != {"ALL"}:
+        rate_mask = rate_mask & (
+            out_ferc1__yearly_rate_base.utility_name_pudl.isin(selection.utilities)
+        )
+        sales_mask = sales_mask & (
+            core_eia861__yearly_sales.utility_name_pudl.isin(selection.utilities)
+        )
+        if (util_len := len(selection.utilities)) > 1:
+            utility_selection_title_part = f"{util_len} Utilities"
+            utils_subtitle = " & ".join(selection.utilities)
+        else:
+            utility_selection_title_part = f"{list(selection.utilities)[0]} Utilities"
+    filtered_rate_base = out_ferc1__yearly_rate_base[rate_mask]
+    filtered_sales = core_eia861__yearly_sales[sales_mask]
+    return (
+        filtered_rate_base,
+        filtered_sales,
+        utility_selection_title_part,
+        utils_subtitle,
+    )
+
+
+@app.cell
+def _(
+    alt,
+    filtered_rate_base,
+    mo,
+    utility_selection_title_part,
+    utils_subtitle,
+    wrap,
+):
     # why colors..?? bc.... bc i can! bc CUTENESS
     cat_colors = [
         "palevioletred",
@@ -310,7 +393,8 @@ def _(alt, mo, out_ferc1__yearly_rate_base, selection):
         alt.Chart(
             filtered_rate_base,
             title=alt.Title(
-                f"Annual Sum of Rate Base by Plant Function for {utility_selection_title_part}"
+                f"Annual Sum of Rate Base by Plant Function for {utility_selection_title_part}",
+                subtitle=wrap(utils_subtitle),
             ),
         )
         .mark_bar()
@@ -327,7 +411,8 @@ def _(alt, mo, out_ferc1__yearly_rate_base, selection):
         alt.Chart(
             filtered_rate_base,
             title=alt.Title(
-                f"Annual Sum of Rate Base by Category for {utility_selection_title_part}"
+                f"Annual Sum of Rate Base by Category for {utility_selection_title_part}",
+                subtitle=wrap(utils_subtitle),
             ),
         )
         .mark_bar()
@@ -339,47 +424,55 @@ def _(alt, mo, out_ferc1__yearly_rate_base, selection):
     )
 
     mo.output.append(mo.ui.altair_chart(plant_category_chart))
-    return cat_colors, utility_selection_title_part
+    return (cat_colors,)
 
 
 @app.cell
 def _(
     alt,
     cat_colors,
-    core_eia861__yearly_sales,
+    filtered_sales,
     mo,
     utility_selection_title_part,
+    utils_subtitle,
 ):
-    sales = core_eia861__yearly_sales.assign(
-        sales_revenue_by_mwh=lambda x: x.sales_revenue / x.sales_mwh,
-        report_year=lambda x: x.report_date.dt.year,
-    )  # .groupby(["report_date", "customer_class"], observed=True)[["sales_revenue_by_mwh"]].sum(min_count=1)
 
     cols_to_chart = [
         {
             "col": "sales_revenue",
             "title": "Sales Revenue by Customer Class",
             "y_title": "$",
+            "aggregate": "sum",
         },
-        {"col": "sales_mwh", "title": "MWh Sales by Customer Class", "y_title": "MWh"},
+        {
+            "col": "sales_mwh",
+            "title": "MWh Sales by Customer Class",
+            "y_title": "MWh",
+            "aggregate": "sum",
+        },
         {
             "col": "sales_revenue_by_mwh",
             "title": "Revenue per MWh by Customer Class",
             "y_title": "$/MWh",
+            "aggregate": "mean",
         },
     ]
     for col_to_chart in cols_to_chart:
         sales_chart = (
             alt.Chart(
-                sales,
+                # w/o this drop, we loose all customer_class that come after the nulls
+                filtered_sales.dropna(subset=[col_to_chart["col"]]).assign(
+                    year=lambda x: x.report_date.dt.year
+                ),
                 title=alt.Title(
-                    f"Annual Sum of {col_to_chart['title']} for {utility_selection_title_part}"
+                    f"Annual {col_to_chart['aggregate'].title()} of {col_to_chart['title']} for {utility_selection_title_part}",
+                    subtitle=utils_subtitle,
                 ),
             )
             .mark_bar()
             .encode(
-                alt.X("report_year", type="ordinal").title("Report date"),
-                alt.Y(col_to_chart["col"], aggregate="sum").title(
+                alt.X("year", type="ordinal").title("Report date"),
+                alt.Y(col_to_chart["col"], aggregate=col_to_chart["aggregate"]).title(
                     col_to_chart["y_title"]
                 ),
                 color=alt.Color("customer_class").scale(range=cat_colors),
