@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.5"
+__generated_with = "0.20.4"
 app = marimo.App(width="medium")
 
 
@@ -9,25 +9,32 @@ def _():
     # Imports
     import pandas as pd
     import marimo as mo
-    import plotly.graph_objects as go
-    import plotly
+    #import plotly.graph_objects as go
+    #import plotly
     import altair as alt
     import json
     from urllib.request import urlopen
-    import plotly.express as px
-
-    return alt, go, json, mo, pd, px, urlopen
+    #import plotly.express as px
+    return alt, json, mo, pd, urlopen
 
 
 @app.cell
-def _(mo, selected_state_full, selected_util):
+def _(mo, selection):
     mo.output.append(mo.md("# Utility Explorer"))
     mo.output.append(
         mo.md(
             'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time and generators.'
         )
     )
-    mo.output.append(mo.vstack([selected_state_full, selected_util]))
+    mo.output.append(mo.vstack([selection.state_selector, selection.util_selector]))
+    return
+
+
+@app.cell
+def _():
+    ### 
+    # Wherever displaying state selector: change to selection.state_selector
+    # Wherever accessing selected state: change to selection.state
     return
 
 
@@ -77,6 +84,136 @@ def _(pd):
 
 
 @app.cell
+def _(mo, pd, st_df, yu_df):
+    class Options:
+        """Compute valid plant selection options based on partial selections.
+
+        Caches the results so we're not constantly repeating dataframe queries.
+
+        Used by marimo ui widgets in constructing dropdown options; used by
+        selection initialization in validating/filling gaps in url params."""
+
+        @classmethod
+        @mo.cache
+        def available_states(cls) -> pd.Series:
+            return st_df.state.drop_duplicates().sort_values()
+
+
+        @classmethod
+        @mo.cache
+        def available_utils(cls, state: str) -> pd.Series:
+            return (
+                (
+                    yu_df[yu_df["utility_id_eia"].isin(
+                        st_df.loc[st_df.state == state, "utility_id_eia"]
+                        .drop_duplicates()
+                        .to_list())] 
+                    if state else yu_df
+                )[["utility_id_eia", "utility_name_eia"]]
+                .drop_duplicates()
+                .sort_values(by="utility_name_eia")["utility_name_eia"]
+             )
+        # For utilities, add a function that filters based on the available states (see plant_explorer notebook)
+    return (Options,)
+
+
+@app.cell
+def _(initialize_default_params, query_params):
+    def reset_params(**kwargs):
+        """Persist selection parameters into the URL.
+
+        Should be called whenever the user makes a change to their selection.
+        Automatically updates downstream selections to valid defaults."""
+        for param, value in kwargs.items():
+            query_params.set(param, value)
+        initialize_default_params()
+
+    return (reset_params,)
+
+
+@app.cell
+def _(Options, mo, query_params, reset_params):
+    from pydantic import BaseModel, Field, computed_field
+    from functools import cached_property
+
+    class Selection(BaseModel):
+        """Store/represent the user's current plant selection.
+
+        The direct values (state, county, plant, etc) are pulled from
+        and persisted to the corresponding URL parameters.
+
+        The selector views (state_selector, county_selector, etc) are
+        computed based on the values and cached for display in the dashboard."""
+
+        state: str
+        util: str
+
+        @computed_field 
+        @cached_property
+        def state_selector(self) -> mo.Html:
+            # return mo.hstack([
+            #     mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
+            return mo.ui.dropdown.from_series(
+                    Options.available_states(),
+                    label="Select a state:",
+                    value=self.state,
+                    searchable=True,
+                    allow_select_none=True,
+                    on_change=lambda value: reset_params(state=value),
+                )
+            #], justify="start")
+
+
+        @computed_field
+        @cached_property
+        def util_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown.from_series(
+                Options.available_utils(self.state),
+                label="Select a Utility",
+                value=self.util,
+                searchable=True,
+                allow_select_none=False,
+                on_change=lambda value: reset_params(util=value)
+            )
+
+    # default_util = in_state_utils_stats.iloc[0]
+    # selected_util = mo.ui.dropdown(
+    #     options={
+    #         f"{name} (id={id})": id for id, name in in_state_utils_stats.to_records()
+    #     },
+    #     value=f"{default_util.utility_name_eia} (id={default_util.name})",
+    #     label="Select a Utility:",
+    #     searchable=True,
+    # )
+
+    selection = Selection(**query_params.to_dict())
+    return (selection,)
+
+
+@app.cell
+def _(Options, mo):
+    # this has to be in a cell other than the cell where `selection` is defined,
+    # otherwise updates won't propagate correctly.
+    query_params = mo.query_params()
+
+    def initialize_default_params():
+        if "state" not in query_params or query_params["state"] not in set(
+            Options.available_states()
+        ):
+            query_params["state"] = "CO"
+
+        if "util" not in query_params or query_params["util"] not in set(
+            Options.available_utils(query_params["state"])
+        ):
+            query_params["util"] = (
+                Options.available_utils(query_params["state"]).iloc[0]
+            )
+
+    initialize_default_params()
+    return initialize_default_params, query_params
+
+
+@app.cell
 def _(end_year, selected_util, start_year):
     # Get desired year/util func
     def get_util_years(df):
@@ -89,34 +226,40 @@ def _(end_year, selected_util, start_year):
 
 
 @app.cell
-def _(mo, st_df):
-    # State selection
-    selected_state = mo.ui.dropdown.from_series(
-        st_df.state.drop_duplicates().sort_values(),
-        label="Select a state:",
-        value="CO",
-        searchable=True,
-        allow_select_none=True,
-    )
+def _():
+    # # State selection
+    # selected_state = mo.ui.dropdown.from_series(
+    #     Options.available_states(),
+    #     label="Select a state:",
+    #     value="CO",
+    #     searchable=True,
+    #     allow_select_none=True,
+    # )
 
-    selected_state_full = mo.hstack([
-        mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
-        selected_state
-    ], justify="start",)
-    return selected_state, selected_state_full
+    # selected_state_full = mo.hstack([
+    #     mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
+    #     selected_state
+    # ], justify="start",)
+    return
 
 
 @app.cell
-def _(mo, selected_state, st_df, yu_df):
+def _(selected_state_full):
+    selected_state_full
+    return
+
+
+@app.cell
+def _(mo, selection, st_df, yu_df):
     # Utility selection
     in_state_utils_stats = (
         (
             yu_df[yu_df["utility_id_eia"].isin(
-                st_df.loc[st_df.state == selected_state.value, "utility_id_eia"]
+                st_df.loc[st_df.state == selection.state, "utility_id_eia"]
                 .drop_duplicates()
                 .to_list()
             )]
-            if selected_state.value
+            if selection.state
             else yu_df
         )[["utility_id_eia", "utility_name_eia"]]
         .drop_duplicates()

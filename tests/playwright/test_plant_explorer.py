@@ -39,9 +39,6 @@ def _multiselect_option_by_text(page: Page, label: str, option_text: str) -> Non
 def _chart_png(page: Page) -> bytes:
     chart = page.locator("[role='graphics-document'], .vega-embed").first
     expect(chart).to_be_visible(timeout=5_000)
-    # without this sleep, sometimes the chart isn't attached to the DOM when
-    # we try to take a screenshot
-    time.sleep(0.2)
     return chart.screenshot()
 
 
@@ -58,6 +55,9 @@ def test_plant_explorer_interactions(page: Page, server_base_url: str) -> None:
     _find_interactible(page, "Select a plant:", "dropdown").select_option(
         "Barry (id=3)"
     )
+    expect(page).to_have_url(
+        f"{server_base_url}/plant-explorer.html?state=AL&county=Mobile&plant=3&year=2026&timeseries_start=2001"
+    )
     first_chart_png = _chart_png(page)
     assert first_chart_png, "Expected non-empty chart screenshot after first plant."
 
@@ -65,10 +65,13 @@ def test_plant_explorer_interactions(page: Page, server_base_url: str) -> None:
     _find_interactible(page, "Select a plant:", "dropdown").select_option(
         "Hog Bayou Energy Center (id=55241)"
     )
+    expect(page).to_have_url(
+        f"{server_base_url}/plant-explorer.html?state=AL&county=Mobile&plant=55241&year=2026&timeseries_start=2001"
+    )
     for _ in range(30):
+        time.sleep(0.5)
         if _chart_png(page) != first_chart_png:
             break
-        time.sleep(0.5)
     else:
         raise AssertionError("Chart did not update after selecting a second plant.")
 

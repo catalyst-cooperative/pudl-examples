@@ -9,42 +9,43 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 # See sync_kaggle_deps.py for how we keep this synced to what the Kaggle Docker image has
 #
 # Dependencies not pinned in the Docker image are just specified as *.
-python = ">=3.14.5,<3.15"
-ipykernel = ">=7.2.0,<8"
-jupyterlab = ">=4.5.7,<5"
-ipython = ">=9.14.0,<10"
-pandas = ">=3.0.3,<4"
-numpy = ">=2.4.6,<3"
-matplotlib = ">=3.10.9,<4"
-seaborn = ">=0.13.2,<0.14"
-geopandas = ">=1.1.3,<2"
-pyarrow = ">=24.0.0,<25"
-duckdb = ">=1.5.3,<2"
-altair = ">=6.1.0,<7"
-tqdm = ">=4.67.3,<5"
-matplotx = ">=0.3.10,<0.4"
-requests = ">=2.34.2,<3"
+python = "==3.12.12"
+ipykernel = "==6.17.1"
+jupyterlab = "*"
+ipython = "*"
+pandas = "==2.3.3"
+numpy = "==2.0.2"
+matplotlib = "==3.10.0"
+seaborn = "==0.13.2"
+geopandas = "==1.1.2"
+pyarrow = "==23.0.1"
+duckdb = "==1.3.2"
+altair = "==5.5.0"
+tqdm = "==4.67.3"
+matplotx = "*"
+requests = "==2.32.4"
 
 [feature.dev.dependencies]
-prek = ">=0.4.3,<0.5"
-tomlkit = ">=0.15.0,<0.16"
-requests = ">=2.34.2,<3"
-requirements-parser = ">=0.13.0,<0.14"
-kaggle = ">=2.2.0,<3"
+prek = ">=0.3.9,<1"
+tomlkit = "*"
+requests = "*"
+requirements-parser = "*"
+kaggle = ">=2,<3"
 
 [feature.wasm.dependencies]
 # Match Pyodide 0.27.7 package versions for packages imported by wasm marimo notebooks.
-python = ">=3.14.5,<3.15"
-marimo = ">=0.23.8,<0.24"
-altair = ">=6.1.0,<7"
-fastparquet = ">=2026.5.0,<2027"
-pandas = ">=3.0.3,<4"
-pyarrow = ">=24.0.0,<25"
+python = "3.12.*"
+marimo = "*"
+altair = "==5.4.1"
+fastparquet = "==2024.5.0"
+pandas = "==2.2.3"
+pyarrow = "==18.1.0"
+pydantic = "==2.10.5"
 
 [feature.wasm-test.dependencies]
-pytest = ">=9.0.3,<10"
-pytest-playwright = ">=0.8.0,<0.9"
-playwright = ">=1.60.0,<2"
+pytest = "*"
+pytest-playwright = "*"
+playwright = "*"
 
 [tasks]
 # NOTE (2026-02-27): ipython==7.34.0 from Kaggle is not on conda-forge - too old
@@ -57,7 +58,3 @@ test-wasm-marimo = "pytest -q tests/playwright"
 dev = ["dev"]
 kaggle = ["kaggle"]
 wasm = ["wasm", "wasm-test"]
-
-[dependencies]
-pre-commit = ">=4.6.0,<5"
-plotly = ">=6.6.0,<7"
