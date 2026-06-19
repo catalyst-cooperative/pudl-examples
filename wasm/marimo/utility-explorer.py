@@ -28,7 +28,13 @@ def _(mo, selection):
             'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time and generators.'
         )
     )
-    mo.output.append(mo.vstack([selection.state_selector, selection.util_selector]))
+    mo.output.append(mo.vstack([
+        mo.hstack([
+            mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
+            selection.state_selector,
+        ], justify="start"),
+        selection.util_selector
+    ]))
     return
 
 
