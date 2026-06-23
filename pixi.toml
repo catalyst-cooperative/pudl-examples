@@ -45,7 +45,8 @@ pydantic = "==2.10.5"
 [feature.wasm-test.dependencies]
 pytest = "*"
 pytest-playwright = "*"
-playwright = "*"
+playwright = "==1.58"
+playwright-python = "==1.58"
 
 [tasks]
 # NOTE (2026-02-27): ipython==7.34.0 from Kaggle is not on conda-forge - too old
