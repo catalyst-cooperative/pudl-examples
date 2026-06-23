@@ -56,7 +56,7 @@ def _():
 
 
 @app.function
-# Preview tables
+# Preview tables func
 def table_preview_href(name):
     return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>"""
 
@@ -129,11 +129,16 @@ def _(mo, pd, st_df, yu_df):
                     else yu_df
                 )[["utility_id_eia", "utility_name_eia"]]
                 .drop_duplicates()
-                .sort_values(by="utility_name_eia")["utility_name_eia"]
+                .sort_values(by="utility_name_eia")
+                .set_index("utility_id_eia")
             )
 
-        # For utilities, add a function that filters based on the available states (see plant_explorer notebook)
+            # @clasmethod
+            # @mo.cache
+            # def available_years(cls, state:str, util_id: int) -> pd.Series:
+            #     return (
 
+            #     )
     return (Options,)
 
 
@@ -166,13 +171,11 @@ def _(Options, mo, query_params, reset_params):
         computed based on the values and cached for display in the dashboard."""
 
         state: str
-        util: str
+        util_id: int
 
         @computed_field
         @cached_property
         def state_selector(self) -> mo.Html:
-            # return mo.hstack([
-            #     mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
             return mo.ui.dropdown.from_series(
                 Options.available_states(),
                 label="Select a state:",
@@ -181,22 +184,30 @@ def _(Options, mo, query_params, reset_params):
                 allow_select_none=True,
                 on_change=lambda value: reset_params(state=value),
             )
-            # ], justify="start")
 
         @computed_field
         @cached_property
         def util_selector(self) -> mo.ui.dropdown:
-            return mo.ui.dropdown.from_series(
-                Options.available_utils(self.state),
+            def get_util_name(util_id):
+                util_record = Options.available_utils(self.state).loc[util_id]
+                return f"{util_record.utility_name_eia} (id={util_record.name})"
+
+            return mo.ui.dropdown(
+                options={
+                    f"{name} (id={id})": id
+                    for id, name in Options.available_utils(
+                        self.state
+                    ).to_records()
+                },
                 label="Select a Utility",
-                value=self.util,
+                value=get_util_name(self.util_id),
                 searchable=True,
                 allow_select_none=False,
-                on_change=lambda value: reset_params(util=value),
+                on_change=lambda value: reset_params(util_id=str(value)),
             )
 
     # default_util = in_state_utils_stats.iloc[0]
-    # selected_util = mo.ui.dropdown(
+    # selection.util_id = mo.ui.dropdown(
     #     options={
     #         f"{name} (id={id})": id for id, name in in_state_utils_stats.to_records()
     #     },
@@ -221,23 +232,27 @@ def _(Options, mo):
         ):
             query_params["state"] = "CO"
 
-        if "util" not in query_params or query_params["util"] not in set(
-            Options.available_utils(query_params["state"])
+        if "util_id" not in query_params or int(query_params["util_id"]) not in set(
+            Options.available_utils(query_params["state"]).index
         ):
-            query_params["util"] = Options.available_utils(query_params["state"]).iloc[
-                0
-            ]
+            query_params["util_id"] = str(
+                Options.available_utils(
+                    query_params["state"]
+                )
+                .iloc[0]
+                .name
+            )
 
     initialize_default_params()
     return initialize_default_params, query_params
 
 
 @app.cell
-def _(end_year, selected_util, start_year):
+def _(end_year, selection, start_year):
     # Get desired year/util func
     def get_util_years(df):
         return df[
-            (df["utility_id_eia"] == selected_util.value)
+            (df["utility_id_eia"] == selection.util_id)
             & (
                 df["report_date"].dt.year.isin(
                     range(start_year.value, end_year.value + 1)
@@ -267,57 +282,51 @@ def _():
 
 
 @app.cell
-def _(selected_state_full):
-    selected_state_full
+def _():
+    # # Utility selection
+    # in_state_utils_stats = (
+    #     (
+    #         yu_df[
+    #             yu_df["utility_id_eia"].isin(
+    #                 st_df.loc[st_df.state == selection.state, "utility_id_eia"]
+    #                 .drop_duplicates()
+    #                 .to_list()
+    #             )
+    #         ]
+    #         if selection.state
+    #         else yu_df
+    #     )[["utility_id_eia", "utility_name_eia"]]
+    #     .drop_duplicates()
+    #     .sort_values(by="utility_name_eia")
+    #     .set_index("utility_id_eia")
+    # )
+    # default_util = in_state_utils_stats.iloc[0]
+    # selection.util_id = mo.ui.dropdown(
+    #     options={
+    #         f"{name} (id={id})": id for id, name in in_state_utils_stats.to_records()
+    #     },
+    #     value=f"{default_util.utility_name_eia} (id={default_util.name})",
+    #     label="Select a Utility:",
+    #     searchable=True,
+    # )
     return
 
 
 @app.cell
-def _(mo, selection, st_df, yu_df):
-    # Utility selection
-    in_state_utils_stats = (
-        (
-            yu_df[
-                yu_df["utility_id_eia"].isin(
-                    st_df.loc[st_df.state == selection.state, "utility_id_eia"]
-                    .drop_duplicates()
-                    .to_list()
-                )
-            ]
-            if selection.state
-            else yu_df
-        )[["utility_id_eia", "utility_name_eia"]]
-        .drop_duplicates()
-        .sort_values(by="utility_name_eia")
-        .set_index("utility_id_eia")
-    )
-    default_util = in_state_utils_stats.iloc[0]
-    selected_util = mo.ui.dropdown(
-        options={
-            f"{name} (id={id})": id for id, name in in_state_utils_stats.to_records()
-        },
-        value=f"{default_util.utility_name_eia} (id={default_util.name})",
-        label="Select a Utility:",
-        searchable=True,
-    )
-    return (selected_util,)
-
-
-@app.cell
-def _(selected_util, st_df):
+def _(selection, st_df):
     # County selection (for service ter)
-    util_counties = st_df[st_df["utility_id_eia"] == selected_util.value]
+    util_counties = st_df[st_df["utility_id_eia"] == selection.util_id]
     max_year = util_counties.report_date.dt.year.max()
     util_counties_year = util_counties[util_counties["report_date"].dt.year == max_year]
     return (util_counties_year,)
 
 
 @app.cell
-def _(selected_util):
+def _(selection):
     # Function to grab specific utility information from the most recent year.
     def show_static_value(df, col):
         out_df = (
-            df[df["utility_id_eia"] == selected_util.value]
+            df[df["utility_id_eia"] == selection.util_id]
             .sort_values(["report_date"], ascending=False)
             .dropna(subset=[col])
         )
@@ -360,7 +369,7 @@ def _(
     mo,
     num_plants_owned,
     pd,
-    selected_util,
+    selection,
     st_fig,
     states,
     total_cap,
@@ -369,7 +378,7 @@ def _(
         pd.DataFrame(
             [
                 {
-                    "Value": str(selected_util.value),
+                    "Value": str(selection.util_id),
                     "Reference Table": "",
                 },
                 {
@@ -447,18 +456,12 @@ def _(
             ),
         ]
     )
-    return (util_stats,)
-
-
-@app.cell
-def _(util_stats):
-    util_stats
     return
 
 
 @app.cell
-def _(gen_df, selected_util):
-    util_gen = gen_df[gen_df["utility_id_eia"] == selected_util.value].sort_values(
+def _(gen_df, selection):
+    util_gen = gen_df[gen_df["utility_id_eia"] == selection.util_id].sort_values(
         "report_date", ascending=False
     )
 
@@ -517,10 +520,10 @@ def _(gen_df, selected_util):
 
 
 @app.cell
-def _(gen_fuel_df, mo, selected_util):
+def _(gen_fuel_df, mo, selection):
     # Drop down for selecting which year of plants to show
 
-    util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"] == selected_util.value]
+    util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"] == selection.util_id]
 
     available_years = sorted(
         util_gen_fuel["report_date"].dt.year.unique(), reverse=True
@@ -719,8 +722,8 @@ def _(go, json, pd, px, urlopen, util_counties_year):
 
 
 @app.cell
-def _(od_df, selected_util):
-    util_od_df = od_df[od_df["utility_id_eia"] == selected_util.value]
+def _(od_df, selection):
+    util_od_df = od_df[od_df["utility_id_eia"] == selection.util_id]
     return (util_od_df,)
 
 
@@ -827,9 +830,9 @@ def _(end_year, fuel_chart, mo, source_chart, start_year):
 
 
 @app.cell
-def _(end_year, gen_fuel_df, mfrc_df, selected_util, start_year):
+def _(end_year, gen_fuel_df, mfrc_df, selection, start_year):
     util_mfrc_df = mfrc_df[
-        (mfrc_df["utility_id_eia"] == selected_util.value)
+        (mfrc_df["utility_id_eia"] == selection.util_id)
         & (
             mfrc_df["report_date"].dt.year.isin(
                 range(start_year.value, end_year.value + 1)
@@ -838,7 +841,7 @@ def _(end_year, gen_fuel_df, mfrc_df, selected_util, start_year):
     ]
 
     util_year_gen_fuel_df = gen_fuel_df[
-        (gen_fuel_df["utility_id_eia"] == selected_util.value)
+        (gen_fuel_df["utility_id_eia"] == selection.util_id)
         & (
             gen_fuel_df["report_date"].dt.year.isin(
                 range(start_year.value, end_year.value + 1)
@@ -1009,11 +1012,11 @@ def _(combined_fuel_chart, mo):
 
 
 @app.cell
-def _(end_year, s_df, selected_util, start_year):
+def _(end_year, s_df, selection, start_year):
     # PIVOT TABLE FOR SALES and REV CHART
 
     s_df_util = s_df[
-        (s_df["utility_id_eia"] == selected_util.value)
+        (s_df["utility_id_eia"] == selection.util_id)
         & (
             s_df["report_date"].dt.year.isin(
                 range(start_year.value, end_year.value + 1)
