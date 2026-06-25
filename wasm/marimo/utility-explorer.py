@@ -139,6 +139,7 @@ def _(mo, pd, st_df, yu_df):
             #     return (
 
             #     )
+
     return (Options,)
 
 
@@ -195,9 +196,7 @@ def _(Options, mo, query_params, reset_params):
             return mo.ui.dropdown(
                 options={
                     f"{name} (id={id})": id
-                    for id, name in Options.available_utils(
-                        self.state
-                    ).to_records()
+                    for id, name in Options.available_utils(self.state).to_records()
                 },
                 label="Select a Utility",
                 value=get_util_name(self.util_id),
@@ -236,11 +235,7 @@ def _(Options, mo):
             Options.available_utils(query_params["state"]).index
         ):
             query_params["util_id"] = str(
-                Options.available_utils(
-                    query_params["state"]
-                )
-                .iloc[0]
-                .name
+                Options.available_utils(query_params["state"]).iloc[0].name
             )
 
     initialize_default_params()
