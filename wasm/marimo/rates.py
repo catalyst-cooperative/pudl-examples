@@ -202,7 +202,12 @@ def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, pd, state_cols):
     core_eia861__yearly_sales.loc[:, "sales_revenue_by_mwh"] = (
         core_eia861__yearly_sales.sales_revenue / core_eia861__yearly_sales.sales_mwh
     )
-
+    core_eia861__yearly_sales.loc[:, "revenue_per_customer"] = (
+        core_eia861__yearly_sales.sales_revenue / core_eia861__yearly_sales.customers
+    )
+    core_eia861__yearly_sales.loc[:, "revenue_per_month_customer"] = (
+        core_eia861__yearly_sales.revenue_per_customer / 12
+    )
     core_eia861__yearly_sales.loc[:, "report_year"] = (
         core_eia861__yearly_sales.report_date.dt.year
     )
@@ -697,7 +702,10 @@ def _(alt, mo, pd, selection, wrap):
         utility_selection_title_part: str,
         y_axis_format: str,
         y_title: str,
+        filter_on_color_stack: str | None = None,
     ):
+        if filter_on_color_stack:
+            df = df[df[color_stack] == filter_on_color_stack]
         # groupby first bc its toooo big otherwise T_T
         gb = df.groupby(["report_year", color_stack], observed=False)[col]
         agged = getattr(gb, aggregate)().reset_index()
@@ -737,6 +745,9 @@ def _(alt, mo, pd, selection, wrap):
                         ],
                         y_title=col_to_chart["y_title"],
                         y_axis_format=col_to_chart["y_axis_format"],
+                        filter_on_color_stack=col_to_chart.get(
+                            "filter_on_color_stack", None
+                        ),
                     )
                     stack_graphs[option_n] = rate_base_chart
             mo.output.append(mo.md(col_to_chart.get("preamble", "")))
@@ -791,15 +802,41 @@ def _(graph_inputs, make_comparison_charts):
 
 
 @app.cell
+def _(core_eia861__yearly_sales):
+    core_eia861__yearly_sales
+    return
+
+
+@app.cell
 def _(graph_inputs, make_comparison_charts):
     cols_to_chart_eia861 = [
         {
+            "preamble": (
+                "How much of the revenue that utilities collect come from each different "
+                "types of customers?"
+            ),
             "col": "sales_revenue",
             "title": "Sales Revenue by Customer Class",
             "y_title": "$",
             "aggregate": "sum",
             "color_stack": "customer_class",
             "y_axis_format": "$",
+        },
+        {
+            # I added a filter in here bc.. well I assume most people want to see residential
+            # and with all customers the residential customers were drowned out
+            "preamble": (
+                "What about average monthly revenue per residential customers? This "
+                "isn't exactly equivilant to monthly bills but it is a good proxy for "
+                "an average monthly customer bill."
+            ),
+            "col": "revenue_per_month_customer",
+            "title": "Revenue per Residential Customer by per Month",
+            "y_title": "Sales ($) per Customer per Month",
+            "aggregate": "mean",
+            "color_stack": "customer_class",
+            "y_axis_format": "$",
+            "filter_on_color_stack": "residential",
         },
         {
             "col": "sales_mwh",
