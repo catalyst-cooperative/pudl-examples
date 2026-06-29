@@ -459,7 +459,7 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
             return out
 
     selection = Selection(**query_params.to_dict())
-    return (selection,)
+    return BaseModel, selection
 
 
 @app.cell
@@ -488,7 +488,7 @@ def sidebar(mo, selection):
                 align="start",
                 gap=0,
             ),
-            mo.md("""###Choose a Utility or Utilities to Compare:"""),
+            mo.md("""###Choose a Utility or Utilities:"""),
             mo.hstack(
                 [
                     mo.md(
@@ -544,10 +544,27 @@ def sidebar(mo, selection):
 
 @app.cell
 def filter_dfs(
+    BaseModel,
     core_eia861__yearly_sales,
     out_ferc1__yearly_rate_base,
     selection,
 ):
+
+    from typing import TypeVar
+
+    PandasDataFrame = TypeVar("pandas.core.frame.DataFrame")
+
+    class GraphInput(BaseModel):
+        filtered_rate_base: PandasDataFrame
+        filtered_sales: PandasDataFrame
+        utility_selection_title_part: str
+        utils_subtitle: str
+        utility_selection: set
+
+    class GraphInputs(BaseModel):
+        opt_1: GraphInput | dict
+        opt_2: GraphInput | dict
+
     graph_inputs = {"opt_1": {}, "opt_2": {}}
 
     for opt_n in graph_inputs.keys():
@@ -601,18 +618,19 @@ def filter_dfs(
                     utility_selection_title_part = f"{list(utility_selection)[0]}"
             filtered_rate_base = out_ferc1__yearly_rate_base[rate_mask]
             filtered_sales = core_eia861__yearly_sales[sales_mask]
-            graph_inputs[opt_n] = {
-                "utility_selection_title_part": utility_selection_title_part,
-                "utils_subtitle": utils_subtitle,
-                "filtered_rate_base": filtered_rate_base,
-                "filtered_sales": filtered_sales,
-                "utility_selection": utility_selection,
-            }
-    return (graph_inputs,)
+            graph_inputs[opt_n] = GraphInput(
+                filtered_rate_base=filtered_rate_base,
+                filtered_sales=filtered_sales,
+                utility_selection_title_part=utility_selection_title_part,
+                utils_subtitle=utils_subtitle,
+                utility_selection=utility_selection,
+            )
+    graph_inputs = GraphInputs(**graph_inputs)
+    return GraphInput, GraphInputs, graph_inputs
 
 
 @app.cell
-def chart_tools(alt, mo, pd, selection, wrap):
+def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
     # why colors..?? bc.... bc i can! bc CUTENESS
     cat_colors = [
         "palevioletred",
@@ -644,20 +662,27 @@ def chart_tools(alt, mo, pd, selection, wrap):
         "mistyrose",
     ]
 
+    # So many of the inputs for the charts were exactly the same with slight permiutaions. Plus I wanted to be able to
+    # either show one utility's charts OR two graphs for a comparison. So i did a slightly silly thing of compiling
+    # all of the inputs
     def make_chart(
         df: pd.DataFrame,
-        aggregate: str,
-        utils_subtitle: str,
-        color_stack: str,
-        colors: list[str],
-        col: str,
-        title: str,
-        utility_selection_title_part: str,
-        y_axis_format: str,
-        y_title: str,
-        filter_on_color_stack: list[str] | None = None,
-        xOffset: str | None = None,
+        graph_input: GraphInput,
+        col_to_chart: dict,
     ):
+        """Make a chart!
+
+        Args:
+            df: DataFrame to graph
+            graph_input: inputs for graphing based on the first or second
+                utility selection. See GraphInput above.
+            col_to_chart: dictionary of
+        """
+        aggregate = col_to_chart["aggregate"]
+        col = col_to_chart["col"]
+        # now do the chart
+        color_stack = col_to_chart["color_stack"]
+        filter_on_color_stack = col_to_chart.get("filter_on_color_stack", None)
         if filter_on_color_stack:
             df = df[df[color_stack].isin(filter_on_color_stack)]
         # groupby first bc its toooo big otherwise T_T
@@ -667,11 +692,16 @@ def chart_tools(alt, mo, pd, selection, wrap):
             agged,
             title=alt.Title(
                 wrap(
-                    f"{aggregate.title()} of {title} for {utility_selection_title_part}"
+                    f"{aggregate.title()} of {col_to_chart['title']} for {
+                        graph_input['utility_selection_title_part']
+                    }"
                 ),
-                subtitle=wrap(utils_subtitle),
+                subtitle=wrap(graph_input["utils_subtitle"]),
             ),
         )
+        # make the chart a side-by-side chart when there is an xOffest set
+        # and also its a bar chart
+        xOffset = col_to_chart.get("xOffset", None)
         xOffset_if_bar_and_side_by_side = (
             {"xOffset": xOffset}
             if xOffset and selection.mark_type_selector.value == "mark_bar"
@@ -681,35 +711,26 @@ def chart_tools(alt, mo, pd, selection, wrap):
             getattr(chart_cls, selection.mark_type_selector.value)()
             .encode(
                 alt.X("report_year", type="ordinal").title("Report date"),
-                alt.Y(col).axis(format=y_axis_format).title(y_title),
-                color=alt.Color(color_stack).scale(range=colors),
+                alt.Y(col)
+                .axis(format=col_to_chart["y_axis_format"])
+                .title(col_to_chart["y_title"]),
+                color=alt.Color(color_stack).scale(
+                    range=col_to_chart.get("colors", cat_colors)
+                ),
                 **xOffset_if_bar_and_side_by_side,
             )
             .properties(width="container")
         )
 
-    def make_comparison_charts(cols_to_chart, graph_inputs, df_name: str):
+    def make_comparison_charts(cols_to_chart, graph_inputs: GraphInputs, df_name: str):
         for col_to_chart in cols_to_chart:
             stack_graphs = {}
-            for option_n, graph_input in graph_inputs.items():
+            for option_n, graph_input in graph_inputs.dict().items():
                 if graph_input:
                     rate_base_chart = make_chart(
                         df=graph_input[df_name],
-                        aggregate=col_to_chart["aggregate"],
-                        utils_subtitle=graph_input["utils_subtitle"],
-                        color_stack=col_to_chart["color_stack"],
-                        col=col_to_chart["col"],
-                        title=col_to_chart["title"],
-                        utility_selection_title_part=graph_input[
-                            "utility_selection_title_part"
-                        ],
-                        y_title=col_to_chart["y_title"],
-                        y_axis_format=col_to_chart["y_axis_format"],
-                        filter_on_color_stack=col_to_chart.get(
-                            "filter_on_color_stack", None
-                        ),
-                        xOffset=col_to_chart.get("xOffset", None),
-                        colors=col_to_chart.get("colors", cat_colors),
+                        col_to_chart=col_to_chart,
+                        graph_input=graph_input,
                     )
                     stack_graphs[option_n] = rate_base_chart
             mo.output.append(mo.md(col_to_chart.get("preamble", "")))
