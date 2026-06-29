@@ -88,7 +88,7 @@ def _(mo, pd, pudl):
         core_pudl__assn_eia_pudl_utilities = pudl("core_pudl__assn_eia_pudl_utilities")
         do_fetch_data.update(subtitle="core_pudl__assn_eia_pudl_utilities")
         # data
-        out_ferc1__yearly_rate_base = pudl("out_ferc1__yearly_rate_base")
+        out_ferc1__yearly_rate_base1 = pudl("out_ferc1__yearly_rate_base")
         do_fetch_data.update(subtitle="out_ferc1__yearly_rate_base")
         core_eia861__yearly_sales = pudl("core_eia861__yearly_sales")
         do_fetch_data.update(subtitle="core_eia861__yearly_sales")
@@ -134,24 +134,24 @@ def _(mo, pd, pudl):
         .assign(report_year=lambda x: x.report_date.dt.year)
     )
 
-    out_ferc1__yearly_rate_base = out_ferc1__yearly_rate_base.merge(
+    out_ferc1__yearly_rate_base = out_ferc1__yearly_rate_base1.merge(
         out_pudl__entity_utilities_pudl.drop_duplicates(
-            subset=["utility_id_pudl", "utility_id_ferc1"]
+            subset=["utility_id_pudl", "utility_id_ferc1", "report_year"]
         )[
             ["utility_id_pudl", "utility_id_ferc1", "utility_name_pudl", "report_year"]
-            + list(out_pudl__entity_utilities_pudl.filter(like="state_").columns)
+            + state_cols
         ],
         on=["utility_id_pudl", "utility_id_ferc1", "report_year"],
         how="left",
         validate="m:1",
-    )
+    ).sort_values(by=["report_year"])
 
     core_eia861__yearly_sales = core_eia861__yearly_sales.merge(
         out_pudl__entity_utilities_pudl.drop_duplicates(
             subset=["utility_id_eia", "report_date"]
         )[
             ["utility_id_pudl", "utility_id_eia", "utility_name_pudl", "report_date"]
-            + list(out_pudl__entity_utilities_pudl.filter(like="state_").columns)
+            + state_cols
         ],
         on=["utility_id_eia", "report_date"],
         how="left",
@@ -184,16 +184,17 @@ def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, pd, state_cols):
     )
 
     # back and forward fill the state columns
-    out_ferc1__yearly_rate_base.loc[:, state_cols] = (
-        out_ferc1__yearly_rate_base.groupby(["utility_id_pudl"])[state_cols]
-        .bfill()
-        .ffill()
-    )
-    out_ferc1__yearly_rate_base.loc[:, "utility_name_pudl"] = (
-        out_ferc1__yearly_rate_base.groupby(["utility_id_pudl"])[["utility_name_pudl"]]
-        .bfill()
-        .ffill()
-    )
+    for fill_meth in ["bfill", "ffill"]:
+        out_ferc1__yearly_rate_base.loc[:, state_cols] = (
+            out_ferc1__yearly_rate_base.groupby(["utility_id_pudl"])[
+                state_cols
+            ].transform(fill_meth)
+        )
+        out_ferc1__yearly_rate_base.loc[:, "utility_name_pudl"] = (
+            out_ferc1__yearly_rate_base.groupby(["utility_id_pudl"])[
+                ["utility_name_pudl"]
+            ].transform(fill_meth)
+        )
 
     core_eia861__yearly_sales.loc[:, "sales_revenue_by_mwh"] = (
         core_eia861__yearly_sales.sales_revenue / core_eia861__yearly_sales.sales_mwh
