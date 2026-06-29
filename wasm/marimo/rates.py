@@ -5,10 +5,10 @@ app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def header(mo):
     mo.md(r"""
     # Rates Explorer
-    Explore utility rates with data from <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html" target="_blank">FERC Form 1</a> or <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861</a>. The publically available data can help us understand how rates have changed over time, the primary drivers of change and who bears the impact. The data available provides an incompelete picutre - rates are quite complex and the data is imperfect and incomplete. Nonetheless, we encourage you to explore and see what meaning you can make and utility rates. This dashbooard is attempting to daylight two important tables that can help make meaning about electricty rates:
+    Explore utility rates with data from <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html" target="_blank">FERC Form 1</a> or <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861</a>. The publicly available data can help us understand how rates have changed over time, the primary drivers of change and who bears the impact. The data available provides an incomplete picture - rates are quite complex and the data is imperfect and incomplete. Nonetheless, we encourage you to explore and see what meaning you can make and utility rates. This dashboard is attempting to daylight two important tables that can help make meaning about electricity rates:
     * <a href="https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_rate_base" target="_blank">out_ferc1__yearly_rate_base</a>: Annual time series of granular accounting data consisting of what utilities can typically include in their rate bases. This table tells us about the costs that utilities incur.
     * <a href="https://data.catalyst.coop/preview/pudl/core_eia861__yearly_sales" target="_blank">core_eia861__yearly_sales</a>: Annual time series of electricity sales to ultimate customers by utility, balancing authority, state, and customer class. The EIA-861 sales data tells us about revenue collected from consumers, presumable to cover those costs from the FERC Form 1 rate base table.
 
@@ -16,25 +16,25 @@ def _(mo):
     There is a fair amount of complexity in rate making and this dashboard only gives us a snapshot.  For more background materials, see the Additional Resources at the bottom of the page.
 
     * What are the costs that go into rate base?
-      * __"Rate base"__ includes expenses, investmetns, a rate of return on captial investment, amoung other things.
+      * __"Rate base"__ includes expenses, investments, a rate of return on capital investment, among other things.
         * __Fixed vs. Variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are *relatively* fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things in a "fixed" side of rates certainly change over time and require investments when use exa the existing infrastructure.
         * __Capital Bias__ is a well understood result of the predominate rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
-      * __Fuel costs & Other Riders__ (not included in this dashboard): "Riders" or "pass-throughs" are a common method for charging customers for specific programs or costs as a line-item on your bill. These costs are not included in rate base, but do effect customer prices. Fuel costs are the most notable because they can be extremely variable and can be significant. Fuel costs and other riders are not explored in this dashbaord.
+      * __Fuel costs & Other Riders__ (not included in this dashboard): "Riders" or "pass-throughs" are a common method for charging customers for specific programs or costs as a line-item on your bill. These costs are not included in rate base, but do effect customer prices. Fuel costs are the most notable because they can be extremely variable and can be significant. Fuel costs and other riders are not explored in this dashboard.
     * How do those costs get allocated to customers?
-      * __Cost Allocation__: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between custsomers.
+      * __Cost Allocation__: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between customers.
       * __Demand vs volumetric charges__: Residential customers almost always have bills which is largely volumetric pricing - meaning you are charged based on how much you consume. Some rate structures are demand-based, meaning you are charged by the maximum amount of energy you have consumed.
       * The EIA-861 data in this dashboard tells us about what costs are collected from different kinds of customers, but it does not tell us about how rates are structured or calculated. For more information about rate schedules you can explore <a href='https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_sales_by_rate_schedules_sched304' target='_blank'>out_ferc1__yearly_sales_by_rate_schedules_sched304</a>, but beware that table is not particularly well structured.
 
     ## Notable things not covered here
     * __Inflation__. All costs in this dashboard are nominal USD.
-    * __Fuel Costs__. As noted above, this data does not include pass through costs like fuel which can be substaintial.
+    * __Fuel Costs__. As noted above, this data does not include pass through costs like fuel which can be substantial.
     * __FERC Form 1 Respondents Only__. Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities.
     """)
     return
 
 
 @app.cell
-def _():
+def imports():
     import marimo as mo
 
     with mo.status.progress_bar(
@@ -52,10 +52,9 @@ def _():
 
 
 @app.cell
-def _(pd):
+def helpers(pd):
     def path(name):
-        # return f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet"
-        return f"/Users/christinagosnell/code/pudl_work/output/parquet/{name}.parquet"
+        return f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet"
 
     def pudl(name, columns=None):
         return pd.read_parquet(
@@ -71,7 +70,7 @@ def _(pd):
 
 
 @app.cell
-def _(mo, pd, pudl):
+def import_dfs_and_glue(mo, pd, pudl):
     with mo.status.progress_bar(
         total=5,
         title="Loading data",
@@ -166,7 +165,12 @@ def _(mo, pd, pudl):
 
 
 @app.cell
-def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, pd, state_cols):
+def add_columns(
+    core_eia861__yearly_sales,
+    out_ferc1__yearly_rate_base,
+    pd,
+    state_cols,
+):
     out_ferc1__yearly_rate_base.utility_id_ferc1_xbrl = (
         out_ferc1__yearly_rate_base.groupby(["report_year", "utility_id_ferc1"])[
             ["utility_id_ferc1_xbrl"]
@@ -208,11 +212,6 @@ def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, pd, state_cols):
     core_eia861__yearly_sales.loc[:, "report_year"] = (
         core_eia861__yearly_sales.report_date.dt.year
     )
-    return
-
-
-@app.cell
-def _(out_ferc1__yearly_rate_base, pd):
     plant_to_type_map = {
         "unclassified": "other",
         "nuclear_production": "energy_production",
@@ -240,7 +239,7 @@ def _(out_ferc1__yearly_rate_base, pd):
 
 
 @app.cell
-def _(
+def options_ferc1(
     mo,
     out_eia861__yearly_utility_service_territory,
     out_ferc1__yearly_rate_base,
@@ -299,7 +298,7 @@ def _(
 
 
 @app.cell
-def _(OptionsFerc1, mo):
+def build_query_params(OptionsFerc1, mo):
     # this has to be in a cell other than the cell where `selection` is defined,
     # otherwise updates won't propagate correctly.
     query_params = mo.query_params()
@@ -343,7 +342,7 @@ def _(initialize_default_params, query_params):
 
 
 @app.cell
-def _(OptionsFerc1, mo, query_params, reset_params):
+def selection(OptionsFerc1, mo, query_params, reset_params):
     from functools import cached_property
 
     from pydantic import BaseModel, Field, computed_field, field_validator
@@ -464,7 +463,7 @@ def _(OptionsFerc1, mo, query_params, reset_params):
 
 
 @app.cell
-def _(mo, selection):
+def sidebar(mo, selection):
     mo.sidebar(
         [
             mo.md("##Make Selections:"),
@@ -544,7 +543,11 @@ def _(mo, selection):
 
 
 @app.cell
-def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, selection):
+def filter_dfs(
+    core_eia861__yearly_sales,
+    out_ferc1__yearly_rate_base,
+    selection,
+):
     graph_inputs = {"opt_1": {}, "opt_2": {}}
 
     for opt_n in graph_inputs.keys():
@@ -609,7 +612,7 @@ def _(core_eia861__yearly_sales, out_ferc1__yearly_rate_base, selection):
 
 
 @app.cell
-def _(alt, mo, pd, selection, wrap):
+def chart_tools(alt, mo, pd, selection, wrap):
     # why colors..?? bc.... bc i can! bc CUTENESS
     cat_colors = [
         "palevioletred",
@@ -721,7 +724,7 @@ def _(alt, mo, pd, selection, wrap):
 
 
 @app.cell
-def _(graph_inputs, make_comparison_charts, mo):
+def chart_ferc1(graph_inputs, make_comparison_charts, mo):
     mo.output.append(mo.md("""## Utility Rate Base"""))
 
     cols_to_chart_ferc1 = [
@@ -765,7 +768,7 @@ def _(graph_inputs, make_comparison_charts, mo):
 
 
 @app.cell
-def _(graph_inputs, make_comparison_charts, mo):
+def chart_eia861(graph_inputs, make_comparison_charts, mo):
     mo.output.append(
         mo.md("""## Utility Revenue from Customers
     Now let's look at how much utilities are collecting from customers using EIA 861 data.
@@ -775,7 +778,7 @@ def _(graph_inputs, make_comparison_charts, mo):
     cols_to_chart_eia861 = [
         {
             "preamble": (
-                "How has utilty sales changed over time? Is this different than the rate base changing over time?\n"
+                "How has utility sales changed over time? Is this different than the rate base changing over time?\n"
                 "How much of the revenue that utilities collect come from each different "
                 "types of customers?"
             ),
@@ -793,7 +796,7 @@ def _(graph_inputs, make_comparison_charts, mo):
             # and with all customers the residential customers were drowned out
             "preamble": (
                 "What about average monthly revenue per residential customers? This "
-                "isn't exactly equivilant to monthly bills but it is a good proxy for "
+                "isn't exactly equivalent to monthly bills but it is a good proxy for "
                 "an average monthly customer bill."
             ),
             "col": "revenue_per_month_customer",
@@ -838,9 +841,9 @@ def _(graph_inputs, make_comparison_charts, mo):
 
 
 @app.cell
-def _(mo):
+def resources(mo):
     mo.md("""
-    ## Addition Resoures
+    ## Addition Resources
     * <a href="https://affordability-toolkit.rmi.org/" target='_blank'>RMI's Electricity Affordability Toolkit</a>
     * <a href='https://utilitydisconnections.org/' target='_blank'>Utility Disconnection Dashboard</a>
     * <a href='https://www.raponline.org/wp-content/uploads/2023/09/appendix-a-smart-rate-design-2015-aug-31.pdf' target='_blank'>RAP's Smart Rate Design for a Smart Future</a>
