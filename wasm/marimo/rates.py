@@ -7,28 +7,38 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def header(mo):
     mo.md(r"""
-    # Rates Explorer
-    Explore utility rates with data from <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html" target="_blank">FERC Form 1</a> or <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861</a>. The publicly available data can help us understand how rates have changed over time, the primary drivers of change and who bears the impact. The data available provides an incomplete picture - rates are quite complex and the data is imperfect and incomplete. Nonetheless, we encourage you to explore and see what meaning you can make and utility rates. This dashboard is attempting to daylight two important tables that can help make meaning about electricity rates:
-    * <a href="https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_rate_base" target="_blank">out_ferc1__yearly_rate_base</a>: Annual time series of granular accounting data consisting of what utilities can typically include in their rate bases. This table tells us about the costs that utilities incur.
-    * <a href="https://data.catalyst.coop/preview/pudl/core_eia861__yearly_sales" target="_blank">core_eia861__yearly_sales</a>: Annual time series of electricity sales to ultimate customers by utility, balancing authority, state, and customer class. The EIA-861 sales data tells us about revenue collected from consumers, presumable to cover those costs from the FERC Form 1 rate base table.
+    # Utility Rates Base & Sales Explorer
 
-    ## Brief overview of what goes into an electric utility bill?
-    There is a fair amount of complexity in rate making and this dashboard only gives us a snapshot.  For more background materials, see the Additional Resources at the bottom of the page.
+    This dashboard daylights two tables that can help us better understand utility rates:
+    * __<a href="https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_rate_base" target="_blank">out_ferc1__yearly_rate_base</a>__: This table tells us about the investments that utilities make to serve electricity customers which they typically include in their rate bases.
+    * __<a href="https://data.catalyst.coop/preview/pudl/core_eia861__yearly_sales" target="_blank">core_eia861__yearly_sales</a>__: This table tells us about revenue collected from each type of customer, presumably to cover those costs from the FERC Form 1 rate base table as well as other costs. This table gives us a good proxy for utility bills in aggregate, but doesn’t tell us about how rates are structured.
 
-    * What are the costs that go into rate base?
-      * __"Rate base"__ includes expenses, investments, a rate of return on capital investment, among other things.
-        * __Fixed vs. Variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are *relatively* fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things in a "fixed" side of rates certainly change over time and require investments when use exa the existing infrastructure.
-        * __Capital Bias__ is a well understood result of the predominate rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
-      * __Fuel costs & Other Riders__ (not included in this dashboard): "Riders" or "pass-throughs" are a common method for charging customers for specific programs or costs as a line-item on your bill. These costs are not included in rate base, but do effect customer prices. Fuel costs are the most notable because they can be extremely variable and can be significant. Fuel costs and other riders are not explored in this dashboard.
-    * How do those costs get allocated to customers?
-      * __Cost Allocation__: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between customers.
-      * __Demand vs volumetric charges__: Residential customers almost always have bills which is largely volumetric pricing - meaning you are charged based on how much you consume. Some rate structures are demand-based, meaning you are charged by the maximum amount of energy you have consumed.
-      * The EIA-861 data in this dashboard tells us about what costs are collected from different kinds of customers, but it does not tell us about how rates are structured or calculated. For more information about rate schedules you can explore <a href='https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_sales_by_rate_schedules_sched304' target='_blank'>out_ferc1__yearly_sales_by_rate_schedules_sched304</a>, but beware that table is not particularly well structured.
+    These tables provide clues about how rates have changed over time, the primary drivers of that change and who bears the impact of that change. It’s important to note that, while informative, the data provide an incomplete and imperfect picture. The rate making process is complex and this dashboard only gives us a snapshot. Nonetheless, we think this information is useful and we encourage you to explore. For more background materials, see the Additional Resources at the bottom of the page.
 
-    ## Notable things not covered here
-    * __Inflation__. All costs in this dashboard are nominal USD.
-    * __Fuel Costs__. As noted above, this data does not include pass through costs like fuel which can be substantial.
-    * __FERC Form 1 Respondents Only__. Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities.
+    ### Key concepts for exploring utility rates
+
+    * Utilities’ Revenue Requirement: The Building Blocks for Utility Bills
+      * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
+    * What is “Rate Base”? (shown below)
+      * FERC defines Rate Base as: “The value of property upon which a utility is permitted to earn a specified rate of return as established by a regulatory authority.”
+      * Rate Base includes all property and assets that the utility invests in and maintains for the purpose of serving customers.
+    * Expenses (not included in rate base)
+      * Fuel Cost and Other Expenses : Expenses are effectively passed on to consumers. These costs are not included in the rate base, but do affect customer bills.
+      * Fuel costs are the most notable because they can be volatile and can be significant.
+    * How do revenue requirements get translated into customer bills? (shown below)
+      * Cost Allocation: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between customers.
+      * The EIA-861 data in this dashboard tells us about how much revenue is collected from different kinds of customers, but it does not tell us about how rates are structured or calculated. For more information about rate schedules you can explore <a href='https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_sales_by_rate_schedules_sched304' target='_blank'>out_ferc1__yearly_sales_by_rate_schedules_sched304</a>, but beware that table is particularly messy and hard to interpret.
+    * Some key concepts to consider when exploring utility rates:
+      * __Capital Bias__: This is a well understood result of the predominant rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
+      * __Fixed vs. Variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are relatively fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things on the "fixed" side of rates certainly change over time and require investments when use of the existing infrastructure expands.
+      * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume.. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period..
+    ###  Complicating Factors
+    * __Inflation__: All costs in this dashboard are nominal USD.
+    * __Fuel Costs__: As noted above, the rate base data does not include pass through costs like fuel which can be substantial.
+    * __FERC Form 1 Respondents Only__: Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities. This biases the utilities shown here towards larger utilities which tend to be more investor owned utilities. Municipal and cooperative utilities do not report to FERC at all and so do not appear in this data.
+    * __Deregulated markets__: States which have utility markets which preclude or discourage customer-serving utilities from owning generation will show up in this data a little differently. These utilities buy generation on the market - so generation doesn't show up in their rate base because generation is purely an expense for them.
+
+    If you see anything odd in the data, find a bug or just have a question, feel free to reach out to us by emailing us at hello@catalyst.coop or write up <a href="https://github.com/catalyst-cooperative/pudl/issues/new?template=bug_report.md" target="_blank">a github issue</a>.
     """)
     return
 
@@ -630,7 +640,16 @@ def filter_dfs(
 
 
 @app.cell
-def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
+def chart_tools(
+    BaseModel,
+    GraphInput,
+    GraphInputs,
+    alt,
+    mo,
+    pd,
+    selection,
+    wrap,
+):
     # why colors..?? bc.... bc i can! bc CUTENESS
     cat_colors = [
         "palevioletred",
@@ -665,26 +684,45 @@ def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
     # So many of the inputs for the charts were exactly the same with slight permiutaions. Plus I wanted to be able to
     # either show one utility's charts OR two graphs for a comparison. So i did a slightly silly thing of compiling
     # all of the inputs
+
+    class ColumToChart(BaseModel):
+        col: str
+        """Name of the column to display in chart."""
+        aggregate: str
+        """How to aggreate the data. Generally Sum or Mean. Also first word in title."""
+        title_middle: str
+        """The middle bit of the title. Ex: Sum/Mean of (middle bit) for All/PA Utilities"""
+        preamble: str = ""
+        """Words to apear before this column's chart(s)."""
+        # Everything below is an alt.Chart or encode argument
+        color_stack: str
+        """Name of column that you want to stack."""
+        y_title: str
+        y_axis_format: str | None = None
+        xOffset: str | None = None
+        """If you want a side-by-side bars instead of stacked bar add xOffset."""
+        filter_on_color_stack: list[str] | None = None
+        colors: list[str] = cat_colors
+
     def make_chart(
         df: pd.DataFrame,
         graph_input: GraphInput,
-        col_to_chart: dict,
+        col_to_chart: ColumToChart,
     ):
         """Make a chart!
 
         Args:
             df: DataFrame to graph
             graph_input: inputs for graphing based on the first or second
-                utility selection. See GraphInput above.
-            col_to_chart: dictionary of
+                utility selection. See ``GraphInput`` above.
+            col_to_chart: inputs for charting a columns ;-) see ``ColumToChart``.
         """
-        aggregate = col_to_chart["aggregate"]
-        col = col_to_chart["col"]
+        aggregate = col_to_chart.aggregate
+        col = col_to_chart.col
         # now do the chart
-        color_stack = col_to_chart["color_stack"]
-        filter_on_color_stack = col_to_chart.get("filter_on_color_stack", None)
-        if filter_on_color_stack:
-            df = df[df[color_stack].isin(filter_on_color_stack)]
+        color_stack = col_to_chart.color_stack
+        if col_to_chart.filter_on_color_stack:
+            df = df[df[color_stack].isin(col_to_chart.filter_on_color_stack)]
         # groupby first bc its toooo big otherwise T_T
         gb = df.groupby(["report_year", color_stack], observed=True)[col]
         agged = getattr(gb, aggregate)().reset_index()
@@ -692,7 +730,7 @@ def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
             agged,
             title=alt.Title(
                 wrap(
-                    f"{aggregate.title()} of {col_to_chart['title']} for {
+                    f"{aggregate.title()} of {col_to_chart.title_middle} for {
                         graph_input['utility_selection_title_part']
                     }"
                 ),
@@ -701,10 +739,9 @@ def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
         )
         # make the chart a side-by-side chart when there is an xOffest set
         # and also its a bar chart
-        xOffset = col_to_chart.get("xOffset", None)
         xOffset_if_bar_and_side_by_side = (
-            {"xOffset": xOffset}
-            if xOffset and selection.mark_type_selector.value == "mark_bar"
+            {"xOffset": col_to_chart.xOffset}
+            if col_to_chart.xOffset and selection.mark_type_selector.value == "mark_bar"
             else {}
         )
         return (
@@ -712,17 +749,17 @@ def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
             .encode(
                 alt.X("report_year", type="ordinal").title("Report date"),
                 alt.Y(col)
-                .axis(format=col_to_chart["y_axis_format"])
-                .title(col_to_chart["y_title"]),
-                color=alt.Color(color_stack).scale(
-                    range=col_to_chart.get("colors", cat_colors)
-                ),
+                .axis(format=col_to_chart.y_axis_format)
+                .title(col_to_chart.y_title),
+                color=alt.Color(color_stack).scale(range=col_to_chart.colors),
                 **xOffset_if_bar_and_side_by_side,
             )
             .properties(width="container")
         )
 
-    def make_comparison_charts(cols_to_chart, graph_inputs: GraphInputs, df_name: str):
+    def make_comparison_charts(
+        cols_to_chart: list[ColumToChart], graph_inputs: GraphInputs, df_name: str
+    ):
         for col_to_chart in cols_to_chart:
             stack_graphs = {}
             for option_n, graph_input in graph_inputs.dict().items():
@@ -733,7 +770,7 @@ def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
                         graph_input=graph_input,
                     )
                     stack_graphs[option_n] = rate_base_chart
-            mo.output.append(mo.md(col_to_chart.get("preamble", "")))
+            mo.output.append(mo.md(col_to_chart.preamble))
             if len(stack_graphs) == 1:
                 mo.output.append(stack_graphs["opt_1"])
             else:
@@ -741,47 +778,47 @@ def chart_tools(GraphInput, GraphInputs, alt, mo, pd, selection, wrap):
                     alt.hconcat(stack_graphs["opt_1"], stack_graphs["opt_2"])
                 )
 
-    return (make_comparison_charts,)
+    return ColumToChart, make_comparison_charts
 
 
 @app.cell
-def chart_ferc1(graph_inputs, make_comparison_charts, mo):
+def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
     mo.output.append(mo.md("""## Utility Rate Base"""))
 
     cols_to_chart_ferc1 = [
-        {
-            "preamble": (
+        ColumToChart(
+            preamble=(
                 "What portion of a utilities overall expenses or capital has increased or decreased over time? Are the increases coming from the **generation of electricity** or the **transmission and distribution system**? Consider fixed vs. variable costs."
             ),
-            "col": "ending_balance",
-            "aggregate": "sum",
-            "title": "Rate Base by Function Type",
-            "y_title": "Nominal USD",
-            "y_axis_format": "$",
-            "color_stack": "plant_function_type",
-        },
-        {
-            "preamble": (
+            col="ending_balance",
+            aggregate="sum",
+            title_middle="Rate Base by Function Type",
+            y_title="Nominal USD",
+            y_axis_format="$",
+            color_stack="plant_function_type",
+        ),
+        ColumToChart(
+            preamble=(
                 "Want to dig in further? This graph breaks down rate base by 'plant function', which is a FERC-defined label of what function an expense or capital cost plays in utility operations."
             ),
-            "col": "ending_balance",
-            "title": "Rate Base by Plant Function",
-            "y_title": "Nominal USD",
-            "y_axis_format": "$",
-            "aggregate": "sum",
-            "color_stack": "plant_function",
-        },
-        {
-            "preamble": (
-                "Details Abound! The smart folks at <a href='rmi.org' target='_blank'>RMI</a> labled rate base with even more detail. This is a more detailed break down of these rate base costs."
+            col="ending_balance",
+            title_middle="Rate Base by Plant Function",
+            y_title="Nominal USD",
+            y_axis_format="$",
+            aggregate="sum",
+            color_stack="plant_function",
+        ),
+        ColumToChart(
+            preamble=(
+                "__Details Abound!__ The smart folks at <a href='rmi.org' target='_blank'>RMI</a> labled rate base with even more detail. This is a more detailed break down of these rate base costs."
             ),
-            "col": "ending_balance",
-            "aggregate": "sum",
-            "title": "Rate Base by Category",
-            "y_title": "Nominal USD",
-            "y_axis_format": "$",
-            "color_stack": "rate_base_category",
-        },
+            col="ending_balance",
+            aggregate="sum",
+            title_middle="Rate Base by Category",
+            y_title="Nominal USD",
+            y_axis_format="$",
+            color_stack="rate_base_category",
+        ),
     ]
 
     make_comparison_charts(cols_to_chart_ferc1, graph_inputs, "filtered_rate_base")
@@ -789,72 +826,72 @@ def chart_ferc1(graph_inputs, make_comparison_charts, mo):
 
 
 @app.cell
-def chart_eia861(graph_inputs, make_comparison_charts, mo):
+def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
     mo.output.append(
-        mo.md("""## Utility Revenue from Customers
-    Now let's look at how much utilities are collecting from customers using EIA 861 data.
+        mo.md("""## Utility Sale from Customers
+    Now let's look at how much utilities are collecting from customers using <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861 data</a>. The temporal coverage of EIA-861 is different from FERC Form 1. PUDL has integrated EIA-861 data starting in 2001 and EIA-861 data is released after FERC Form 1 data in year.
     """)
     )
     customer_colors = ["palevioletred", "purple", "lightseagreen"]
     cols_to_chart_eia861 = [
-        {
-            "preamble": (
+        ColumToChart(
+            preamble=(
                 "How has utility sales changed over time? Is this different than the rate base changing over time?\n"
                 "How much of the revenue that utilities collect come from each different "
                 "types of customers?"
             ),
-            "col": "sales_revenue",
-            "title": "Sales Revenue by Customer Class",
-            "y_title": "$",
-            "aggregate": "sum",
-            "colors": customer_colors,
-            "color_stack": "customer_class",
-            "y_axis_format": "$",
-            "filter_on_color_stack": ["commercial", "industrial", "residential"],
-        },
-        {
+            col="sales_revenue",
+            title_middle="Sales Revenue by Customer Class",
+            y_title="$",
+            aggregate="sum",
+            colors=customer_colors,
+            color_stack="customer_class",
+            y_axis_format="$",
+            filter_on_color_stack=["commercial", "industrial", "residential"],
+        ),
+        ColumToChart(
             # I added a filter in here bc.. well I assume most people want to see residential
             # and with all customers the residential customers were drowned out
-            "preamble": (
+            preamble=(
                 "What about average monthly revenue per residential customers? This "
                 "isn't exactly equivalent to monthly bills but it is a good proxy for "
                 "an average monthly customer bill."
             ),
-            "col": "revenue_per_month_customer",
-            "title": "Monthly Residential Sales",
-            "y_title": "Sales ($) per Customer per Month",
-            "aggregate": "mean",
-            "colors": [customer_colors[-1]],
-            "color_stack": "customer_class",
-            "y_axis_format": "$",
-            "filter_on_color_stack": ["residential"],
-            "xOffset": "customer_class",
-        },
-        {
-            "preamble": (
+            col="revenue_per_month_customer",
+            title_middle="Monthly Residential Sales",
+            y_title="Sales ($) per Customer per Month",
+            aggregate="mean",
+            colors=[customer_colors[-1]],
+            color_stack="customer_class",
+            y_axis_format="$",
+            filter_on_color_stack=["residential"],
+            xOffset="customer_class",
+        ),
+        ColumToChart(
+            preamble=(
                 "How has electricity consumption changed over time within these different customer classes\n"
                 "**Hint**: Generally speaking, electricity consumption over the last few decades has been incredibly flat."
             ),
-            "col": "sales_mwh",
-            "title": "MWh Sales by Customer Class",
-            "y_title": "MWh",
-            "aggregate": "sum",
-            "colors": customer_colors,
-            "color_stack": "customer_class",
-            "y_axis_format": None,
-            "filter_on_color_stack": ["commercial", "industrial", "residential"],
-        },
-        {
-            "col": "sales_revenue_by_mwh",
-            "title": "Revenue per MWh by Customer Class",
-            "y_title": "$/MWh",
-            "aggregate": "mean",
-            "colors": customer_colors,
-            "color_stack": "customer_class",
-            "y_axis_format": "$",
-            "filter_on_color_stack": ["commercial", "industrial", "residential"],
-            "xOffset": "customer_class",
-        },
+            col="sales_mwh",
+            title_middle="MWh Sales by Customer Class",
+            y_title="MWh",
+            aggregate="sum",
+            colors=customer_colors,
+            color_stack="customer_class",
+            y_axis_format=None,
+            filter_on_color_stack=["commercial", "industrial", "residential"],
+        ),
+        ColumToChart(
+            col="sales_revenue_by_mwh",
+            title_middle="Revenue per MWh by Customer Class",
+            y_title="$/MWh",
+            aggregate="mean",
+            colors=customer_colors,
+            color_stack="customer_class",
+            y_axis_format="$",
+            filter_on_color_stack=["commercial", "industrial", "residential"],
+            xOffset="customer_class",
+        ),
     ]
 
     make_comparison_charts(cols_to_chart_eia861, graph_inputs, "filtered_sales")
@@ -864,7 +901,8 @@ def chart_eia861(graph_inputs, make_comparison_charts, mo):
 @app.cell
 def resources(mo):
     mo.md("""
-    ## Addition Resources
+    ## Additional Resources
+    * <a href="https://www.nasuca.org/wp-content/uploads/2025/02/Rate-Base-Overview-Slide-Deck-NASUCA-Feb-2025-2025.02.24-v2.0.pdf" target="_blank">NASUCA's Overview of Rate Base</a>
     * <a href="https://affordability-toolkit.rmi.org/" target='_blank'>RMI's Electricity Affordability Toolkit</a>
     * <a href='https://utilitydisconnections.org/' target='_blank'>Utility Disconnection Dashboard</a>
     * <a href='https://www.raponline.org/wp-content/uploads/2023/09/appendix-a-smart-rate-design-2015-aug-31.pdf' target='_blank'>RAP's Smart Rate Design for a Smart Future</a>
