@@ -7,32 +7,33 @@ app = marimo.App(width="medium")
 @app.cell(hide_code=True)
 def header(mo):
     mo.md(r"""
-    # Utility Rates Base & Sales Explorer
+    # ⚡💸Utility Rate Base & Sales Explorer 💸⚡
 
     This dashboard daylights two tables that can help us better understand utility rates:
-    * __<a href="https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_rate_base" target="_blank">out_ferc1__yearly_rate_base</a>__: This table tells us about the investments that utilities make to serve electricity customers which they typically include in their rate bases.
-    * __<a href="https://data.catalyst.coop/preview/pudl/core_eia861__yearly_sales" target="_blank">core_eia861__yearly_sales</a>__: This table tells us about revenue collected from each type of customer, presumably to cover those costs from the FERC Form 1 rate base table as well as other costs. This table gives us a good proxy for utility bills in aggregate, but doesn’t tell us about how rates are structured.
+    * 🧮 __<a href="https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_rate_base" target="_blank">out_ferc1__yearly_rate_base</a>__: This table tells us about the investments that utilities make to serve electricity customers which they typically include in their rate bases.
+    * 🧾 __<a href="https://data.catalyst.coop/preview/pudl/core_eia861__yearly_sales" target="_blank">core_eia861__yearly_sales</a>__: This table tells us about revenue collected from each type of customer, presumably to cover those costs from the FERC Form 1 rate base table as well as other costs. This table gives us a good proxy for utility bills in aggregate, but doesn’t tell us about how rates are structured.
 
     These tables provide clues about how rates have changed over time, the primary drivers of that change and who bears the impact of that change. It’s important to note that, while informative, the data provide an incomplete and imperfect picture. The rate making process is complex and this dashboard only gives us a snapshot. Nonetheless, we think this information is useful and we encourage you to explore. For more background materials, see the Additional Resources at the bottom of the page.
 
-    ### Key concepts for exploring utility rates
+    ### Rate base ➡️ Customer Bills
 
-    * Utilities’ Revenue Requirement: The Building Blocks for Utility Bills
+    * 🧱 Utilities’ Revenue Requirement: The Building Blocks for Utility Bills
       * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
-    * What is “Rate Base”? (shown below)
+    * 🧮 What is “Rate Base”? (shown below)
       * FERC defines Rate Base as: “The value of property upon which a utility is permitted to earn a specified rate of return as established by a regulatory authority.”
       * Rate Base includes all property and assets that the utility invests in and maintains for the purpose of serving customers.
-    * Expenses (not included in rate base)
+    * ⛽ Expenses (not included in rate base)
       * Fuel Cost and Other Expenses : Expenses are effectively passed on to consumers. These costs are not included in the rate base, but do affect customer bills.
       * Fuel costs are the most notable because they can be volatile and can be significant.
-    * How do revenue requirements get translated into customer bills? (shown below)
+    * 🧾 How do revenue requirements get translated into customer bills? (shown below)
       * Cost Allocation: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between customers.
       * The EIA-861 data in this dashboard tells us about how much revenue is collected from different kinds of customers, but it does not tell us about how rates are structured or calculated. For more information about rate schedules you can explore <a href='https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_sales_by_rate_schedules_sched304' target='_blank'>out_ferc1__yearly_sales_by_rate_schedules_sched304</a>, but beware that table is particularly messy and hard to interpret.
-    * Some key concepts to consider when exploring utility rates:
+    * 🤔 Some key concepts to consider when exploring utility rates:
       * __Capital Bias__: This is a well understood result of the predominant rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
       * __Fixed vs. Variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are relatively fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things on the "fixed" side of rates certainly change over time and require investments when use of the existing infrastructure expands.
-      * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume.. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period..
-    ###  Complicating Factors
+      * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume.. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period.
+
+    ### 😵‍💫 Complicating Factors
     * __Inflation__: All costs in this dashboard are nominal USD.
     * __Fuel Costs__: As noted above, the rate base data does not include pass through costs like fuel which can be substantial.
     * __FERC Form 1 Respondents Only__: Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities. This biases the utilities shown here towards larger utilities which tend to be more investor owned utilities. Municipal and cooperative utilities do not report to FERC at all and so do not appear in this data.
@@ -783,7 +784,7 @@ def chart_tools(
 
 @app.cell
 def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
-    mo.output.append(mo.md("""## Utility Rate Base"""))
+    mo.output.append(mo.md("""## 🧮 Utility Rate Base"""))
 
     cols_to_chart_ferc1 = [
         ColumToChart(
@@ -828,7 +829,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
 @app.cell
 def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
     mo.output.append(
-        mo.md("""## Utility Sale from Customers
+        mo.md("""## 🧾 Utility Sales from Customers
     Now let's look at how much utilities are collecting from customers using <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861 data</a>. The temporal coverage of EIA-861 is different from FERC Form 1. PUDL has integrated EIA-861 data starting in 2001 and EIA-861 data is released after FERC Form 1 data in year.
     """)
     )
@@ -901,7 +902,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
 @app.cell
 def resources(mo):
     mo.md("""
-    ## Additional Resources
+    ## 📚 Additional Resources
     * <a href="https://www.nasuca.org/wp-content/uploads/2025/02/Rate-Base-Overview-Slide-Deck-NASUCA-Feb-2025-2025.02.24-v2.0.pdf" target="_blank">NASUCA's Overview of Rate Base</a>
     * <a href="https://affordability-toolkit.rmi.org/" target='_blank'>RMI's Electricity Affordability Toolkit</a>
     * <a href='https://utilitydisconnections.org/' target='_blank'>Utility Disconnection Dashboard</a>
