@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.20.4"
+__generated_with = "0.23.10"
 app = marimo.App(width="medium")
 
 
@@ -43,7 +43,6 @@ def _():
         import itertools
         import functools
 
-        import fastparquet as fp
         import pandas as pd
         import pyarrow as pa
         import altair as alt
@@ -61,12 +60,15 @@ def path(name):
 
 @app.cell
 def _(pd):
-    def pudl(name, columns=None):
-        return pd.read_parquet(
+    def pudl(name, **kwargs):
+        df = pd.read_parquet(
             path(name),
-            engine="fastparquet",
-            **({"columns": columns} if columns else {}),
+            **kwargs,
         )
+        # fastparquet gets the dtypes right but pyarrow seems to miss them
+        if "report_date" in df.columns and df.report_date.dtype != "datetime64[s]":
+            df["report_date"] = pd.to_datetime(df["report_date"])
+        return df
 
     return (pudl,)
 
@@ -110,7 +112,7 @@ def _(mo, pudl):
                 "net_generation_mwh",
             ],
         )
-        do_fetch_data.update(subtitle=".")
+        do_fetch_data.update(subtitle="out_eia923__monthly_generation")
         out_eia923__monthly_generation = pudl("out_eia923__monthly_generation")
         do_fetch_data.update(subtitle="Done!")
     return (
