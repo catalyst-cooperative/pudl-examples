@@ -16,12 +16,14 @@ def _():
     import json
     from urllib.request import urlopen
 
-    # import plotly.express as px
+    #import plotly.express as px
     return alt, json, mo, pd, urlopen
 
 
 @app.cell
 def _(mo, selection):
+    # ~~~~ FORMAT INITIAL STATE/UTIL SELECTION ~~~~
+
     mo.output.append(mo.md("# Utility Explorer"))
     mo.output.append(
         mo.md(
@@ -48,26 +50,26 @@ def _(mo, selection):
 
 
 @app.cell
-def _():
-    ###
-    # Wherever displaying state selector: change to selection.state_selector
-    # Wherever accessing selected state: change to selection.state
+def _(mo, selection):
+    mo.md(f"""
+    #**{selection.util_name}**
+    """)
     return
-
-
-@app.function
-# Preview tables func
-def table_preview_href(name):
-    return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>"""
 
 
 @app.cell
 def _(pd):
-    # Retreive tables func
+    # ~~~~ HELPFUL FUNCTIONS ~~~~
+
+    # ---- Preview tables func ---- 
+    def table_preview_href(name):
+        return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>"""
+
+    # ---- Retreive tables func ----
     def path(name):
         return f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet"
 
-    # Read tables func
+    # ---- Read tables func ----
     def pudl(name, columns=None):
         return pd.read_parquet(
             path(name),
@@ -75,7 +77,57 @@ def _(pd):
             **({"columns": columns} if columns else {}),
         )
 
-    # Grab tables
+    # ---- Turn date to year ---- 
+    def make_report_date_report_year(df):
+        df["report_year"] = df["report_date"].dt.year
+        return df
+
+    return make_report_date_report_year, pudl, table_preview_href
+
+
+@app.cell
+def _(selection):
+    # ~~~~ MORE HELPFUL FUNCTIONS ~~~~
+
+    # ---- Get desired year/util ---- 
+    def get_util_years(df):
+        return df[
+            (df["utility_id_eia"] == selection.util_id)
+            & (
+                df["report_date"].dt.year.isin(
+                    range(selection.start_year, selection.end_year + 1)
+                )
+            )
+        ]
+
+    # --- Get specific utility information from the most recent year. --- # 
+    def show_static_value_from_recent_year(df, col):
+    
+        util_df = (
+            df.loc[
+                (df["utility_id_eia"] == selection.util_id)
+            ]
+            .dropna(subset=[col])
+        )
+        recent_year = util_df.report_date.dt.year.max()
+        out_df = util_df.loc[util_df["report_date"].dt.year==recent_year]
+
+        if out_df.empty:
+            value = "Nothing Reported"
+            year = "N/A"
+        else:
+            value_list = out_df[col].unique().tolist()
+            value = ", ".join(str(x) for x in value_list)
+            year = recent_year
+        return value, year
+
+    return get_util_years, show_static_value_from_recent_year
+
+
+@app.cell
+def _(pudl):
+    # ~~~~ LOAD INPUT TABLES ~~~~
+
     st_df = pudl("out_eia861__yearly_utility_service_territory")
     yu_df = pudl("out_eia__yearly_utilities")
     od_df = pudl("core_eia861__yearly_operational_data_misc")
@@ -99,7 +151,9 @@ def _(pd):
 
 
 @app.cell
-def _(mo, pd, st_df, yu_df):
+def _(gen_df, mo, pd, st_df, yu_df):
+    # ~~~~ DEFINE SELECTION OPTIONS ~~~~ 
+
     class Options:
         """Compute valid plant selection options based on partial selections.
 
@@ -133,18 +187,44 @@ def _(mo, pd, st_df, yu_df):
                 .set_index("utility_id_eia")
             )
 
-            # @clasmethod
-            # @mo.cache
-            # def available_years(cls, state:str, util_id: int) -> pd.Series:
-            #     return (
+        @classmethod
+        @mo.cache
+        def available_years(cls, state:str, util_id: str) -> pd.Series:
+            return (
+                yu_df.loc[
+                    (yu_df.utility_id_eia == int(util_id))
+                ].report_date.dt.year.drop_duplicates()
+                .sort_values(ascending=False)
+            )
 
-            #     )
+        @classmethod
+        @mo.cache
+        def available_counties(cls, util_id: str) -> pd.Series:
+            return (
+                st_df.loc[
+                    (st_df.utility_id_eia == int(util_id))
+                ]
+                .county_id_fips
+                .drop_duplicates()
+            )
+
+        @classmethod
+        @mo.cache
+        def available_plant_status(cls) -> pd.Series:
+            return (
+                gen_df
+                .operational_status
+                .drop_duplicates()
+                .dropna()
+            )
 
     return (Options,)
 
 
 @app.cell
 def _(initialize_default_params, query_params):
+    # ~~~~ ENABLE PARAMETER RESET ~~~~
+
     def reset_params(**kwargs):
         """Persist selection parameters into the URL.
 
@@ -158,21 +238,27 @@ def _(initialize_default_params, query_params):
 
 
 @app.cell
-def _(Options, mo, query_params, reset_params):
+def _(Options, mo, query_params, reset_params, yu_df):
+    # ~~~~ CREATE SELECTION DROPDOWNS AND CACHED VALUES ~~~~
+
     from pydantic import BaseModel, computed_field
     from functools import cached_property
 
     class Selection(BaseModel):
         """Store/represent the user's current plant selection.
 
-        The direct values (state, county, plant, etc) are pulled from
+        The direct values (state, utility, year, etc) are pulled from
         and persisted to the corresponding URL parameters.
 
-        The selector views (state_selector, county_selector, etc) are
+        The selector views (state_selector, util_selector, etc) are
         computed based on the values and cached for display in the dashboard."""
 
         state: str
         util_id: int
+        start_year: int
+        end_year: int
+        plant_year: int
+        plant_status: str
 
         @computed_field
         @cached_property
@@ -205,15 +291,73 @@ def _(Options, mo, query_params, reset_params):
                 on_change=lambda value: reset_params(util_id=str(value)),
             )
 
-    # default_util = in_state_utils_stats.iloc[0]
-    # selection.util_id = mo.ui.dropdown(
-    #     options={
-    #         f"{name} (id={id})": id for id, name in in_state_utils_stats.to_records()
-    #     },
-    #     value=f"{default_util.utility_name_eia} (id={default_util.name})",
-    #     label="Select a Utility:",
-    #     searchable=True,
-    # )
+        @computed_field
+        @cached_property
+        def start_year_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options = (
+                    Options.available_years(self.state, self.util_id)
+                    .sort_values(ascending=True)
+                    .astype(str)
+                ),
+                label="Select a start year",
+                value=self.start_year,
+                searchable=True,
+                on_change=lambda value: reset_params(start_year=value)
+            )
+
+        @computed_field
+        @cached_property
+        def end_year_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options = {
+                    str(i) for i in 
+                    Options.available_years(self.state, self.util_id)
+                    if i >= int(self.start_year)
+                },
+                label="Select an end year",
+                value=self.end_year,
+                searchable=True,
+                on_change=lambda value: reset_params(end_year=value)
+            )
+
+        @computed_field
+        @cached_property
+        def plant_year_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options = (
+                    Options.available_years(self.state, self.util_id)
+                    .sort_values(ascending=False)
+                    .astype(str)
+                ),
+                label="Select a year",
+                value=self.plant_year,
+                searchable=True,
+                on_change=lambda value: reset_params(plant_year=value)
+            )
+
+        @computed_field
+        @cached_property
+        def plant_status_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options = Options.available_plant_status(),
+                label="Select plant status",
+                value=self.plant_status,
+                searchable=True,
+                on_change=lambda value: reset_params(plant_status=value)
+
+            )
+
+        @computed_field
+        @cached_property
+        def util_name(self) -> str:
+            return (
+                yu_df.loc[
+                    (yu_df["utility_id_eia"] == self.util_id)
+                    & (yu_df["report_date"].dt.year==self.plant_year)]
+                .utility_name_eia
+                .item()
+            )
 
     selection = Selection(**query_params.to_dict())
     return (selection,)
@@ -221,6 +365,8 @@ def _(Options, mo, query_params, reset_params):
 
 @app.cell
 def _(Options, mo):
+    # ~~~~ INITIALIZE DEFAULT PARAMETERS ~~~~
+
     # this has to be in a cell other than the cell where `selection` is defined,
     # otherwise updates won't propagate correctly.
     query_params = mo.query_params()
@@ -237,138 +383,68 @@ def _(Options, mo):
             query_params["util_id"] = str(
                 Options.available_utils(query_params["state"]).iloc[0].name
             )
+        if "start_year" not in query_params or int(query_params["start_year"]) not in set(
+            Options.available_years(query_params["state"], query_params["util_id"])
+        ):
+            query_params["start_year"] = str(
+                Options.available_years(
+                    query_params["state"], query_params["util_id"]
+                )
+                .iloc[-1]
+            )
+
+        if "end_year" not in query_params or int(query_params["end_year"]) not in set(
+            Options.available_years(query_params["state"], query_params["util_id"])
+        ):
+            query_params["end_year"] = str(
+                Options.available_years(
+                    query_params["state"], query_params["util_id"]
+                )
+                .iloc[0]
+            )
+        if "plant_year" not in query_params or int(query_params["plant_year"]) not in set(
+            Options.available_years(query_params["state"], query_params["util_id"])
+        ):
+            query_params["plant_year"] = str(
+                Options.available_years(
+                    query_params["state"], query_params["util_id"]
+                )
+                .iloc[0]
+            ) 
+        if "plant_status" not in query_params or query_params["plant_status"] not in set(
+            Options.available_plant_status()
+        ):
+            query_params["plant_status"] = "existing"
 
     initialize_default_params()
     return initialize_default_params, query_params
 
 
 @app.cell
-def _(end_year, selection, start_year):
-    # Get desired year/util func
-    def get_util_years(df):
-        return df[
-            (df["utility_id_eia"] == selection.util_id)
-            & (
-                df["report_date"].dt.year.isin(
-                    range(start_year.value, end_year.value + 1)
-                )
-            )
-        ]
-
-    return (get_util_years,)
-
-
-@app.cell
-def _():
-    # # State selection
-    # selected_state = mo.ui.dropdown.from_series(
-    #     Options.available_states(),
-    #     label="Select a state:",
-    #     value="CO",
-    #     searchable=True,
-    #     allow_select_none=True,
-    # )
-
-    # selected_state_full = mo.hstack([
-    #     mo.md(f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""),
-    #     selected_state
-    # ], justify="start",)
-    return
-
-
-@app.cell
-def _():
-    # # Utility selection
-    # in_state_utils_stats = (
-    #     (
-    #         yu_df[
-    #             yu_df["utility_id_eia"].isin(
-    #                 st_df.loc[st_df.state == selection.state, "utility_id_eia"]
-    #                 .drop_duplicates()
-    #                 .to_list()
-    #             )
-    #         ]
-    #         if selection.state
-    #         else yu_df
-    #     )[["utility_id_eia", "utility_name_eia"]]
-    #     .drop_duplicates()
-    #     .sort_values(by="utility_name_eia")
-    #     .set_index("utility_id_eia")
-    # )
-    # default_util = in_state_utils_stats.iloc[0]
-    # selection.util_id = mo.ui.dropdown(
-    #     options={
-    #         f"{name} (id={id})": id for id, name in in_state_utils_stats.to_records()
-    #     },
-    #     value=f"{default_util.utility_name_eia} (id={default_util.name})",
-    #     label="Select a Utility:",
-    #     searchable=True,
-    # )
-    return
-
-
-@app.cell
-def _(selection, st_df):
-    # County selection (for service ter)
-    util_counties = st_df[st_df["utility_id_eia"] == selection.util_id]
-    max_year = util_counties.report_date.dt.year.max()
-    util_counties_year = util_counties[util_counties["report_date"].dt.year == max_year]
-    return (util_counties_year,)
-
-
-@app.cell
-def _(selection):
-    # Function to grab specific utility information from the most recent year.
-    def show_static_value(df, col):
-        out_df = (
-            df[df["utility_id_eia"] == selection.util_id]
-            .sort_values(["report_date"], ascending=False)
-            .dropna(subset=[col])
-        )
-        recent_report_date = out_df.report_date.iloc[0]
-
-        if out_df.empty:
-            value = "Nothing Reported"
-            year = "N/A"
-        else:
-            value_list = (
-                out_df[out_df["report_date"] == recent_report_date][col]
-                .unique()
-                .tolist()
-            )
-            value = ", ".join(str(x) for x in value_list)
-            year = recent_report_date.year
-        return value, year
-
-    return (show_static_value,)
-
-
-@app.cell
-def _(gen_df, od_df, show_static_value, st_df, yu_df):
-    # Grab utility stats
-    util_name, util_name_year = show_static_value(yu_df, "utility_name_eia")
-    address, address_year = show_static_value(yu_df, "street_address")
-    states, states_year = show_static_value(st_df, "state")
-    entity_type, entity_year = show_static_value(od_df, "entity_type")
-    ba, ba_year = show_static_value(gen_df, "balancing_authority_code_eia")
-
-    # Grab capacity stats
-    return address, ba, entity_type, states
-
-
-@app.cell
 def _(
-    address,
-    ba,
-    entity_type,
+    gen_df,
     mo,
     num_plants_owned,
+    od_df,
     pd,
     selection,
-    st_fig,
-    states,
+    show_static_value_from_recent_year,
+    st_df,
+    table_preview_href,
     total_cap,
+    yu_df,
 ):
+    # ~~~~ BUILD UTILITY STATS TABLE ~~~~
+
+    # ---- Get stats from data ----
+    util_name, util_name_year = show_static_value_from_recent_year(yu_df, "utility_name_eia")
+    address, address_year = show_static_value_from_recent_year(yu_df, "street_address")
+    states, states_year = show_static_value_from_recent_year(st_df, "state")
+    entity_type, entity_year = show_static_value_from_recent_year(od_df, "entity_type")
+    ba, ba_year = show_static_value_from_recent_year(gen_df, "balancing_authority_code_eia")
+
+
+    # ---- Build stats table ---- 
     stats_table = mo.ui.table(
         pd.DataFrame(
             [
@@ -426,6 +502,85 @@ def _(
             ],
         )
     )
+    return (stats_table,)
+
+
+@app.cell
+def _(Options, alt, json, pd, selection, urlopen):
+    # ~~~~ GENERATE MAP FOR SERVICE TERRITORY ~~~~
+
+    with urlopen(
+        "https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json"
+    ) as _r:
+        _geojson = json.load(_r)
+
+    with urlopen(
+        "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
+    ) as _r:
+        _states_geojson = json.load(_r)
+
+    # --- build the same plot dataframe ---
+    fips_set = set(Options.available_counties(util_id=selection.util_id).str.zfill(5))
+    _all_fips = [f["id"] for f in _geojson["features"]]
+    _plot_df = pd.DataFrame({
+        "fips": _all_fips,
+        "in_df": [1 if f in fips_set else 0 for f in _all_fips],
+    })
+
+    # --- county choropleth ---
+    counties = alt.topo_feature(
+        "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json",
+        "counties"
+    )
+    states_map = alt.topo_feature(
+        "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
+        "states"
+    )
+
+    county_layer = (
+        alt.Chart(counties)
+        .mark_geoshape(stroke="black", strokeWidth=0.3)
+        .transform_lookup(
+            lookup="id",
+            from_=alt.LookupData(data=_plot_df, key="fips", fields=["in_df"]),
+            default="0",
+        )
+        .encode(
+            color=alt.condition(
+                alt.datum.in_df == 1,
+                alt.value("#1a237e"),
+                alt.value("#e8eaf6"),
+            ),
+            tooltip="id:N",
+        )
+    )
+
+    state_layer = (
+        alt.Chart(states_map)
+        .mark_geoshape(fill=None, stroke="black", strokeWidth=1.5)
+    )
+
+    st_chart = (
+        alt.layer(county_layer, state_layer)
+        .project("albersUsa")
+        .properties(width=900, height=560)
+        .configure_view(stroke=None)
+    )
+    return fips_set, st_chart
+
+
+@app.cell
+def _(fips_set, mo, selection, st_chart, stats_table):
+    # ~~~~ COMBINE AND DISPLAY UTIL STATS WITH SERVICE TERRITORY MAP ~~~~ 
+    # TO-DO: Make it slide horizontally
+
+    if not fips_set:
+        service_ter_chart = f"*No service territory reported for {selection.util_name}*"
+    else: 
+        service_ter_chart = mo.ui.altair_chart(st_chart.properties(width=500, height=300))
+
+    if not fips_set: 
+        no_st_warning = mo.md(f"*No service territory data for {selection.util_name}.*")
 
     util_stats = mo.vstack(
         [
@@ -443,7 +598,7 @@ def _(
                     mo.vstack(
                         [
                             mo.md("### Service Territory"),
-                            mo.ui.plotly(st_fig.update_layout(width=500, height=300)),
+                            service_ter_chart,
                         ]
                     ),
                 ],
@@ -451,16 +606,19 @@ def _(
             ),
         ]
     )
+    util_stats
     return
 
 
 @app.cell
 def _(gen_df, selection):
+    # ~~~~ PREP CONTENT FOR UTIL STATS TABLE ~~~~
+
     util_gen = gen_df[gen_df["utility_id_eia"] == selection.util_id].sort_values(
         "report_date", ascending=False
     )
 
-    recent_report_date = util_gen["report_date"].iloc[0]
+    recent_report_date = 2024 #util_gen["report_date"].iloc[0]
 
     util_gen_existing = util_gen[
         (util_gen["report_date"] == recent_report_date)
@@ -529,25 +687,7 @@ def _(gen_fuel_df, mo, selection):
         value=int(available_years[0]),
         label="Select year:",
     )
-    return available_years, selected_plant_year, util_gen_fuel
-
-
-@app.cell
-def _(available_years, mo):
-    available_years_ascending = available_years[::-1]
-
-    start_year = mo.ui.dropdown(
-        options=[int(y) for y in available_years_ascending],
-        value=int(available_years_ascending[0]),
-        label="Start year:",
-    )
-
-    end_year = mo.ui.dropdown(
-        options=[int(y) for y in available_years_ascending],
-        value=int(available_years_ascending[-1]),
-        label="End year:",
-    )
-    return end_year, start_year
+    return (util_gen_fuel,)
 
 
 @app.cell
@@ -558,47 +698,47 @@ def _(mo):
         value="existing",
         label="Select generator status:",
     )
-    return (selected_status,)
-
-
-@app.cell
-def _(agg_plant_values, mo, selected_plant_year, selected_status, util_gen):
-    # Display selected plant table
-    selected_year_util_gen = util_gen[
-        util_gen["report_date"].dt.year == selected_plant_year.value
-    ]
-
-    status_df = agg_plant_values(selected_year_util_gen, selected_status.value)
-
-    owned_gen = mo.vstack(
-        [
-            mo.md("## Owned Capacity"),
-            mo.vstack(
-                [
-                    mo.hstack(
-                        [
-                            selected_plant_year,
-                            selected_status,
-                        ],
-                        justify="start",
-                    ),
-                    mo.Html(
-                        f'<div style="max-width: 1000px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'
-                    ),
-                    mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"),
-                ]
-            ),
-        ]
-    )
-    owned_gen
     return
 
 
 @app.cell
-def _(alt, end_year, start_year, util_gen_fuel):
+def _(agg_plant_values, mo, selection, util_gen):
+    # Display selected plant table
+    selected_year_util_gen = util_gen[
+        util_gen["report_date"].dt.year == selection.plant_year
+    ]
+
+    status_df = agg_plant_values(selected_year_util_gen, selection.plant_status)
+
+
+    owned_gen_selection = mo.vstack([
+        mo.md("## Owned Capacity"),
+        mo.hstack([selection.plant_year_selector,selection.plant_status_selector], justify="start")
+    ])
+
+    owned_gen_selection
+    return (status_df,)
+
+
+@app.cell
+def _(mo, selection, status_df, table_preview_href):
+    mo.stop(status_df.empty, mo.md(f"*{selection.util_name} has no {selection.plant_status} owned capacity.*")),
+    mo.vstack([
+        mo.Html(
+            f'<div style="max-width: 1000px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'
+        ),
+        mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"),
+    ])
+    return
+
+
+@app.cell
+def _(alt, selection, util_gen_fuel):
+    # ~~~~ GENERATE FUEL CHART ~~~~ 
+
     fuel_year_df = util_gen_fuel[
         util_gen_fuel["report_date"].dt.year.isin(
-            range(start_year.value, end_year.value + 1)
+            range(selection.start_year, selection.end_year + 1)
         )
     ]
 
@@ -643,77 +783,7 @@ def _(alt, end_year, start_year, util_gen_fuel):
             height=400,
         )
     )
-    return (fuel_chart,)
-
-
-@app.cell
-def _(go, json, pd, px, urlopen, util_counties_year):
-    # Generate map for service territory
-    with urlopen(
-        "https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json"
-    ) as _r:
-        _geojson = json.load(_r)
-
-    with urlopen(
-        "https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json"
-    ) as _r:
-        _states_geojson = json.load(_r)
-
-    _fips_col = "county_fips"
-    _fips_set = set(util_counties_year["county_id_fips"].str.zfill(5))
-    _all_fips = [f["id"] for f in _geojson["features"]]
-
-    _plot_df = pd.DataFrame(
-        {
-            "fips": _all_fips,
-            "in_df": [1 if f in _fips_set else 0 for f in _all_fips],
-        }
-    )
-
-    st_fig = px.choropleth(
-        _plot_df,
-        geojson=_geojson,
-        locations="fips",
-        color="in_df",
-        scope="usa",
-        color_continuous_scale=[(0, "#e8eaf6"), (1, "#1a237e")],
-        range_color=[0, 1],
-        hover_data={"fips": True, "in_df": False},
-    )
-
-    # Add state outlines as a Scattergeo trace
-    for _feature in _states_geojson["features"]:
-        _coords = _feature["geometry"]["coordinates"]
-        _polys = (
-            _coords if _feature["geometry"]["type"] == "MultiPolygon" else [_coords]
-        )
-        for _poly in _polys:
-            _lons, _lats = zip(*_poly[0])
-            st_fig.add_trace(
-                go.Scattergeo(
-                    lon=list(_lons) + [None],
-                    lat=list(_lats) + [None],
-                    mode="lines",
-                    line=dict(color="black", width=1.5),
-                    showlegend=False,
-                    hoverinfo="skip",
-                )
-            )
-
-    st_fig.update_traces(marker_line_color="black", marker_line_width=0.3)
-    st_fig.update_layout(
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        coloraxis_showscale=False,
-        geo=dict(
-            scope="usa",
-            showlakes=False,
-            showsubunits=True,  # ← draws state boundaries
-            subunitcolor="white",
-            subunitwidth=1.5,
-        ),
-    )
-    None
-    return (st_fig,)
+    return fuel_chart, fuel_long
 
 
 @app.cell
@@ -723,7 +793,7 @@ def _(od_df, selection):
 
 
 @app.cell
-def _(alt, end_year, start_year, util_od_df):
+def _(alt, selection, util_od_df):
     # Define value cols
     value_cols = [
         "net_generation_mwh",
@@ -736,7 +806,7 @@ def _(alt, end_year, start_year, util_od_df):
     # Get year of interest
     source_year_df = util_od_df[
         util_od_df["report_date"].dt.year.isin(
-            range(start_year.value, end_year.value + 1)
+            range(selection.start_year, selection.end_year + 1)
         )
     ]
     # source_year_df["report_date"] = source_year_df.report_date.dt.year
@@ -787,11 +857,21 @@ def _(alt, end_year, start_year, util_od_df):
 
 
 @app.cell
-def _(end_year, fuel_chart, mo, source_chart, start_year):
+def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
+    # ~~~~ YEAR RANGE SELECTION AND DISPLAY FOR ELECTRICITY SOURCE
+
+
+    if fuel_long.empty:
+        fuel_chart_mo = f"*{selection.util_name} has no owned capacity*"
+    else: 
+        fuel_chart_mo = mo.ui.altair_chart(
+            fuel_chart.properties(width=350, height=250)
+        )
+
     electricity_source = mo.vstack(
         [
             mo.md("## Electricity Source"),
-            mo.hstack([start_year, end_year], justify="start"),
+            mo.hstack([selection.start_year_selector, selection.end_year_selector], justify="start"),
             mo.hstack(
                 [
                     mo.vstack(
@@ -825,12 +905,12 @@ def _(end_year, fuel_chart, mo, source_chart, start_year):
 
 
 @app.cell
-def _(end_year, gen_fuel_df, mfrc_df, selection, start_year):
+def _(gen_fuel_df, mfrc_df, selection):
     util_mfrc_df = mfrc_df[
         (mfrc_df["utility_id_eia"] == selection.util_id)
         & (
             mfrc_df["report_date"].dt.year.isin(
-                range(start_year.value, end_year.value + 1)
+                range(selection.start_year, selection.end_year + 1)
             )
         )
     ]
@@ -839,7 +919,7 @@ def _(end_year, gen_fuel_df, mfrc_df, selection, start_year):
         (gen_fuel_df["utility_id_eia"] == selection.util_id)
         & (
             gen_fuel_df["report_date"].dt.year.isin(
-                range(start_year.value, end_year.value + 1)
+                range(selection.start_year, selection.end_year + 1)
             )
         )
     ]
@@ -847,174 +927,177 @@ def _(end_year, gen_fuel_df, mfrc_df, selection, start_year):
     fuel_plus_gen_df = util_year_gen_fuel_df.groupby(
         ["report_date", "fuel_type_code_pudl"]
     )[["net_generation_mwh", "fuel_consumed_mmbtu"]].sum()
-    return fuel_plus_gen_df, util_mfrc_df
-
-
-@app.cell
-def _(util_mfrc_df):
-    util_mfrc_df.sort_values("report_date")
-    util_mfrc_df["fuel_consumed_units"] = (
-        util_mfrc_df.fuel_consumed_mmbtu / util_mfrc_df.fuel_mmbtu_per_unit
-    )
     return
 
 
 @app.cell
-def _(util_mfrc_df):
-    fuel_cost_df = util_mfrc_df.groupby(["report_date", "fuel_type_code_pudl"])[
-        [
-            "fuel_received_units",
-            "fuel_mmbtu_per_unit",
-            "fuel_cost_per_mmbtu",
-            "fuel_consumed_mmbtu",
-        ]
-    ].sum()
-
-    fuel_cost_df["fuel_received_mmbtu"] = (
-        fuel_cost_df.fuel_received_units * fuel_cost_df.fuel_mmbtu_per_unit
-    )
-    fuel_cost_df["fuel_consumed_cost"] = (
-        fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_consumed_mmbtu
-    )
-    fuel_cost_df["fuel_received_cost"] = (
-        fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_received_mmbtu
-    )
-    return (fuel_cost_df,)
+def _():
+    ## THIS WAS WHERE I FOUND THAT COL NAME BUG -- FUEL CONSUMED SHOULD BE FUEL RECIEVED
 
 
-@app.cell
-def _(fuel_cost_df, fuel_plus_gen_df, pd):
-    # For some reason, fuel_consumed_mmbtu is really off when you aggregate up...
-    fuel_cost_net_gen = pd.merge(
-        fuel_plus_gen_df,
-        fuel_cost_df,
-        on=["report_date", "fuel_type_code_pudl"],
-        suffixes=["_gen_df", "_cost_df"],
-    ).reset_index()
-
-    fuel_cost_net_gen = fuel_cost_net_gen[fuel_cost_net_gen["fuel_received_units"] > 0]
-    fuel_cost_net_gen["fuel_consumed_cost_per_net_gen"] = (
-        fuel_cost_net_gen.fuel_consumed_cost / fuel_cost_net_gen.net_generation_mwh
-    )
-    return (fuel_cost_net_gen,)
-
-
-@app.cell
-def _(alt, fuel_cost_net_gen):
-    fuel_cost_mmbtu_chart = (
-        alt.Chart(fuel_cost_net_gen)
-        .mark_line(strokeWidth=2)
-        .encode(
-            x=alt.X("report_date:T", title="Report Date"),
-            y=alt.Y("fuel_cost_per_mmbtu:Q", title="Fuel Cost ($/MMBtu)"),
-            color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
-            tooltip=[
-                alt.Tooltip("report_date:T", title="Date"),
-                alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
-                alt.Tooltip("fuel_cost_per_mmbtu:Q", title="$/MMBtu", format="$.3f"),
-            ],
-        )
-        .properties(
-            title="Fuel Cost per MMBtu Over Time",
-        )
-    )
-    return (fuel_cost_mmbtu_chart,)
-
-
-@app.cell
-def _(alt, fuel_cost_net_gen):
-    fuel_consumed_mmbtu_chart = (
-        alt.Chart(fuel_cost_net_gen)
-        .mark_line(strokeWidth=2)
-        .encode(
-            x=alt.X("report_date:T", title="Report Date"),
-            y=alt.Y("fuel_consumed_mmbtu_gen_df:Q", title="Fuel Consumed (MMBtu)"),
-            color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
-            tooltip=[
-                alt.Tooltip("report_date:T", title="Date"),
-                alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
-                alt.Tooltip("sum(fuel_consumed_mmbtu):Q", title="MMBtu", format=",.0f"),
-            ],
-        )
-        .properties(
-            title="Fuel Consumed (MMBtu) Over Time",
-        )
-    )
-    return (fuel_consumed_mmbtu_chart,)
-
-
-@app.cell
-def _(alt, fuel_cost_net_gen):
-    fuel_cost_mer_mwh_chart = (
-        alt.Chart(fuel_cost_net_gen)
-        .mark_line(strokeWidth=2)
-        .encode(
-            x=alt.X("report_date:T", title="Report Date"),
-            y=alt.Y(
-                "fuel_consumed_cost_per_net_gen:Q",
-                title="Fuel Cost ($) / Net Generation (MWh)",
-            ),
-            color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
-            tooltip=[
-                alt.Tooltip("report_date:T", title="Date"),
-                alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
-                alt.Tooltip(
-                    "fuel_consumed_cost_per_net_gen:Q",
-                    title="Total Cost ($)",
-                    format=",.0f",
-                ),
-            ],
-        )
-        .properties(
-            title="Fuel Cost per MWh Over Time",
-        )
-    )
+    # util_mfrc_df.sort_values("report_date")
+    # util_mfrc_df["fuel_consumed_units"] = (
+    #     util_mfrc_df.fuel_consumed_mmbtu / util_mfrc_df.fuel_mmbtu_per_unit
+    # )
     return
 
 
 @app.cell
-def _(alt, fuel_consumed_mmbtu_chart, fuel_cost_mmbtu_chart):
-    combined_fuel_chart = alt.hconcat(
-        fuel_cost_mmbtu_chart.encode(
-            color=alt.Color(
-                "fuel_type_code_pudl:N",
-                title="Fuel Type",
-                legend=alt.Legend(orient="right", legendX=0, legendY=-30),
-            ),
-        ),
-        fuel_consumed_mmbtu_chart.encode(
-            color=alt.Color("fuel_type_code_pudl:N", legend=None)
-        ),
-        # fuel_cost_mer_mwh_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
-    ).resolve_scale(color="shared")
-    return (combined_fuel_chart,)
+def _():
+    # fuel_cost_df = util_mfrc_df.groupby(["report_date", "fuel_type_code_pudl"])[
+    #     [
+    #         "fuel_received_units",
+    #         "fuel_mmbtu_per_unit",
+    #         "fuel_cost_per_mmbtu",
+    #         "fuel_consumed_mmbtu",
+    #     ]
+    # ].sum()
 
-
-@app.cell
-def _(combined_fuel_chart, mo):
-    fuel_cost = mo.vstack(
-        [
-            mo.md("### Fuel Stats"),
-            mo.ui.altair_chart(combined_fuel_chart),
-            mo.md(
-                f"via {table_preview_href('out_eia923__monthly_fuel_receipts_costs')} and {table_preview_href('out_eia923__generation_fuel_combined')}"
-            ),
-        ]
-    )
-
-    fuel_cost
+    # fuel_cost_df["fuel_received_mmbtu"] = (
+    #     fuel_cost_df.fuel_received_units * fuel_cost_df.fuel_mmbtu_per_unit
+    # )
+    # fuel_cost_df["fuel_consumed_cost"] = (
+    #     fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_consumed_mmbtu
+    # )
+    # fuel_cost_df["fuel_received_cost"] = (
+    #     fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_received_mmbtu
+    # )
     return
 
 
 @app.cell
-def _(end_year, s_df, selection, start_year):
-    # PIVOT TABLE FOR SALES and REV CHART
+def _():
+    # # For some reason, fuel_consumed_mmbtu is really off when you aggregate up...
+    # fuel_cost_net_gen = pd.merge(
+    #     fuel_plus_gen_df,
+    #     fuel_cost_df,
+    #     on=["report_date", "fuel_type_code_pudl"],
+    #     suffixes=["_gen_df", "_cost_df"],
+    # ).reset_index()
+
+    # fuel_cost_net_gen = fuel_cost_net_gen[fuel_cost_net_gen["fuel_received_units"] > 0]
+    # fuel_cost_net_gen["fuel_consumed_cost_per_net_gen"] = (
+    #     fuel_cost_net_gen.fuel_consumed_cost / fuel_cost_net_gen.net_generation_mwh
+    # )
+    return
+
+
+@app.cell
+def _():
+    # fuel_cost_mmbtu_chart = (
+    #     alt.Chart(fuel_cost_net_gen)
+    #     .mark_line(strokeWidth=2)
+    #     .encode(
+    #         x=alt.X("report_date:T", title="Report Date"),
+    #         y=alt.Y("fuel_cost_per_mmbtu:Q", title="Fuel Cost ($/MMBtu)"),
+    #         color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
+    #         tooltip=[
+    #             alt.Tooltip("report_date:T", title="Date"),
+    #             alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
+    #             alt.Tooltip("fuel_cost_per_mmbtu:Q", title="$/MMBtu", format="$.3f"),
+    #         ],
+    #     )
+    #     .properties(
+    #         title="Fuel Cost per MMBtu Over Time",
+    #     )
+    # )
+    return
+
+
+@app.cell
+def _():
+    # fuel_consumed_mmbtu_chart = (
+    #     alt.Chart(fuel_cost_net_gen)
+    #     .mark_line(strokeWidth=2)
+    #     .encode(
+    #         x=alt.X("report_date:T", title="Report Date"),
+    #         y=alt.Y("fuel_consumed_mmbtu_gen_df:Q", title="Fuel Consumed (MMBtu)"),
+    #         color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
+    #         tooltip=[
+    #             alt.Tooltip("report_date:T", title="Date"),
+    #             alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
+    #             alt.Tooltip("sum(fuel_consumed_mmbtu):Q", title="MMBtu", format=",.0f"),
+    #         ],
+    #     )
+    #     .properties(
+    #         title="Fuel Consumed (MMBtu) Over Time",
+    #     )
+    # )
+    return
+
+
+@app.cell
+def _():
+    # fuel_cost_mer_mwh_chart = (
+    #     alt.Chart(fuel_cost_net_gen)
+    #     .mark_line(strokeWidth=2)
+    #     .encode(
+    #         x=alt.X("report_date:T", title="Report Date"),
+    #         y=alt.Y(
+    #             "fuel_consumed_cost_per_net_gen:Q",
+    #             title="Fuel Cost ($) / Net Generation (MWh)",
+    #         ),
+    #         color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
+    #         tooltip=[
+    #             alt.Tooltip("report_date:T", title="Date"),
+    #             alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
+    #             alt.Tooltip(
+    #                 "fuel_consumed_cost_per_net_gen:Q",
+    #                 title="Total Cost ($)",
+    #                 format=",.0f",
+    #             ),
+    #         ],
+    #     )
+    #     .properties(
+    #         title="Fuel Cost per MWh Over Time",
+    #     )
+    # )
+    return
+
+
+@app.cell
+def _():
+    # combined_fuel_chart = alt.hconcat(
+    #     fuel_cost_mmbtu_chart.encode(
+    #         color=alt.Color(
+    #             "fuel_type_code_pudl:N",
+    #             title="Fuel Type",
+    #             legend=alt.Legend(orient="right", legendX=0, legendY=-30),
+    #         ),
+    #     ),
+    #     fuel_consumed_mmbtu_chart.encode(
+    #         color=alt.Color("fuel_type_code_pudl:N", legend=None)
+    #     ),
+    #     # fuel_cost_mer_mwh_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
+    # ).resolve_scale(color="shared")
+    return
+
+
+@app.cell
+def _():
+    # fuel_cost = mo.vstack(
+    #     [
+    #         mo.md("### Fuel Stats"),
+    #         mo.ui.altair_chart(combined_fuel_chart),
+    #         mo.md(
+    #             f"via {table_preview_href('out_eia923__monthly_fuel_receipts_costs')} and {table_preview_href('out_eia923__generation_fuel_combined')}"
+    #         ),
+    #     ]
+    # )
+
+    # fuel_cost
+    return
+
+
+@app.cell
+def _(make_report_date_report_year, s_df, selection):
+    # ~~~~ PIVOT TABLE FOR SALES and REV CHART ~~~~
 
     s_df_util = s_df[
         (s_df["utility_id_eia"] == selection.util_id)
         & (
             s_df["report_date"].dt.year.isin(
-                range(start_year.value, end_year.value + 1)
+                range(selection.start_year, selection.end_year + 1)
             )
         )
     ]
@@ -1041,7 +1124,7 @@ def _(end_year, s_df, selection, start_year):
 
 @app.cell
 def _(alt, sales_long):
-    # SALES MWH CHART
+    # ~~~~ SALES MWH CHART ~~~~
 
     sales_mwh_chart = (
         alt.Chart(sales_long)
@@ -1073,7 +1156,7 @@ def _(alt, sales_long):
 
 @app.cell
 def _(alt, sales_long):
-    # REVENUE CHART
+    # ~~~~ REVENUE CHART ~~~~~
 
     sales_revenue_chart = (
         alt.Chart(sales_long)
@@ -1119,7 +1202,7 @@ def _(alt, sales_mwh_chart, sales_revenue_chart):
 
 
 @app.cell
-def _(alt, get_util_years, odr_df):
+def _(alt, get_util_years, make_report_date_report_year, odr_df):
     # REVENUE CHART
 
     odr_year_util_df = make_report_date_report_year(get_util_years(odr_df))
@@ -1155,14 +1238,8 @@ def _(alt, get_util_years, odr_df):
     return (revenue_class_chart,)
 
 
-@app.function
-def make_report_date_report_year(df):
-    df["report_year"] = df["report_date"].dt.year
-    return df
-
-
 @app.cell
-def _(get_util_years, r_df):
+def _(get_util_years, make_report_date_report_year, r_df):
     # RELIABILITY
 
     r_util_year_df = get_util_years(r_df)
@@ -1310,7 +1387,15 @@ def _(alt, saifi_df):
 
 
 @app.cell
-def _(caidi, combined_sales_chart, mo, revenue_class_chart, saidi, saifi):
+def _(
+    caidi,
+    combined_sales_chart,
+    mo,
+    revenue_class_chart,
+    saidi,
+    saifi,
+    table_preview_href,
+):
     customer_facing = mo.vstack(
         [
             mo.md("## Customer-Facing"),
