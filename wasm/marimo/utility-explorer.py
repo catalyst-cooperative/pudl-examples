@@ -16,7 +16,7 @@ def _():
     import json
     from urllib.request import urlopen
 
-    #import plotly.express as px
+    # import plotly.express as px
     return alt, json, mo, pd, urlopen
 
 
@@ -61,7 +61,7 @@ def _(mo, selection):
 def _(pd):
     # ~~~~ HELPFUL FUNCTIONS ~~~~
 
-    # ---- Preview tables func ---- 
+    # ---- Preview tables func ----
     def table_preview_href(name):
         return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>"""
 
@@ -77,7 +77,7 @@ def _(pd):
             **({"columns": columns} if columns else {}),
         )
 
-    # ---- Turn date to year ---- 
+    # ---- Turn date to year ----
     def make_report_date_report_year(df):
         df["report_year"] = df["report_date"].dt.year
         return df
@@ -89,7 +89,7 @@ def _(pd):
 def _(selection):
     # ~~~~ MORE HELPFUL FUNCTIONS ~~~~
 
-    # ---- Get desired year/util ---- 
+    # ---- Get desired year/util ----
     def get_util_years(df):
         return df[
             (df["utility_id_eia"] == selection.util_id)
@@ -100,17 +100,14 @@ def _(selection):
             )
         ]
 
-    # --- Get specific utility information from the most recent year. --- # 
+    # --- Get specific utility information from the most recent year. --- #
     def show_static_value_from_recent_year(df, col):
-    
-        util_df = (
-            df.loc[
-                (df["utility_id_eia"] == selection.util_id)
-            ]
-            .dropna(subset=[col])
+
+        util_df = df.loc[(df["utility_id_eia"] == selection.util_id)].dropna(
+            subset=[col]
         )
         recent_year = util_df.report_date.dt.year.max()
-        out_df = util_df.loc[util_df["report_date"].dt.year==recent_year]
+        out_df = util_df.loc[util_df["report_date"].dt.year == recent_year]
 
         if out_df.empty:
             value = "Nothing Reported"
@@ -152,7 +149,7 @@ def _(pudl):
 
 @app.cell
 def _(gen_df, mo, pd, st_df, yu_df):
-    # ~~~~ DEFINE SELECTION OPTIONS ~~~~ 
+    # ~~~~ DEFINE SELECTION OPTIONS ~~~~
 
     class Options:
         """Compute valid plant selection options based on partial selections.
@@ -189,34 +186,24 @@ def _(gen_df, mo, pd, st_df, yu_df):
 
         @classmethod
         @mo.cache
-        def available_years(cls, state:str, util_id: str) -> pd.Series:
+        def available_years(cls, state: str, util_id: str) -> pd.Series:
             return (
-                yu_df.loc[
-                    (yu_df.utility_id_eia == int(util_id))
-                ].report_date.dt.year.drop_duplicates()
+                yu_df.loc[(yu_df.utility_id_eia == int(util_id))]
+                .report_date.dt.year.drop_duplicates()
                 .sort_values(ascending=False)
             )
 
         @classmethod
         @mo.cache
         def available_counties(cls, util_id: str) -> pd.Series:
-            return (
-                st_df.loc[
-                    (st_df.utility_id_eia == int(util_id))
-                ]
-                .county_id_fips
-                .drop_duplicates()
-            )
+            return st_df.loc[
+                (st_df.utility_id_eia == int(util_id))
+            ].county_id_fips.drop_duplicates()
 
         @classmethod
         @mo.cache
         def available_plant_status(cls) -> pd.Series:
-            return (
-                gen_df
-                .operational_status
-                .drop_duplicates()
-                .dropna()
-            )
+            return gen_df.operational_status.drop_duplicates().dropna()
 
     return (Options,)
 
@@ -295,7 +282,7 @@ def _(Options, mo, query_params, reset_params, yu_df):
         @cached_property
         def start_year_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options = (
+                options=(
                     Options.available_years(self.state, self.util_id)
                     .sort_values(ascending=True)
                     .astype(str)
@@ -303,29 +290,29 @@ def _(Options, mo, query_params, reset_params, yu_df):
                 label="Select a start year",
                 value=self.start_year,
                 searchable=True,
-                on_change=lambda value: reset_params(start_year=value)
+                on_change=lambda value: reset_params(start_year=value),
             )
 
         @computed_field
         @cached_property
         def end_year_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options = {
-                    str(i) for i in 
-                    Options.available_years(self.state, self.util_id)
+                options={
+                    str(i)
+                    for i in Options.available_years(self.state, self.util_id)
                     if i >= int(self.start_year)
                 },
                 label="Select an end year",
                 value=self.end_year,
                 searchable=True,
-                on_change=lambda value: reset_params(end_year=value)
+                on_change=lambda value: reset_params(end_year=value),
             )
 
         @computed_field
         @cached_property
         def plant_year_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options = (
+                options=(
                     Options.available_years(self.state, self.util_id)
                     .sort_values(ascending=False)
                     .astype(str)
@@ -333,31 +320,27 @@ def _(Options, mo, query_params, reset_params, yu_df):
                 label="Select a year",
                 value=self.plant_year,
                 searchable=True,
-                on_change=lambda value: reset_params(plant_year=value)
+                on_change=lambda value: reset_params(plant_year=value),
             )
 
         @computed_field
         @cached_property
         def plant_status_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options = Options.available_plant_status(),
+                options=Options.available_plant_status(),
                 label="Select plant status",
                 value=self.plant_status,
                 searchable=True,
-                on_change=lambda value: reset_params(plant_status=value)
-
+                on_change=lambda value: reset_params(plant_status=value),
             )
 
         @computed_field
         @cached_property
         def util_name(self) -> str:
-            return (
-                yu_df.loc[
-                    (yu_df["utility_id_eia"] == self.util_id)
-                    & (yu_df["report_date"].dt.year==self.plant_year)]
-                .utility_name_eia
-                .item()
-            )
+            return yu_df.loc[
+                (yu_df["utility_id_eia"] == self.util_id)
+                & (yu_df["report_date"].dt.year == self.plant_year)
+            ].utility_name_eia.item()
 
     selection = Selection(**query_params.to_dict())
     return (selection,)
@@ -383,14 +366,15 @@ def _(Options, mo):
             query_params["util_id"] = str(
                 Options.available_utils(query_params["state"]).iloc[0].name
             )
-        if "start_year" not in query_params or int(query_params["start_year"]) not in set(
+        if "start_year" not in query_params or int(
+            query_params["start_year"]
+        ) not in set(
             Options.available_years(query_params["state"], query_params["util_id"])
         ):
             query_params["start_year"] = str(
                 Options.available_years(
                     query_params["state"], query_params["util_id"]
-                )
-                .iloc[-1]
+                ).iloc[-1]
             )
 
         if "end_year" not in query_params or int(query_params["end_year"]) not in set(
@@ -399,21 +383,21 @@ def _(Options, mo):
             query_params["end_year"] = str(
                 Options.available_years(
                     query_params["state"], query_params["util_id"]
-                )
-                .iloc[0]
+                ).iloc[0]
             )
-        if "plant_year" not in query_params or int(query_params["plant_year"]) not in set(
+        if "plant_year" not in query_params or int(
+            query_params["plant_year"]
+        ) not in set(
             Options.available_years(query_params["state"], query_params["util_id"])
         ):
             query_params["plant_year"] = str(
                 Options.available_years(
                     query_params["state"], query_params["util_id"]
-                )
-                .iloc[0]
-            ) 
-        if "plant_status" not in query_params or query_params["plant_status"] not in set(
-            Options.available_plant_status()
-        ):
+                ).iloc[0]
+            )
+        if "plant_status" not in query_params or query_params[
+            "plant_status"
+        ] not in set(Options.available_plant_status()):
             query_params["plant_status"] = "existing"
 
     initialize_default_params()
@@ -437,14 +421,17 @@ def _(
     # ~~~~ BUILD UTILITY STATS TABLE ~~~~
 
     # ---- Get stats from data ----
-    util_name, util_name_year = show_static_value_from_recent_year(yu_df, "utility_name_eia")
+    util_name, util_name_year = show_static_value_from_recent_year(
+        yu_df, "utility_name_eia"
+    )
     address, address_year = show_static_value_from_recent_year(yu_df, "street_address")
     states, states_year = show_static_value_from_recent_year(st_df, "state")
     entity_type, entity_year = show_static_value_from_recent_year(od_df, "entity_type")
-    ba, ba_year = show_static_value_from_recent_year(gen_df, "balancing_authority_code_eia")
+    ba, ba_year = show_static_value_from_recent_year(
+        gen_df, "balancing_authority_code_eia"
+    )
 
-
-    # ---- Build stats table ---- 
+    # ---- Build stats table ----
     stats_table = mo.ui.table(
         pd.DataFrame(
             [
@@ -522,19 +509,19 @@ def _(Options, alt, json, pd, selection, urlopen):
     # --- build the same plot dataframe ---
     fips_set = set(Options.available_counties(util_id=selection.util_id).str.zfill(5))
     _all_fips = [f["id"] for f in _geojson["features"]]
-    _plot_df = pd.DataFrame({
-        "fips": _all_fips,
-        "in_df": [1 if f in fips_set else 0 for f in _all_fips],
-    })
+    _plot_df = pd.DataFrame(
+        {
+            "fips": _all_fips,
+            "in_df": [1 if f in fips_set else 0 for f in _all_fips],
+        }
+    )
 
     # --- county choropleth ---
     counties = alt.topo_feature(
-        "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json",
-        "counties"
+        "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json", "counties"
     )
     states_map = alt.topo_feature(
-        "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json",
-        "states"
+        "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json", "states"
     )
 
     county_layer = (
@@ -555,9 +542,8 @@ def _(Options, alt, json, pd, selection, urlopen):
         )
     )
 
-    state_layer = (
-        alt.Chart(states_map)
-        .mark_geoshape(fill=None, stroke="black", strokeWidth=1.5)
+    state_layer = alt.Chart(states_map).mark_geoshape(
+        fill=None, stroke="black", strokeWidth=1.5
     )
 
     st_chart = (
@@ -571,15 +557,17 @@ def _(Options, alt, json, pd, selection, urlopen):
 
 @app.cell
 def _(fips_set, mo, selection, st_chart, stats_table):
-    # ~~~~ COMBINE AND DISPLAY UTIL STATS WITH SERVICE TERRITORY MAP ~~~~ 
+    # ~~~~ COMBINE AND DISPLAY UTIL STATS WITH SERVICE TERRITORY MAP ~~~~
     # TO-DO: Make it slide horizontally
 
     if not fips_set:
         service_ter_chart = f"*No service territory reported for {selection.util_name}*"
-    else: 
-        service_ter_chart = mo.ui.altair_chart(st_chart.properties(width=500, height=300))
+    else:
+        service_ter_chart = mo.ui.altair_chart(
+            st_chart.properties(width=500, height=300)
+        )
 
-    if not fips_set: 
+    if not fips_set:
         no_st_warning = mo.md(f"*No service territory data for {selection.util_name}.*")
 
     util_stats = mo.vstack(
@@ -618,7 +606,7 @@ def _(gen_df, selection):
         "report_date", ascending=False
     )
 
-    recent_report_date = 2024 #util_gen["report_date"].iloc[0]
+    recent_report_date = 2024  # util_gen["report_date"].iloc[0]
 
     util_gen_existing = util_gen[
         (util_gen["report_date"] == recent_report_date)
@@ -710,11 +698,15 @@ def _(agg_plant_values, mo, selection, util_gen):
 
     status_df = agg_plant_values(selected_year_util_gen, selection.plant_status)
 
-
-    owned_gen_selection = mo.vstack([
-        mo.md("## Owned Capacity"),
-        mo.hstack([selection.plant_year_selector,selection.plant_status_selector], justify="start")
-    ])
+    owned_gen_selection = mo.vstack(
+        [
+            mo.md("## Owned Capacity"),
+            mo.hstack(
+                [selection.plant_year_selector, selection.plant_status_selector],
+                justify="start",
+            ),
+        ]
+    )
 
     owned_gen_selection
     return (status_df,)
@@ -722,19 +714,28 @@ def _(agg_plant_values, mo, selection, util_gen):
 
 @app.cell
 def _(mo, selection, status_df, table_preview_href):
-    mo.stop(status_df.empty, mo.md(f"*{selection.util_name} has no {selection.plant_status} owned capacity.*")),
-    mo.vstack([
-        mo.Html(
-            f'<div style="max-width: 1000px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'
+    (
+        mo.stop(
+            status_df.empty,
+            mo.md(
+                f"*{selection.util_name} has no {selection.plant_status} owned capacity.*"
+            ),
         ),
-        mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"),
-    ])
+    )
+    mo.vstack(
+        [
+            mo.Html(
+                f'<div style="max-width: 1000px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'
+            ),
+            mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"),
+        ]
+    )
     return
 
 
 @app.cell
 def _(alt, selection, util_gen_fuel):
-    # ~~~~ GENERATE FUEL CHART ~~~~ 
+    # ~~~~ GENERATE FUEL CHART ~~~~
 
     fuel_year_df = util_gen_fuel[
         util_gen_fuel["report_date"].dt.year.isin(
@@ -860,18 +861,18 @@ def _(alt, selection, util_od_df):
 def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
     # ~~~~ YEAR RANGE SELECTION AND DISPLAY FOR ELECTRICITY SOURCE
 
-
     if fuel_long.empty:
         fuel_chart_mo = f"*{selection.util_name} has no owned capacity*"
-    else: 
-        fuel_chart_mo = mo.ui.altair_chart(
-            fuel_chart.properties(width=350, height=250)
-        )
+    else:
+        fuel_chart_mo = mo.ui.altair_chart(fuel_chart.properties(width=350, height=250))
 
     electricity_source = mo.vstack(
         [
             mo.md("## Electricity Source"),
-            mo.hstack([selection.start_year_selector, selection.end_year_selector], justify="start"),
+            mo.hstack(
+                [selection.start_year_selector, selection.end_year_selector],
+                justify="start",
+            ),
             mo.hstack(
                 [
                     mo.vstack(
@@ -933,7 +934,6 @@ def _(gen_fuel_df, mfrc_df, selection):
 @app.cell
 def _():
     ## THIS WAS WHERE I FOUND THAT COL NAME BUG -- FUEL CONSUMED SHOULD BE FUEL RECIEVED
-
 
     # util_mfrc_df.sort_values("report_date")
     # util_mfrc_df["fuel_consumed_units"] = (
