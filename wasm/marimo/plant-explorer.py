@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.10"
+__generated_with = "0.23.13"
 app = marimo.App(width="medium")
 
 
@@ -25,11 +25,8 @@ def _(mo, selection):
 
 
 @app.cell(hide_code=True)
-def _(mo, selection, this_plant):
-    if selection.plant is not None:
-        mo.md(f"# {this_plant.name} (EIA id={this_plant.plant_id_eia})")
-    else:
-        mo.md("# ")
+def _(mo, this_plant):
+    mo.md(f"# {this_plant.name} (EIA id={this_plant.plant_id_eia})")
     return
 
 
@@ -516,6 +513,11 @@ def _(
     )
 
 
+@app.function
+def chart_style(chart):
+    return chart.properties(width="container")
+
+
 @app.cell
 def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
     mo.output.append(mo.md("## Plant-level generation"))
@@ -529,7 +531,7 @@ def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
         mo.md("Here is a timeseries view of the electricity produced at this plant.")
     )
 
-    plant_netgen_chart = (
+    plant_netgen_chart = chart_style(
         alt.Chart(
             this_plant__monthly_generation_fuel_combined,
             title=alt.Title(
@@ -550,7 +552,7 @@ def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
         ).style({"margin-bottom": "2rem"})
     )
 
-    plant_netgen_bysource_chart = (
+    plant_netgen_bysource_chart = chart_style(
         alt.Chart(
             this_plant__monthly_generation_fuel_combined,
             title=alt.Title(
@@ -604,7 +606,7 @@ def _(
                 f"Generation data available for {n_monthly_gens} of {this_plant__generators.shape[0]} generators for this plant."
             ).style({"background": "#eee"})
         )
-    bygen_chart = (
+    bygen_chart = chart_style(
         alt.Chart(
             this_plant__monthly_generation,
             title=alt.Title(
