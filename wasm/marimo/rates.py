@@ -14,32 +14,6 @@ def header(mo):
     * 🧾 __<a href="https://data.catalyst.coop/preview/pudl/core_eia861__yearly_sales" target="_blank">core_eia861__yearly_sales</a>__: This table tells us about revenue collected from each type of customer, presumably to cover those costs from the FERC Form 1 rate base table as well as other costs. This table gives us a good proxy for utility bills in aggregate, but doesn’t tell us about how rates are structured.
 
     These tables provide clues about how rates have changed over time, the primary drivers of that change and who bears the impact of that change. It’s important to note that, while informative, the data provide an incomplete and imperfect picture. The rate making process is complex and this dashboard only gives us a snapshot. Nonetheless, we think this information is useful and we encourage you to explore. For more background materials, see the Additional Resources at the bottom of the page.
-
-    ### Rate base ➡️ Customer Bills
-
-    * 🧱 Utilities’ Revenue Requirement: The Building Blocks for Utility Bills
-      * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
-    * 🧮 What is “Rate Base”? (shown below)
-      * FERC defines Rate Base as: “The value of property upon which a utility is permitted to earn a specified rate of return as established by a regulatory authority.”
-      * Rate Base includes all property and assets that the utility invests in and maintains for the purpose of serving customers.
-    * ⛽ Expenses (not included in rate base)
-      * Fuel Cost and Other Expenses : Expenses are effectively passed on to consumers. These costs are not included in the rate base, but do affect customer bills.
-      * Fuel costs are the most notable because they can be volatile and can be significant.
-    * 🧾 How do revenue requirements get translated into customer bills? (shown below)
-      * Cost Allocation: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between customers.
-      * The EIA-861 data in this dashboard tells us about how much revenue is collected from different kinds of customers, but it does not tell us about how rates are structured or calculated. For more information about rate schedules you can explore <a href='https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_sales_by_rate_schedules_sched304' target='_blank'>out_ferc1__yearly_sales_by_rate_schedules_sched304</a>, but beware that table is particularly messy and hard to interpret.
-    * 🤔 Some key concepts to consider when exploring utility rates:
-      * __Capital Bias__: This is a well understood result of the predominant rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
-      * __Fixed vs. Variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are relatively fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things on the "fixed" side of rates certainly change over time and require investments when use of the existing infrastructure expands.
-      * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume.. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period.
-
-    ### 😵‍💫 Complicating Factors
-    * __Inflation__: All costs in this dashboard are nominal USD.
-    * __Fuel Costs__: As noted above, the rate base data does not include pass through costs like fuel which can be substantial.
-    * __FERC Form 1 Respondents Only__: Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities. This biases the utilities shown here towards larger utilities which tend to be more investor owned utilities. Municipal and cooperative utilities do not report to FERC at all and so do not appear in this data.
-    * __Deregulated markets__: States which have utility markets which preclude or discourage customer-serving utilities from owning generation will show up in this data a little differently. These utilities buy generation on the market - so generation doesn't show up in their rate base because generation is purely an expense for them.
-
-    If you see anything odd in the data, find a bug or just have a question, feel free to reach out to us by emailing us at hello@catalyst.coop or write up <a href="https://github.com/catalyst-cooperative/pudl/issues/new?template=bug_report.md" target="_blank">a github issue</a>.
     """)
     return
 
@@ -269,18 +243,18 @@ def options_ferc1(
         def available_states(cls) -> pd.Series:
             return pd.concat(
                 [
-                    pd.Series("ALL"),
+                    pd.Series(["", "ALL"]),
                     out_eia861__yearly_utility_service_territory.state.drop_duplicates().sort_values(),
                 ]
             )
 
         @classmethod
         @mo.cache
-        def available_utilities(cls, states: set[str]) -> pd.Series:
+        def available_utilities(cls, states: str) -> pd.Series:
             df = out_ferc1__yearly_rate_base
-            if states != {"ALL"}:
+            if states != "ALL":
                 df = out_ferc1__yearly_rate_base.loc[
-                    df.filter(like="state_").isin(states).any(axis="columns")
+                    (df.filter(like="state_") == states).any(axis="columns")
                 ]
             utils = df.loc[:, "utility_name_pudl"].drop_duplicates().sort_values()
             return pd.concat([pd.Series(["ALL"]), utils])
@@ -315,22 +289,26 @@ def build_query_params(OptionsFerc1, mo):
     query_params = mo.query_params()
 
     def initialize_default_params():
-        if "states_1" not in query_params:
-            query_params["states_1"] = "ALL"
+        if "state_1" not in query_params:
+            query_params["state_1"] = "ALL"
         if "utilities_1" not in query_params:
             query_params["utilities_1"] = "ALL"
         util_set = set(query_params["utilities_1"].split("|"))
         available_years = OptionsFerc1.available_years(util_set)
-        if "start_year" not in query_params or (
-            int(query_params["start_year"]) not in set(available_years)
-        ):
-            query_params["start_year"] = str(available_years.min())
-        if "end_year" not in query_params or (
-            int(query_params["end_year"]) not in set(available_years)
-        ):
-            query_params["end_year"] = str(available_years.max())
-        if "states_2" not in query_params:
-            query_params["states_2"] = ""
+        if "year_range" not in query_params:
+            query_params["year_range"] = (
+                f"{min(available_years)}|{max(available_years)}"
+            )
+        # if "start_year" not in query_params or (
+        #     int(query_params["start_year"]) not in set(available_years)
+        # ):
+        #     query_params["start_year"] = str(available_years.min())
+        # if "end_year" not in query_params or (
+        #     int(query_params["end_year"]) not in set(available_years)
+        # ):
+        #     query_params["end_year"] = str(available_years.max())
+        if "state_2" not in query_params:
+            query_params["state_2"] = ""
         if "utilities_2" not in query_params:
             query_params["utilities_2"] = ""
 
@@ -347,6 +325,7 @@ def _(initialize_default_params, query_params):
         Automatically updates downstream selections to valid defaults."""
         for param, value in kwargs.items():
             query_params.set(param, value)
+
         initialize_default_params()
 
     return (reset_params,)
@@ -367,49 +346,37 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
         The selector views (utilities_selector, years_selector, etc) are
         computed based on the values and cached for display in the dashboard."""
 
-        start_year: str = "1994"
-        end_year: str = "2024"
-
-        states_1: set[str] = Field({"ALL"})
+        state_1: str = Field("ALL")
         utilities_1: set[str] = Field({"ALL"})
 
-        states_2: set[str] = Field({None})
+        state_2: str | None = Field(None)
         utilities_2: set[str] = Field({None})
 
-        @computed_field
-        @cached_property
-        def start_year_selector(self) -> mo.ui.dropdown:
-            return mo.ui.dropdown(
-                options={
-                    str(i) for i in OptionsFerc1.available_years(self.utilities_1)
-                },
-                label="Utility attributes starting from:",
-                value=str(self.start_year),
-                on_change=lambda value: reset_params(start_year=str(value)),
-            )
+        year_range: str = Field("1994,2025")
+        mark_type: str = Field("Stacked Bar")
 
         @computed_field
         @cached_property
-        def end_year_selector(self) -> mo.ui.dropdown:
-            return mo.ui.dropdown(
-                options={
-                    str(i) for i in OptionsFerc1.available_years(self.utilities_1)
-                },
-                label="Utility attributes ending:",
-                value=str(self.end_year),
-                on_change=lambda value: reset_params(end_year=str(value)),
-            )
-
-        @computed_field
-        @cached_property
-        def states_1_selector(self) -> mo.ui.multiselect:
-            return mo.ui.multiselect(
-                options=list(OptionsFerc1.available_states()),
-                value=self.states_1,
-                label="First Set States or select ALL: ",
-                max_selections=10,
+        def year_range_silder(self) -> mo.ui.range_slider:
+            available_years = OptionsFerc1.available_years(self.utilities_1)
+            range_slider = mo.ui.range_slider(
+                steps=range(min(available_years), max(available_years) + 1),
+                full_width=True,
                 on_change=lambda value: reset_params(
-                    states_1="|".join(value), utilities_1=""
+                    year_range="|".join([str(y) for y in value])
+                ),
+            )
+            return range_slider
+
+        @computed_field
+        @cached_property
+        def state_1_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
+                options=list(OptionsFerc1.available_states()),
+                value=self.state_1,
+                label="State:",
+                on_change=lambda value: reset_params(
+                    state_1=value, utilities_1={"ALL"}
                 ),
             )
 
@@ -417,34 +384,31 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
         @cached_property
         def utilities_1_selector(self) -> mo.ui.multiselect:
             return mo.ui.multiselect(
-                options=list(OptionsFerc1.available_utilities(self.states_1)),
+                options=list(OptionsFerc1.available_utilities(self.state_1)),
                 value=self.utilities_1,
-                label="First Set Utilities or select ALL: ",
+                label="Utility:",
                 max_selections=10,
                 on_change=lambda value: reset_params(utilities_1="|".join(value)),
             )
 
         @computed_field
         @cached_property
-        def states_2_selector(self) -> mo.ui.multiselect:
-            return mo.ui.multiselect(
+        def state_2_selector(self) -> mo.ui.dropdown:
+            return mo.ui.dropdown(
                 options=list(OptionsFerc1.available_states()),
-                value=self.states_2,
-                label="First Set States or select ALL: ",
-                max_selections=10,
-                # when this one changes, reset the states_1 param and clear the utils param
-                on_change=lambda value: reset_params(
-                    states_2="|".join(value), utilities_2=""
-                ),
+                value=self.state_2,
+                label="State:",
+                # when this one changes, reset the state_1 param and clear the utils param
+                on_change=lambda value: reset_params(state_2=value, utilities_2="ALL"),
             )
 
         @computed_field
         @cached_property
         def utilities_2_selector(self) -> mo.ui.multiselect:
             return mo.ui.multiselect(
-                options=list(OptionsFerc1.available_utilities(self.states_2)),
+                options=list(OptionsFerc1.available_utilities(self.state_2)),
                 value=self.utilities_2,
-                label="Second Set Utilities or Select All: ",
+                label="Utility:",
                 max_selections=10,
                 on_change=lambda value: reset_params(utilities_2="|".join(value)),
             )
@@ -455,12 +419,10 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
             return mo.ui.dropdown(
                 options={"Stacked Bar": "mark_bar", "Line": "mark_line"},
                 label="Chart Display Type:",
-                value="Stacked Bar",
+                value=self.mark_type,
             )
 
-        @field_validator(
-            "utilities_1", "utilities_2", "states_1", "states_2", mode="before"
-        )
+        @field_validator("utilities_1", "utilities_2", mode="before")
         @classmethod
         def deserialize(cls, value: str) -> set[str]:
             if value == "":
@@ -475,37 +437,17 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
 
 @app.cell
 def sidebar(mo, selection):
+
     mo.sidebar(
         [
-            mo.md("##Make Selections:"),
-            mo.md("###Choose Years:"),
-            mo.hstack(
-                [
-                    mo.md(f"""<div data-tooltip="By default we extend the timeseries as far back as we have data available.
-                To prune to a more recent year, select here.">{mo.icon("lucide:info")}</div>"""),
-                    selection.start_year_selector,
-                ],
-                justify="start",
-                align="start",
-                gap=0,
-            ),
-            mo.hstack(
-                [
-                    mo.md(f"""<div data-tooltip="By default we include the most recent data available.
-                To prune to a less recent year, select here.">{mo.icon("lucide:info")}</div>"""),
-                    selection.end_year_selector,
-                ],
-                justify="start",
-                align="start",
-                gap=0,
-            ),
-            mo.md("""###Choose a Utility or Utilities:"""),
+            mo.md("## Make Selections:"),
+            mo.md("### Choose Utilities:"),
             mo.hstack(
                 [
                     mo.md(
                         f"""<div data-tooltip="Choose a state or a set of states to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
                     ),
-                    selection.states_1_selector,
+                    selection.state_1_selector,
                 ],
                 justify="start",
                 align="start",
@@ -514,7 +456,7 @@ def sidebar(mo, selection):
             mo.hstack(
                 [
                     mo.md(
-                        f"""<div data-tooltip="Choose a first set of utilities to explore. By default we show you all utilities. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                        f"""<div data-tooltip="Choose utility to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
                     ),
                     selection.utilities_1_selector,
                 ],
@@ -522,13 +464,13 @@ def sidebar(mo, selection):
                 align="start",
                 gap=0,
             ),
-            mo.md("""###To Compare, choose Second Utility or Utilities:"""),
+            mo.md("""###To Compare, choose additional utilities:"""),
             mo.hstack(
                 [
                     mo.md(
                         f"""<div data-tooltip="Choose a state or a set of states to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
                     ),
-                    selection.states_2_selector,
+                    selection.state_2_selector,
                 ],
                 justify="start",
                 align="start",
@@ -537,7 +479,7 @@ def sidebar(mo, selection):
             mo.hstack(
                 [
                     mo.md(
-                        f"""<div data-tooltip="Choose a second set of utilities to explore. By default we show you all utilities. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                        f"""<div data-tooltip="Choose a second set of utilities to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
                     ),
                     selection.utilities_2_selector,
                 ],
@@ -545,11 +487,23 @@ def sidebar(mo, selection):
                 align="start",
                 gap=0,
             ),
+            mo.md("### Choose Years:"),
+            selection.year_range_silder,
             mo.md("""###Choose between chart styles:"""),
             selection.mark_type_selector,
         ]
     )
-    # TODO: add a warning if a user chooses utilities_2 but not utilities_1
+    return
+
+
+@app.cell
+def no_utilities_1_stop(mo, selection):
+    mo.stop(
+        not selection.model_dump().get("utilities_1"),
+        mo.md(
+            "## 🛑 **Choose a utilities the sidebar.** ⬅️\nWe really want to show you some pretty graphs, but you have to select utilities to show. If you happen to choose utilities in the 'To compare' section, you still need to choose utilities above that."
+        ),
+    )
     return
 
 
@@ -560,7 +514,6 @@ def filter_dfs(
     out_ferc1__yearly_rate_base,
     selection,
 ):
-
     from typing import TypeVar
 
     PandasDataFrame = TypeVar("pandas.core.frame.DataFrame")
@@ -583,36 +536,40 @@ def filter_dfs(
             f"utilities_{opt_n.removeprefix('opt_')}"
         )
         state_selection = selection.model_dump().get(
-            f"states_{opt_n.removeprefix('opt_')}"
+            f"state_{opt_n.removeprefix('opt_')}"
         )
         if utility_selection:
             # Set default mask and title
             utility_selection_title_part = "All Utilities"
             utils_subtitle = ""
+
+            year_range = selection.year_range.split("|")
             rate_mask = out_ferc1__yearly_rate_base.report_year.between(
-                int(selection.start_year), int(selection.end_year)
+                int(year_range[0]), int(year_range[1])
             )
 
             # Only show utilities which also show up in FERC1
             sales_mask = core_eia861__yearly_sales.report_year.between(
-                int(selection.start_year), int(selection.end_year)
+                int(year_range[0]), int(year_range[1])
             ) & (
                 core_eia861__yearly_sales.utility_id_pudl.isin(
                     list(out_ferc1__yearly_rate_base.utility_id_pudl.unique())
                 )
             )
-            if state_selection != {"ALL"}:
+            if state_selection != "ALL":
                 rate_mask = rate_mask & (
-                    out_ferc1__yearly_rate_base.filter(like="state")
-                    .isin(state_selection)
-                    .any(axis=1)
+                    (
+                        out_ferc1__yearly_rate_base.filter(like="state")
+                        == state_selection
+                    ).any(axis=1)
                 )
                 sales_mask = sales_mask & (
-                    core_eia861__yearly_sales.filter(like="state")
-                    .isin(state_selection)
-                    .any(axis=1)
+                    (
+                        core_eia861__yearly_sales.filter(like="state")
+                        == state_selection
+                    ).any(axis=1)
                 )
-                utility_selection_title_part = f"{', '.join(state_selection)} Utilities"
+                utility_selection_title_part = f"{state_selection} Utilities"
             if utility_selection != {"ALL"}:
                 rate_mask = rate_mask & (
                     out_ferc1__yearly_rate_base.utility_name_pudl.isin(
@@ -746,7 +703,7 @@ def chart_tools(
             else {}
         )
         return (
-            getattr(chart_cls, selection.mark_type_selector.value)()
+            getattr(chart_cls, selection.mark_type_selector.value)(tooltip=True)
             .encode(
                 alt.X("report_year", type="ordinal").title("Report date"),
                 alt.Y(col)
@@ -843,7 +800,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
             ),
             col="sales_revenue",
             title_middle="Sales Revenue by Customer Class",
-            y_title="$",
+            y_title="Nominal USD",
             aggregate="sum",
             colors=customer_colors,
             color_stack="customer_class",
@@ -851,8 +808,6 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
             filter_on_color_stack=["commercial", "industrial", "residential"],
         ),
         ColumToChart(
-            # I added a filter in here bc.. well I assume most people want to see residential
-            # and with all customers the residential customers were drowned out
             preamble=(
                 "What about average monthly revenue per residential customers? This "
                 "isn't exactly equivalent to monthly bills but it is a good proxy for "
@@ -860,11 +815,13 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
             ),
             col="revenue_per_month_customer",
             title_middle="Monthly Residential Sales",
-            y_title="Sales ($) per Customer per Month",
+            y_title="Sales (Nominal $USD) per Customer per Month",
             aggregate="mean",
             colors=[customer_colors[-1]],
             color_stack="customer_class",
             y_axis_format="$",
+            # I added a filter in here bc.. well I assume most people want to see residential
+            # and with all customers the residential customers were drowned out
             filter_on_color_stack=["residential"],
             xOffset="customer_class",
         ),
@@ -885,7 +842,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ColumToChart(
             col="sales_revenue_by_mwh",
             title_middle="Revenue per MWh by Customer Class",
-            y_title="$/MWh",
+            y_title="Nominal $USD /MWh",
             aggregate="mean",
             colors=customer_colors,
             color_stack="customer_class",
@@ -899,15 +856,56 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
     return
 
 
-@app.cell
-def resources(mo):
-    mo.md("""
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 📚 Additional Resources
+    """)
+    return
+
+
+@app.cell
+def materials_accordion(mo):
+    mo.accordion(
+        {
+            "### Rate base ➡️ Customer Bills": mo.md("""
+    * 🧱 Utilities’ Revenue Requirement: The Building Blocks for Utility Bills
+      * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
+    * 🧮 What is “Rate Base”? (shown below)
+      * FERC defines Rate Base as: “The value of property upon which a utility is permitted to earn a specified rate of return as established by a regulatory authority.”
+      * Rate Base includes all property and assets that the utility invests in and maintains for the purpose of serving customers.
+    * ⛽ Expenses (not included in rate base)
+      * Fuel Cost and Other Expenses : Expenses are effectively passed on to consumers. These costs are not included in the rate base, but do affect customer bills.
+      * Fuel costs are the most notable because they can be volatile and can be significant.
+    * 🧾 How do revenue requirements get translated into customer bills? (shown below)
+      * Cost Allocation: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between customers.
+      * The EIA-861 data in this dashboard tells us about how much revenue is collected from different kinds of customers, but it does not tell us about how rates are structured or calculated. For more information about rate schedules you can explore <a href='https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_sales_by_rate_schedules_sched304' target='_blank'>out_ferc1__yearly_sales_by_rate_schedules_sched304</a>, but beware that table is particularly messy and hard to interpret.
+    * 🤔 Some key concepts to consider when exploring utility rates:
+      * __Capital Bias__: This is a well understood result of the predominant rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
+      * __Fixed vs. Variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are relatively fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things on the "fixed" side of rates certainly change over time and require investments when use of the existing infrastructure expands.
+      * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume.. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period."""),
+            "### 😵‍💫 Complicating Factors": mo.md("""
+    * __Inflation__: All costs in this dashboard are nominal USD.
+    * __Fuel Costs__: As noted above, the rate base data does not include pass through costs like fuel which can be substantial.
+    * __FERC Form 1 Respondents Only__: Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities. This biases the utilities shown here towards larger utilities which tend to be more investor owned utilities. Municipal and cooperative utilities do not report to FERC at all and so do not appear in this data.
+    * __Multi-State Utilities__: FERC 1 Respondents report their data for the entire utility, which can sometimes span multiple states. When selecting states, know that the available utilities in that state may include data from multi-state utilities.
+    * __Deregulated markets__: States which have utility markets which preclude or discourage customer-serving utilities from owning generation will show up in this data a little differently. These utilities buy generation on the market - so generation doesn't show up in their rate base because generation is purely an expense for them.
+            """),
+            "### 🔗 Further Reading": mo.md("""
     * <a href="https://www.nasuca.org/wp-content/uploads/2025/02/Rate-Base-Overview-Slide-Deck-NASUCA-Feb-2025-2025.02.24-v2.0.pdf" target="_blank">NASUCA's Overview of Rate Base</a>
     * <a href="https://affordability-toolkit.rmi.org/" target='_blank'>RMI's Electricity Affordability Toolkit</a>
     * <a href='https://utilitydisconnections.org/' target='_blank'>Utility Disconnection Dashboard</a>
     * <a href='https://www.raponline.org/wp-content/uploads/2023/09/appendix-a-smart-rate-design-2015-aug-31.pdf' target='_blank'>RAP's Smart Rate Design for a Smart Future</a>
-    * <a href='https://www.raponline.org/wp-content/uploads/2023/10/rap-improving-utility-performance-incentives-in-the-united-states-2023-october.pdf' target='_blank'>RAP's Improving Utility Performance Incentives in the United States</a>
+    * <a href='https://www.raponline.org/wp-content/uploads/2023/10/rap-improving-utility-performance-incentives-in-the-united-states-2023-october.pdf' target='_blank'>RAP's Improving Utility Performance Incentives in the United States</a>"""),
+        }
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def contact_us(mo):
+    mo.md(r"""
+    If you see anything odd in the data, find a bug or just have a question, feel free to reach out to us by emailing us at hello@catalyst.coop or write up a <a href="https://github.com/catalyst-cooperative/pudl/issues/new?template=bug_report.md" target="_blank">github issue</a>. Heck, if you just found this helpful, let us know! As an open-source project we love to hear about your energy data needs.
     """)
     return
 
