@@ -262,15 +262,12 @@ def options_ferc1(
         @classmethod
         @mo.cache
         def available_years(cls, utilities_1) -> pd.Series:
-            # TODO: make available years based on the union of years for utils 1 and 2
             if utilities_1 == "ALL" or utilities_1 != "":
                 df = out_ferc1__yearly_rate_base
             else:
                 df = out_ferc1__yearly_rate_base.loc[
-                    (
-                        out_ferc1__yearly_rate_base.utility_name_pudl.isin(
-                            list(utilities_1)
-                        )
+                    out_ferc1__yearly_rate_base.utility_name_pudl.isin(
+                        list(utilities_1)
                     )
                 ]
             return (
@@ -299,14 +296,6 @@ def build_query_params(OptionsFerc1, mo):
             query_params["year_range"] = (
                 f"{min(available_years)}|{max(available_years)}"
             )
-        # if "start_year" not in query_params or (
-        #     int(query_params["start_year"]) not in set(available_years)
-        # ):
-        #     query_params["start_year"] = str(available_years.min())
-        # if "end_year" not in query_params or (
-        #     int(query_params["end_year"]) not in set(available_years)
-        # ):
-        #     query_params["end_year"] = str(available_years.max())
         if "state_2" not in query_params:
             query_params["state_2"] = ""
         if "utilities_2" not in query_params:
@@ -352,8 +341,7 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
         state_2: str | None = Field(None)
         utilities_2: set[str] = Field({None})
 
-        year_range: str = Field("1994,2025")
-        mark_type: str = Field("Stacked Bar")
+        year_range: list[str]
 
         @computed_field
         @cached_property
@@ -361,6 +349,7 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
             available_years = OptionsFerc1.available_years(self.utilities_1)
             range_slider = mo.ui.range_slider(
                 steps=range(min(available_years), max(available_years) + 1),
+                value=[int(self.year_range[0]), int(self.year_range[1])],
                 full_width=True,
                 on_change=lambda value: reset_params(
                     year_range="|".join([str(y) for y in value])
@@ -413,22 +402,22 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
                 on_change=lambda value: reset_params(utilities_2="|".join(value)),
             )
 
-        @computed_field
-        @cached_property
-        def mark_type_selector(self) -> mo.ui.dropdown:
-            return mo.ui.dropdown(
-                options={"Stacked Bar": "mark_bar", "Line": "mark_line"},
-                label="Chart Display Type:",
-                value=self.mark_type,
-            )
-
         @field_validator("utilities_1", "utilities_2", mode="before")
         @classmethod
-        def deserialize(cls, value: str) -> set[str]:
+        def deserialize_set(cls, value: str) -> set[str]:
             if value == "":
                 out = set()
             else:
                 out = set(value.split("|"))
+            return out
+
+        @field_validator("year_range", mode="before")
+        @classmethod
+        def deserialize_list(cls, value: str) -> set[str]:
+            if value == "":
+                out = []
+            else:
+                out = value.split("|")
             return out
 
     selection = Selection(**query_params.to_dict())
@@ -436,8 +425,17 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
 
 
 @app.cell
-def sidebar(mo, selection):
+def chart_type_select(mo):
+    mark_type_selector = mo.ui.dropdown(
+        options={"Stacked Bar": "mark_bar", "Line": "mark_line"},
+        label="Chart Display Type:",
+        value="Stacked Bar",
+    )
+    return (mark_type_selector,)
 
+
+@app.cell
+def sidebar(mark_type_selector, mo, selection):
     mo.sidebar(
         [
             mo.md("## Make Selections:"),
@@ -490,7 +488,7 @@ def sidebar(mo, selection):
             mo.md("### Choose Years:"),
             selection.year_range_silder,
             mo.md("""###Choose between chart styles:"""),
-            selection.mark_type_selector,
+            mark_type_selector,
         ]
     )
     return
@@ -543,7 +541,7 @@ def filter_dfs(
             utility_selection_title_part = "All Utilities"
             utils_subtitle = ""
 
-            year_range = selection.year_range.split("|")
+            year_range = selection.year_range
             rate_mask = out_ferc1__yearly_rate_base.report_year.between(
                 int(year_range[0]), int(year_range[1])
             )
@@ -603,9 +601,9 @@ def chart_tools(
     GraphInput,
     GraphInputs,
     alt,
+    mark_type_selector,
     mo,
     pd,
-    selection,
     wrap,
 ):
     # why colors..?? bc.... bc i can! bc CUTENESS
@@ -699,11 +697,11 @@ def chart_tools(
         # and also its a bar chart
         xOffset_if_bar_and_side_by_side = (
             {"xOffset": col_to_chart.xOffset}
-            if col_to_chart.xOffset and selection.mark_type_selector.value == "mark_bar"
+            if col_to_chart.xOffset and mark_type_selector.value == "mark_bar"
             else {}
         )
         return (
-            getattr(chart_cls, selection.mark_type_selector.value)(tooltip=True)
+            getattr(chart_cls, mark_type_selector.value)(tooltip=True)
             .encode(
                 alt.X("report_year", type="ordinal").title("Report date"),
                 alt.Y(col)
