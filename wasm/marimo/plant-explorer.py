@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.20.4"
+__generated_with = "0.23.13"
 app = marimo.App(width="medium")
 
 
@@ -25,11 +25,8 @@ def _(mo, selection):
 
 
 @app.cell(hide_code=True)
-def _(mo, selection, this_plant):
-    if selection.plant is not None:
-        mo.md(f"# {this_plant.name} (EIA id={this_plant.plant_id_eia})")
-    else:
-        mo.md("# ")
+def _(mo, this_plant):
+    mo.md(f"# {this_plant.name} (EIA id={this_plant.plant_id_eia})")
     return
 
 
@@ -43,7 +40,6 @@ def _():
         import itertools
         import functools
 
-        import fastparquet as fp
         import pandas as pd
         import pyarrow as pa
         import altair as alt
@@ -61,12 +57,15 @@ def path(name):
 
 @app.cell
 def _(pd):
-    def pudl(name, columns=None):
-        return pd.read_parquet(
+    def pudl(name, **kwargs):
+        df = pd.read_parquet(
             path(name),
-            engine="fastparquet",
-            **({"columns": columns} if columns else {}),
+            **kwargs,
         )
+        # fastparquet gets the dtypes right but pyarrow seems to miss them
+        if "report_date" in df.columns and df.report_date.dtype != "datetime64[s]":
+            df["report_date"] = pd.to_datetime(df["report_date"])
+        return df
 
     return (pudl,)
 
@@ -110,7 +109,7 @@ def _(mo, pudl):
                 "net_generation_mwh",
             ],
         )
-        do_fetch_data.update(subtitle=".")
+        do_fetch_data.update(subtitle="out_eia923__monthly_generation")
         out_eia923__monthly_generation = pudl("out_eia923__monthly_generation")
         do_fetch_data.update(subtitle="Done!")
     return (
@@ -514,6 +513,11 @@ def _(
     )
 
 
+@app.function
+def chart_style(chart):
+    return chart.properties(width="container")
+
+
 @app.cell
 def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
     mo.output.append(mo.md("## Plant-level generation"))
@@ -527,7 +531,7 @@ def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
         mo.md("Here is a timeseries view of the electricity produced at this plant.")
     )
 
-    plant_netgen_chart = (
+    plant_netgen_chart = chart_style(
         alt.Chart(
             this_plant__monthly_generation_fuel_combined,
             title=alt.Title(
@@ -548,7 +552,7 @@ def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
         ).style({"margin-bottom": "2rem"})
     )
 
-    plant_netgen_bysource_chart = (
+    plant_netgen_bysource_chart = chart_style(
         alt.Chart(
             this_plant__monthly_generation_fuel_combined,
             title=alt.Title(
@@ -602,7 +606,7 @@ def _(
                 f"Generation data available for {n_monthly_gens} of {this_plant__generators.shape[0]} generators for this plant."
             ).style({"background": "#eee"})
         )
-    bygen_chart = (
+    bygen_chart = chart_style(
         alt.Chart(
             this_plant__monthly_generation,
             title=alt.Title(
