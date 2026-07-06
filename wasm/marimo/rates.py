@@ -846,7 +846,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ),
         ColumToChart(
             preamble=(
-               "How has electricity consumption changed over time within these different customer classes?\n"
+                "How has electricity consumption changed over time within these different customer classes?\n"
                 "**Hint**: Generally speaking, electricity consumption over the last few decades has been incredibly flat."
             ),
             col="sales_mwh",
