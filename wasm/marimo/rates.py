@@ -9,8 +9,8 @@ def header(mo):
     mo.md(r"""
     # ⚡💸Utility Rate Base & Sales Explorer 💸⚡
 
-    This dashboard daylights two tables that can help us better understand utility rates:
-    * 🧮 __<a href="https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_rate_base" target="_blank">out_ferc1__yearly_rate_base</a>__: This table tells us about the investments that utilities make to serve electricity customers which they typically include in their rate bases.
+    This dashboard highlights two tables that can help us better understand utility rates:
+    * 🧮 __<a href="https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_rate_base" target="_blank">out_ferc1__yearly_rate_base</a>__: This table tells us about the investments that utilities make to serve electricity customers and typically include in their rate bases.
     * 🧾 __<a href="https://data.catalyst.coop/preview/pudl/core_eia861__yearly_sales" target="_blank">core_eia861__yearly_sales</a>__: This table tells us about revenue collected from each type of customer, presumably to cover those costs from the FERC Form 1 rate base table as well as other costs. This table gives us a good proxy for utility bills in aggregate, but doesn’t tell us about how rates are structured.
 
     These tables provide clues about how rates have changed over time, the primary drivers of that change and who bears the impact of that change. It’s important to note that, while informative, the data provide an incomplete and imperfect picture. The rate making process is complex and this dashboard only gives us a snapshot. Nonetheless, we think this information is useful and we encourage you to explore. For more background materials, see the Additional Resources at the bottom of the page.
@@ -446,7 +446,7 @@ def sidebar(mark_type_selector, mo, selection):
                     mo.hstack(
                         [
                             mo.md(
-                                f"""<div data-tooltip="Choose a state to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                                f"""<div data-tooltip="View an entire state's data or subset to utilities within that state. All states are displayed by default.">{mo.icon("lucide:info")}</div>"""
                             ),
                             selection.state_1_selector,
                         ],
@@ -457,7 +457,7 @@ def sidebar(mark_type_selector, mo, selection):
                     mo.hstack(
                         [
                             mo.md(
-                                f"""<div data-tooltip="Choose utility to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
+                                f"""<div data-tooltip="Choose a utility to explore. Selecting more than one utility will sum the outputs.">{mo.icon("lucide:info")}</div>"""
                             ),
                             selection.utilities_1_selector,
                         ],
@@ -470,7 +470,7 @@ def sidebar(mark_type_selector, mo, selection):
                 align="start",
                 gap=0,
             ),
-            mo.md("""###To Compare, choose additional utilities:"""),
+            mo.md("""###To compare, choose additional utilities:"""),
             mo.vstack(
                 [
                     mo.hstack(
@@ -766,7 +766,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
     cols_to_chart_ferc1 = [
         ColumToChart(
             preamble=(
-                "What portion of a utilities overall expenses or capital has increased or decreased over time? Are the increases coming from the **generation of electricity** or the **transmission and distribution system**? Consider fixed vs. variable costs."
+                "How has a utility's overall expenses or capital increased or decreased over time? Are the increases coming from the **generation of electricity** or the **transmission and distribution system**? Consider fixed vs. variable costs."
             ),
             col="ending_balance",
             aggregate="sum",
@@ -777,7 +777,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ),
         ColumToChart(
             preamble=(
-                "Want to dig in further? This graph breaks down rate base by 'plant function', which is a FERC-defined label of what function an expense or capital cost plays in utility operations."
+                'Want to dig in further? This graph breaks down rate base by "plant function", a FERC-defined label of what function an expense or capital cost plays in utility operations.'
             ),
             col="ending_balance",
             title_middle="Rate Base by Plant Function",
@@ -788,7 +788,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ),
         ColumToChart(
             preamble=(
-                "__Details Abound!__ The smart folks at <a href='rmi.org' target='_blank'>RMI</a> labled rate base with even more detail. This is a more detailed break down of these rate base costs."
+                "__Details Abound!__ The smart folks at <a href='rmi.org' target='_blank'>RMI</a> labeled rate base categories with even more detail. This is a more detailed break down of these rate base costs."
             ),
             col="ending_balance",
             aggregate="sum",
@@ -807,7 +807,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
 def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
     mo.output.append(
         mo.md("""## 🧾 Utility Sales from Customers
-    Now let's look at how much utilities are collecting from customers using <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861 data</a>. The temporal coverage of EIA-861 is different from FERC Form 1. PUDL has integrated EIA-861 data starting in 2001 and EIA-861 data is released after FERC Form 1 data in year.
+    Now let's look at how much utilities are collecting from customers using <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861 data</a>. The temporal coverage of EIA-861 is different from FERC Form 1. PUDL has integrated EIA-861 data starting in 2001 and EIA-861 data is released after FERC Form 1 data each year.
     """)
     )
     customer_colors = ["palevioletred", "purple", "lightseagreen"]
@@ -830,8 +830,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ColumToChart(
             preamble=(
                 "What about average monthly revenue per residential customers? This "
-                "isn't exactly equivalent to monthly bills but it is a good proxy for "
-                "an average monthly customer bill."
+                "isn't exactly equivalent to average monthly customer bills, but it is a good proxy."
             ),
             col="revenue_per_month_customer",
             title_middle="Monthly Residential Sales",
@@ -847,7 +846,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ),
         ColumToChart(
             preamble=(
-                "How has electricity consumption changed over time within these different customer classes\n"
+               "How has electricity consumption changed over time within these different customer classes?\n"
                 "**Hint**: Generally speaking, electricity consumption over the last few decades has been incredibly flat."
             ),
             col="sales_mwh",
@@ -889,9 +888,9 @@ def materials_accordion(mo):
     mo.accordion(
         {
             "### Rate base ➡️ Customer Bills": mo.md("""
-    * 🧱 Utilities’ Revenue Requirement: The Building Blocks for Utility Bills
+    * 🧱 Utility Revenue Requirements: The Building Blocks for Utility Bills
       * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
-    * 🧮 What is “Rate Base”? (shown below)
+    * 🧮 What is a “Rate Base”? (shown below)
       * FERC defines Rate Base as: “The value of property upon which a utility is permitted to earn a specified rate of return as established by a regulatory authority.”
       * Rate Base includes all property and assets that the utility invests in and maintains for the purpose of serving customers.
     * ⛽ Expenses (not included in rate base)
