@@ -367,9 +367,7 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
                 options=list(OptionsFerc1.available_states()),
                 value=self.state_1,
                 label="State:",
-                on_change=lambda value: reset_params(
-                    state_1=value, utilities_1={"ALL"}
-                ),
+                on_change=lambda value: reset_params(state_1=value, utilities_1="ALL"),
             )
 
         @computed_field
