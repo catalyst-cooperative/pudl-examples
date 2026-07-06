@@ -351,6 +351,7 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
                 steps=range(min(available_years), max(available_years) + 1),
                 value=[int(self.year_range[0]), int(self.year_range[1])],
                 full_width=True,
+                label="Years:",
                 on_change=lambda value: reset_params(
                     year_range="|".join([str(y) for y in value])
                 ),
@@ -440,57 +441,79 @@ def sidebar(mark_type_selector, mo, selection):
         [
             mo.md("## Make Selections:"),
             mo.md("### Choose Utilities:"),
-            mo.hstack(
-                [
-                    mo.md(
-                        f"""<div data-tooltip="Choose a state or a set of states to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+            mo.vstack(
+                [  # the hstack's leave spaces after them, unless you wrap them in a vstack stack stack stack
+                    mo.hstack(
+                        [
+                            mo.md(
+                                f"""<div data-tooltip="Choose a state to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                            ),
+                            selection.state_1_selector,
+                        ],
+                        justify="start",
+                        align="start",
+                        gap=0,
                     ),
-                    selection.state_1_selector,
-                ],
-                justify="start",
-                align="start",
-                gap=0,
-            ),
-            mo.hstack(
-                [
-                    mo.md(
-                        f"""<div data-tooltip="Choose utility to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
+                    mo.hstack(
+                        [
+                            mo.md(
+                                f"""<div data-tooltip="Choose utility to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
+                            ),
+                            selection.utilities_1_selector,
+                        ],
+                        justify="start",
+                        align="start",
+                        gap=0,
                     ),
-                    selection.utilities_1_selector,
                 ],
                 justify="start",
                 align="start",
                 gap=0,
             ),
             mo.md("""###To Compare, choose additional utilities:"""),
-            mo.hstack(
+            mo.vstack(
                 [
-                    mo.md(
-                        f"""<div data-tooltip="Choose a state or a set of states to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                    mo.hstack(
+                        [
+                            mo.md(
+                                f"""<div data-tooltip="Choose a state or a set of states to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                            ),
+                            selection.state_2_selector,
+                        ],
+                        justify="start",
+                        align="start",
+                        gap=0,
                     ),
-                    selection.state_2_selector,
+                    mo.hstack(
+                        [
+                            mo.md(
+                                f"""<div data-tooltip="Choose a second set of utilities to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
+                            ),
+                            selection.utilities_2_selector,
+                        ],
+                        justify="start",
+                        align="start",
+                        gap=0,
+                    ),
                 ],
                 justify="start",
                 align="start",
                 gap=0,
             ),
-            mo.hstack(
+            mo.md("### Other Options:"),
+            mo.vstack(
                 [
-                    mo.md(
-                        f"""<div data-tooltip="Choose a second set of utilities to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
-                    ),
-                    selection.utilities_2_selector,
+                    selection.year_range_silder,
+                    mark_type_selector,
                 ],
                 justify="start",
                 align="start",
-                gap=0,
+                # weirdly 0 gap seems a lil too smol
+                gap=1,
             ),
-            mo.md("### Choose Years:"),
-            selection.year_range_silder,
-            mo.md("""###Choose between chart styles:"""),
-            mark_type_selector,
         ]
     )
+
     return
 
 
