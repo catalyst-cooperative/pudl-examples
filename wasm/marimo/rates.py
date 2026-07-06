@@ -351,6 +351,8 @@ def selection(OptionsFerc1, mo, query_params, reset_params):
                 steps=range(min(available_years), max(available_years) + 1),
                 value=[int(self.year_range[0]), int(self.year_range[1])],
                 full_width=True,
+                # this label by default is on top of not to the left of the selector..
+                # which is a little annoying/inconsistent but alas
                 label="Years:",
                 on_change=lambda value: reset_params(
                     year_range="|".join([str(y) for y in value])
@@ -476,7 +478,7 @@ def sidebar(mark_type_selector, mo, selection):
                     mo.hstack(
                         [
                             mo.md(
-                                f"""<div data-tooltip="Choose a state or a set of states to explore. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                                f"""<div data-tooltip="Choose a state. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
                             ),
                             selection.state_2_selector,
                         ],
@@ -513,7 +515,6 @@ def sidebar(mark_type_selector, mo, selection):
             ),
         ]
     )
-
     return
 
 
