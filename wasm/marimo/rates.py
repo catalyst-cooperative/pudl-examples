@@ -41,12 +41,15 @@ def helpers(pd):
     def path(name):
         return f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet"
 
-    def pudl(name, columns=None):
-        return pd.read_parquet(
+    def pudl(name, **kwargs):
+        df = pd.read_parquet(
             path(name),
-            engine="fastparquet",
-            **({"columns": columns} if columns else {}),
+            **kwargs,
         )
+        # fastparquet gets the dtypes right but pyarrow seems to miss them
+        if "report_date" in df.columns and df.report_date.dtype != "datetime64[s]":
+            df["report_date"] = pd.to_datetime(df["report_date"])
+        return df
 
     def table_preview_href(name):
         return f"""<a href="https://data.catalyst.coop/preview/pudl/{name}" target="_blank">{name}</a>"""
