@@ -290,7 +290,11 @@ def build_query_params(OptionsFerc1, mo):
             query_params["state_1"] = "ALL"
         if "utilities_1" not in query_params:
             query_params["utilities_1"] = "ALL"
+        # Remove ALL if there are more than ALL in the utils
         util_set = set(query_params["utilities_1"].split("|"))
+        if (len(util_set) > 1) and ("ALL" in util_set):
+            util_set = {util for util in util_set if util != "ALL"}
+            query_params["utilities_1"] = "|".join(util_set)
         available_years = OptionsFerc1.available_years(util_set)
         if "year_range" not in query_params:
             query_params["year_range"] = (
@@ -300,6 +304,11 @@ def build_query_params(OptionsFerc1, mo):
             query_params["state_2"] = ""
         if "utilities_2" not in query_params:
             query_params["utilities_2"] = ""
+        # Remove ALL if there are more than ALL in the utils
+        util_set = set(query_params["utilities_2"].split("|"))
+        if (len(util_set) > 1) and ("ALL" in util_set):
+            util_set = {util for util in util_set if util != "ALL"}
+            query_params["utilities_2"] = "|".join(util_set)
 
     initialize_default_params()
     return initialize_default_params, query_params
@@ -476,7 +485,7 @@ def sidebar(mark_type_selector, mo, selection):
                     mo.hstack(
                         [
                             mo.md(
-                                f"""<div data-tooltip="Choose a state. This will restrict the utiilty options. By default we show you all states. If you want to chose particular ones, select here.">{mo.icon("lucide:info")}</div>"""
+                                f"""<div data-tooltip="View an entire state's data or subset to utilities within that state. All states are displayed by default.">{mo.icon("lucide:info")}</div>"""
                             ),
                             selection.state_2_selector,
                         ],
@@ -487,7 +496,7 @@ def sidebar(mark_type_selector, mo, selection):
                     mo.hstack(
                         [
                             mo.md(
-                                f"""<div data-tooltip="Choose a second set of utilities to explore. By default we show you all utilities. If you choose more than one utility, the outputs will be summed together.">{mo.icon("lucide:info")}</div>"""
+                                f"""<div data-tooltip="Choose a utility to explore. Selecting more than one utility will sum the outputs.">{mo.icon("lucide:info")}</div>"""
                             ),
                             selection.utilities_2_selector,
                         ],
@@ -509,7 +518,7 @@ def sidebar(mark_type_selector, mo, selection):
                 justify="start",
                 align="start",
                 # weirdly 0 gap seems a lil too smol
-                gap=1,
+                gap=0,
             ),
         ]
     )
@@ -730,6 +739,11 @@ def chart_tools(
                 .axis(format=col_to_chart.y_axis_format)
                 .title(col_to_chart.y_title),
                 color=alt.Color(color_stack).scale(range=col_to_chart.colors),
+                tooltip=[
+                    alt.Tooltip(
+                        col, format=col_to_chart.y_axis_format
+                    )  # currency with commas
+                ],
                 **xOffset_if_bar_and_side_by_side,
             )
             .properties(width="container")
@@ -772,7 +786,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
             aggregate="sum",
             title_middle="Rate Base by Function Type",
             y_title="Nominal USD",
-            y_axis_format="$",
+            y_axis_format="$,.0f",
             color_stack="plant_function_type",
         ),
         ColumToChart(
@@ -782,7 +796,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
             col="ending_balance",
             title_middle="Rate Base by Plant Function",
             y_title="Nominal USD",
-            y_axis_format="$",
+            y_axis_format="$,.0f",
             aggregate="sum",
             color_stack="plant_function",
         ),
@@ -794,7 +808,7 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
             aggregate="sum",
             title_middle="Rate Base by Category",
             y_title="Nominal USD",
-            y_axis_format="$",
+            y_axis_format="$,.0f",
             color_stack="rate_base_category",
         ),
     ]
@@ -824,7 +838,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
             aggregate="sum",
             colors=customer_colors,
             color_stack="customer_class",
-            y_axis_format="$",
+            y_axis_format="$,.0f",
             filter_on_color_stack=["commercial", "industrial", "residential"],
         ),
         ColumToChart(
@@ -838,7 +852,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
             aggregate="mean",
             colors=[customer_colors[-1]],
             color_stack="customer_class",
-            y_axis_format="$",
+            y_axis_format="$,.0f",
             # I added a filter in here bc.. well I assume most people want to see residential
             # and with all customers the residential customers were drowned out
             filter_on_color_stack=["residential"],
@@ -846,16 +860,16 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ),
         ColumToChart(
             preamble=(
-               "How has electricity consumption changed over time within these different customer classes?\n"
+                "How has electricity consumption changed over time within these different customer classes?\n"
                 "**Hint**: Generally speaking, electricity consumption over the last few decades has been incredibly flat."
             ),
             col="sales_mwh",
             title_middle="MWh Sales by Customer Class",
             y_title="MWh",
             aggregate="sum",
+            y_axis_format=",.0f",
             colors=customer_colors,
             color_stack="customer_class",
-            y_axis_format=None,
             filter_on_color_stack=["commercial", "industrial", "residential"],
         ),
         ColumToChart(
@@ -865,7 +879,7 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
             aggregate="mean",
             colors=customer_colors,
             color_stack="customer_class",
-            y_axis_format="$",
+            y_axis_format="$,.0f",
             filter_on_color_stack=["commercial", "industrial", "residential"],
             xOffset="customer_class",
         ),
@@ -890,24 +904,25 @@ def materials_accordion(mo):
             "### Rate base ➡️ Customer Bills": mo.md("""
     * 🧱 Utility Revenue Requirements: The Building Blocks for Utility Bills
       * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
-    * 🧮 What is a “Rate Base”? (shown below)
+    * 🧮 What is a “Rate Base”?
       * FERC defines Rate Base as: “The value of property upon which a utility is permitted to earn a specified rate of return as established by a regulatory authority.”
       * Rate Base includes all property and assets that the utility invests in and maintains for the purpose of serving customers.
     * ⛽ Expenses (not included in rate base)
-      * Fuel Cost and Other Expenses : Expenses are effectively passed on to consumers. These costs are not included in the rate base, but do affect customer bills.
+      * Fuel cost & other expenses : Expenses are effectively passed on to consumers. These costs are not included in the rate base, but do affect customer bills.
       * Fuel costs are the most notable because they can be volatile and can be significant.
-    * 🧾 How do revenue requirements get translated into customer bills? (shown below)
-      * Cost Allocation: Allocating utility costs to customers happens in a rate design process. This typically happens in a rate case and involves cost of service studies. The high level goal is to allocate costs to customers incurring those costs with minimal cross-subsidy between customers.
+    * 🥧 How do revenue requirements get translated into customer bills? 🧾
+      * Determining the revenue requirement is like determining the size of a pie; allocating costs to different consumers is like slicing up the pie amongst utility customers.
+      * Cost allocation: Allocating utility costs to customers happens in a rate case and involves cost of service studies.
       * The EIA-861 data in this dashboard tells us about how much revenue is collected from different kinds of customers, but it does not tell us about how rates are structured or calculated. For more information about rate schedules you can explore <a href='https://data.catalyst.coop/preview/pudl/out_ferc1__yearly_sales_by_rate_schedules_sched304' target='_blank'>out_ferc1__yearly_sales_by_rate_schedules_sched304</a>, but beware that table is particularly messy and hard to interpret.
     * 🤔 Some key concepts to consider when exploring utility rates:
-      * __Capital Bias__: This is a well understood result of the predominant rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
-      * __Fixed vs. Variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are relatively fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things on the "fixed" side of rates certainly change over time and require investments when use of the existing infrastructure expands.
+      * __Capital bias__: This is a well understood result of the predominant rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
+      * __Fixed vs. variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are relatively fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things on the "fixed" side of rates certainly change over time and require investments when use of the existing infrastructure expands.
       * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume.. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period."""),
             "### 😵‍💫 Complicating Factors": mo.md("""
     * __Inflation__: All costs in this dashboard are nominal USD.
-    * __Fuel Costs__: As noted above, the rate base data does not include pass through costs like fuel which can be substantial.
-    * __FERC Form 1 Respondents Only__: Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities. This biases the utilities shown here towards larger utilities which tend to be more investor owned utilities. Municipal and cooperative utilities do not report to FERC at all and so do not appear in this data.
-    * __Multi-State Utilities__: FERC 1 Respondents report their data for the entire utility, which can sometimes span multiple states. When selecting states, know that the available utilities in that state may include data from multi-state utilities.
+    * __Fuel costs__: As noted above, the rate base data does not include pass through costs like fuel which can be substantial.
+    * __FERC Form 1 respondents only__: Because we only have rate base data for those utilities which report to FERC Form 1 (see <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/ferc1.html#who-submits-this-data" target="_blank">reporting requirements</a>), this entire dashboard is restricted to only those utilities. This biases the utilities shown here towards larger utilities which tend to be more investor owned utilities. Municipal and cooperative utilities do not report to FERC at all and so do not appear in this data.
+    * __Multi-state utilities__: FERC 1 respondents report their data for the entire utility, which can sometimes span multiple states. When selecting states, know that the available utilities in that state may include data from multi-state utilities.
     * __Deregulated markets__: States which have utility markets which preclude or discourage customer-serving utilities from owning generation will show up in this data a little differently. These utilities buy generation on the market - so generation doesn't show up in their rate base because generation is purely an expense for them.
             """),
             "### 🔗 Further Reading": mo.md("""
