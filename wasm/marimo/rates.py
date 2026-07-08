@@ -518,7 +518,7 @@ def sidebar(mark_type_selector, mo, selection):
                 justify="start",
                 align="start",
                 # weirdly 0 gap seems a lil too smol
-                gap=0,
+                gap=2,
             ),
         ]
     )
@@ -819,78 +819,76 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
     return
 
 
-app._unparsable_cell(
-    """
-     mo.output.append(
-        mo.md(\"\"\"## 🧾 Utility Sales from Customers
-    Now let's look at how much utilities are collecting from customers using <a href=\"https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html\" target=\"_blank\">EIA-861 data</a>. The temporal coverage of EIA-861 is different from FERC Form 1. PUDL has integrated EIA-861 data starting in 2001 and EIA-861 data is released after FERC Form 1 data each year.
-    \"\"\")
+@app.cell
+def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
+    mo.output.append(
+        mo.md("""## 🧾 Utility Sales from Customers
+        Now let's look at how much utilities are collecting from customers using <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861 data</a>. The temporal coverage of EIA-861 is different from FERC Form 1. PUDL has integrated EIA-861 data starting in 2001 and EIA-861 data is released after FERC Form 1 data each year.
+        """)
     )
-    customer_colors = [\"palevioletred\", \"purple\", \"lightseagreen\"]
+    customer_colors = ["palevioletred", "purple", "lightseagreen"]
     cols_to_chart_eia861 = [
         ColumToChart(
             preamble=(
-                \"How has utility sales changed over time? Is this different than the rate base changing over time?\\n\"
-                \"How much of the revenue that utilities collect come from each different \"
-                \"types of customers?\"
+                "How has utility sales changed over time? Is this different than the rate base changing over time?\n"
+                "How much of the revenue that utilities collect come from each different "
+                "types of customers?"
             ),
-            col=\"sales_revenue\",
-            title_middle=\"Sales Revenue by Customer Class\",
-            y_title=\"Nominal USD\",
-            aggregate=\"sum\",
+            col="sales_revenue",
+            title_middle="Sales Revenue by Customer Class",
+            y_title="Nominal USD",
+            aggregate="sum",
             colors=customer_colors,
-            color_stack=\"customer_class\",
-            y_axis_format=\"$,.0f\",
-            filter_on_color_stack=[\"commercial\", \"industrial\", \"residential\"],
+            color_stack="customer_class",
+            y_axis_format="$,.0f",
+            filter_on_color_stack=["commercial", "industrial", "residential"],
         ),
         ColumToChart(
             preamble=(
-                \"What about average monthly revenue per residential customers? This \"
-                \"isn't exactly equivalent to average monthly customer bills, but it is a good proxy.\"
+                "What about average monthly revenue per residential customers? This "
+                "isn't exactly equivalent to average monthly customer bills, but it is a good proxy."
             ),
-            col=\"revenue_per_month_customer\",
-            title_middle=\"Monthly Residential Sales\",
-            y_title=\"Sales (Nominal $USD) per Customer per Month\",
-            aggregate=\"mean\",
+            col="revenue_per_month_customer",
+            title_middle="Monthly Residential Sales",
+            y_title="Sales (Nominal $USD) per Customer per Month",
+            aggregate="mean",
             colors=[customer_colors[-1]],
-            color_stack=\"customer_class\",
-            y_axis_format=\"$,.0f\",
+            color_stack="customer_class",
+            y_axis_format="$,.0f",
             # I added a filter in here bc.. well I assume most people want to see residential
             # and with all customers the residential customers were drowned out
-            filter_on_color_stack=[\"residential\"],
-            xOffset=\"customer_class\",
+            filter_on_color_stack=["residential"],
+            xOffset="customer_class",
         ),
         ColumToChart(
             preamble=(
-                \"How has electricity consumption changed over time within these different customer classes?\\n\"
-                \"**Hint**: Generally speaking, electricity consumption over the last few decades has been incredibly flat.\"
+                "How has electricity consumption changed over time within these different customer classes?\n"
+                "**Hint**: Generally speaking, electricity consumption over the last few decades has been incredibly flat."
             ),
-            col=\"sales_mwh\",
-            title_middle=\"MWh Sales by Customer Class\",
-            y_title=\"MWh\",
-            aggregate=\"sum\",
-            y_axis_format=\",.0f\",
+            col="sales_mwh",
+            title_middle="MWh Sales by Customer Class",
+            y_title="MWh",
+            aggregate="sum",
+            y_axis_format=",.0f",
             colors=customer_colors,
-            color_stack=\"customer_class\",
-            filter_on_color_stack=[\"commercial\", \"industrial\", \"residential\"],
+            color_stack="customer_class",
+            filter_on_color_stack=["commercial", "industrial", "residential"],
         ),
         ColumToChart(
-            col=\"sales_revenue_by_mwh\",
-            title_middle=\"Revenue per MWh by Customer Class\",
-            y_title=\"Nominal $USD /MWh\",
-            aggregate=\"mean\",
+            col="sales_revenue_by_mwh",
+            title_middle="Revenue per MWh by Customer Class",
+            y_title="Nominal $USD /MWh",
+            aggregate="mean",
             colors=customer_colors,
-            color_stack=\"customer_class\",
-            y_axis_format=\"$,.0f\",
-            filter_on_color_stack=[\"commercial\", \"industrial\", \"residential\"],
-            xOffset=\"customer_class\",
+            color_stack="customer_class",
+            y_axis_format="$,.0f",
+            filter_on_color_stack=["commercial", "industrial", "residential"],
+            xOffset="customer_class",
         ),
     ]
 
-    make_comparison_charts(cols_to_chart_eia861, graph_inputs, \"filtered_sales\")
-    """,
-    name="chart_eia861",
-)
+    make_comparison_charts(cols_to_chart_eia861, graph_inputs, "filtered_sales")
+    return
 
 
 @app.cell(hide_code=True)
