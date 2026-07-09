@@ -28,7 +28,6 @@ def imports():
         from textwrap import wrap
 
         import altair as alt
-        import fastparquet as fp
         import pandas as pd
         import pyarrow as pa
 
@@ -671,7 +670,7 @@ def chart_tools(
         "mistyrose",
     ]
 
-    # So many of the inputs for the charts were exactly the same with slight permiutaions. Plus I wanted to be able to
+    # So many of the inputs for the charts were exactly the same with slight permutations. Plus I wanted to be able to
     # either show one utility's charts OR two graphs for a comparison. So i did a slightly silly thing of compiling
     # all of the inputs
 
@@ -834,8 +833,8 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
         ColumToChart(
             preamble=(
                 "How has utility sales changed over time? Is this different than the rate base changing over time?\n"
-                "How much of the revenue that utilities collect come from each different "
-                "types of customers?"
+                "How much of the revenue that utilities collect comes from each "
+                "type of customer?"
             ),
             col="sales_revenue",
             title_middle="Sales Revenue by Customer Class",
@@ -908,7 +907,7 @@ def materials_accordion(mo):
         {
             "### Rate base ➡️ Customer Bills": mo.md("""
     * 🧱 Utility Revenue Requirements: The Building Blocks for Utility Bills
-      * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
+      * In order to set rates for consumers, utilities must calculate a revenue requirement which includes expenses, investments, and a rate of return on capital investment, among other things. Each state regulates rates a little differently, but at the most basic level: Revenue Requirement = (Rate Base * Rate of Return) + Expenses
     * 🧮 What is a “Rate Base”?
       * FERC defines Rate Base as: “The value of property upon which a utility is permitted to earn a specified rate of return as established by a regulatory authority.”
       * Rate Base includes all property and assets that the utility invests in and maintains for the purpose of serving customers.
@@ -922,7 +921,7 @@ def materials_accordion(mo):
     * 🤔 Some key concepts to consider when exploring utility rates:
       * __Capital bias__: This is a well understood result of the predominant rate design in the U.S., which incentivizes utilities to invest more capital into their systems because they get a fixed rate of return for allowable capital investments.
       * __Fixed vs. variable__: Some costs are variable based on the amount of electricity consumers use (ex: using natural gas when generating electricity at a natural gas generation facility) and some costs are relatively fixed (ex: investments in maintaining the physical structure at a natural gas plant or the maintenance costs for the distribution system in an area that isn't experiencing lots of growth). Many things on the "fixed" side of rates certainly change over time and require investments when use of the existing infrastructure expands.
-      * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume.. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period."""),
+      * __Demand vs volumetric charges__: Residential customers almost always see volumetric pricing, meaning they are charged in direct proportion to how much energy they consume. However, large commercial and industrial customers often have rate structures that are demand-based, meaning they are charged based on the maximum load they put on the system in a given billing period."""),
             "### 😵‍💫 Complicating Factors": mo.md("""
     * __Inflation__: All costs in this dashboard are nominal USD.
     * __Fuel costs__: As noted above, the rate base data does not include pass through costs like fuel which can be substantial.
