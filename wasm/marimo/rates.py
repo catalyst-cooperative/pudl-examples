@@ -827,7 +827,10 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
 def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
     mo.output.append(
         mo.md("""## 🧾 Utility Sales from Customers
-        Now let's look at how much utilities are collecting from customers using <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861 data</a>. The temporal coverage of EIA-861 is different from FERC Form 1; PUDL has integrated EIA-861 data starting in 2001 and EIA-861 data is released after FERC Form 1 data each year.
+        Now let's look at how much utilities are collecting from customers using
+        <a href="https://docs.catalyst.coop/pudl/en/nightly/data_sources/eia861.html" target="_blank">EIA-861 data</a>.
+        PUDL has different years of data integrated for EIA-861 and FERC Form 1, so
+        there will be slightly different years in the following graphs.
         """)
     )
     customer_colors = ["palevioletred", "purple", "lightseagreen"]
