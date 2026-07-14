@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.20.4"
+__generated_with = "0.23.13"
 app = marimo.App(width="medium")
 
 
@@ -24,7 +24,7 @@ def _():
 def _(mo, selection):
     # ~~~~ FORMAT INITIAL STATE/UTIL SELECTION ~~~~
 
-    mo.output.append(mo.md("# Utility Explorer"))
+    mo.output.append(mo.md("# ⚡Utility Explorer⚡"))
     mo.output.append(
         mo.md(
             'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time, and generators.'
@@ -70,12 +70,15 @@ def _(pd):
         return f"https://s3.us-west-2.amazonaws.com/pudl.catalyst.coop/nightly/{name}.parquet"
 
     # ---- Read tables func ----
-    def pudl(name, columns=None):
-        return pd.read_parquet(
+    def pudl(name, **kwargs):
+        df = pd.read_parquet(
             path(name),
-            engine="fastparquet",
-            **({"columns": columns} if columns else {}),
+            **kwargs,
         )
+        # fastparquet gets the dtypes right but pyarrow seems to miss them
+        if "report_date" in df.columns and df.report_date.dtype != "datetime64[s]":
+            df["report_date"] = pd.to_datetime(df["report_date"])
+        return df
 
     # ---- Turn date to year ----
     def make_report_date_report_year(df):
@@ -1507,6 +1510,14 @@ def _(mo, summer_v_winter_demand_chart, table_preview_href):
     )
 
     demand
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    If you see anything odd in the data, find a bug or just have a question, feel free to reach out to us by emailing us at hello@catalyst.coop or write up a <a href="https://github.com/catalyst-cooperative/pudl/issues/new?template=bug_report.md" target="_blank">github issue</a>. Heck, if you just found this helpful, let us know! As an open-source project we love to hear about your energy data needs.
+    """)
     return
 
 
