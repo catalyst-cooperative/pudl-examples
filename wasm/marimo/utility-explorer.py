@@ -27,7 +27,7 @@ def _(mo, selection):
     mo.output.append(mo.md("# Utility Explorer"))
     mo.output.append(
         mo.md(
-            'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time and generators.'
+            'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time, and generators.'
         )
     )
     mo.output.append(
@@ -102,7 +102,7 @@ def _(selection):
 
     # --- Get specific utility information from the most recent year. --- # 
     def show_static_value_from_recent_year(df, col):
-    
+
         util_df = (
             df.loc[
                 (df["utility_id_eia"] == selection.util_id)
@@ -310,11 +310,11 @@ def _(Options, mo, query_params, reset_params, yu_df):
         @cached_property
         def end_year_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options = {
+                options = [
                     str(i) for i in 
-                    Options.available_years(self.state, self.util_id)
+                    sorted(Options.available_years(self.state, self.util_id))
                     if i >= int(self.start_year)
-                },
+                ],
                 label="Select an end year",
                 value=self.end_year,
                 searchable=True,
@@ -618,10 +618,10 @@ def _(gen_df, selection):
         "report_date", ascending=False
     )
 
-    recent_report_date = 2024 #util_gen["report_date"].iloc[0]
+    recent_report_date = util_gen["report_date"].dt.year.iloc[0]
 
     util_gen_existing = util_gen[
-        (util_gen["report_date"] == recent_report_date)
+        (util_gen["report_date"].dt.year == recent_report_date)
         & (util_gen["operational_status"] == "existing")
     ]
 
@@ -673,35 +673,6 @@ def _(gen_df, selection):
 
 
 @app.cell
-def _(gen_fuel_df, mo, selection):
-    # Drop down for selecting which year of plants to show
-
-    util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"] == selection.util_id]
-
-    available_years = sorted(
-        util_gen_fuel["report_date"].dt.year.unique(), reverse=True
-    )
-
-    selected_plant_year = mo.ui.dropdown(
-        options=[int(y) for y in available_years],
-        value=int(available_years[0]),
-        label="Select year:",
-    )
-    return (util_gen_fuel,)
-
-
-@app.cell
-def _(mo):
-    # Create drop down for selecting which plant table to show
-    selected_status = mo.ui.dropdown(
-        options=["existing", "proposed", "retired"],
-        value="existing",
-        label="Select generator status:",
-    )
-    return
-
-
-@app.cell
 def _(agg_plant_values, mo, selection, util_gen):
     # Display selected plant table
     selected_year_util_gen = util_gen[
@@ -733,8 +704,10 @@ def _(mo, selection, status_df, table_preview_href):
 
 
 @app.cell
-def _(alt, selection, util_gen_fuel):
+def _(alt, gen_fuel_df, selection):
     # ~~~~ GENERATE FUEL CHART ~~~~ 
+
+    util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"] == selection.util_id]
 
     fuel_year_df = util_gen_fuel[
         util_gen_fuel["report_date"].dt.year.isin(
@@ -787,13 +760,9 @@ def _(alt, selection, util_gen_fuel):
 
 
 @app.cell
-def _(od_df, selection):
+def _(alt, od_df, selection):
     util_od_df = od_df[od_df["utility_id_eia"] == selection.util_id]
-    return (util_od_df,)
 
-
-@app.cell
-def _(alt, selection, util_od_df):
     # Define value cols
     value_cols = [
         "net_generation_mwh",
@@ -853,7 +822,7 @@ def _(alt, selection, util_od_df):
     )
 
     source_chart = alt.layer(pos_chart, neg_chart)
-    return (source_chart,)
+    return source_chart, util_od_df
 
 
 @app.cell
@@ -927,31 +896,88 @@ def _(gen_fuel_df, mfrc_df, selection):
     fuel_plus_gen_df = util_year_gen_fuel_df.groupby(
         ["report_date", "fuel_type_code_pudl"]
     )[["net_generation_mwh", "fuel_consumed_mmbtu"]].sum()
+    return (util_mfrc_df,)
+
+
+@app.cell
+def _(util_mfrc_df):
+    fuel_cost_df = util_mfrc_df.groupby(["report_date", "fuel_type_code_pudl"])[
+        [
+            "fuel_cost_per_mmbtu",
+            "fuel_received_mmbtu",
+        ]
+    ].sum()
+
+    fuel_cost_df["fuel_cost_received"] = fuel_cost_df["fuel_cost_per_mmbtu"] * fuel_cost_df["fuel_received_mmbtu"]
     return
 
 
 @app.cell
 def _():
-    ## THIS WAS WHERE I FOUND THAT COL NAME BUG -- FUEL CONSUMED SHOULD BE FUEL RECIEVED
+    return
 
 
-    # util_mfrc_df.sort_values("report_date")
-    # util_mfrc_df["fuel_consumed_units"] = (
-    #     util_mfrc_df.fuel_consumed_mmbtu / util_mfrc_df.fuel_mmbtu_per_unit
-    # )
+@app.cell
+def _(alt, util_mfrc_df):
+    # annual aggregate with volume-weighted price
+    annual = (
+        util_mfrc_df.assign(fuel_cost=util_mfrc_df.fuel_cost_per_mmbtu * util_mfrc_df.fuel_received_mmbtu)
+        .groupby([util_mfrc_df.report_date.dt.year.rename("year"), "fuel_type_code_pudl"])
+        .agg(mmbtu=("fuel_received_mmbtu", "sum"), fuel_cost=("fuel_cost", "sum"))
+        .assign(price=lambda d: d.fuel_cost / d.mmbtu)
+        .reset_index()
+    )
+    annual = annual.loc[annual["mmbtu"] > 0]
+
+    base1 = alt.Chart(annual).encode(
+        x=alt.X("mmbtu:Q", title="Fuel received (MMBtu)"),
+        y=alt.Y("price:Q", title="Delivered cost ($/MMBtu)"),
+        color=alt.Color("fuel_type_code_pudl:N", legend=alt.Legend(title="Fuel type")),
+        detail="fuel_type_code_pudl:N",
+        order="year:O",
+        tooltip=[
+            alt.Tooltip("fuel_type_code_pudl:N", title="Fuel"),
+            alt.Tooltip("year:O", title="Year"),
+            alt.Tooltip("mmbtu:Q", title="MMBtu received", format=",.0f"),
+            alt.Tooltip("price:Q", title="$/MMBtu", format="$.2f"),
+            alt.Tooltip("fuel_cost:Q", title="Total spend", format="$,.0f"),
+        ],
+    )
+
+    lines = base1.mark_line(point=True, interpolate="catmull-rom", strokeWidth=2)
+
+    labels = base1.mark_text(dy=-10, fontSize=11).encode(text="year:O")
+
+    endpoints = (
+        base1.transform_window(
+            rank="rank()", sort=[alt.SortField("year", order="descending")],
+            groupby=["fuel_type_code_pudl"])
+        .transform_filter("datum.rank == 1")
+        .mark_text(dx=12, align="left", fontWeight="bold", fontSize=12)
+        .encode(text="fuel_type_code_pudl:N")
+    )
+
+    fuel_cost_chart = (lines + labels + endpoints).properties(width=620, height=380)
+    return (fuel_cost_chart,)
+
+
+@app.cell
+def _(fuel_cost_chart, mo, table_preview_href):
+    fuel_cost = mo.vstack(
+        [
+            mo.md("### Fuel Cost vs. Fuel Received"),
+            fuel_cost_chart,
+            mo.md(
+                 f"via {table_preview_href('out_eia923__monthly_fuel_receipts_costs')}"
+             ),
+        ]
+    )
+    fuel_cost
     return
 
 
 @app.cell
 def _():
-    # fuel_cost_df = util_mfrc_df.groupby(["report_date", "fuel_type_code_pudl"])[
-    #     [
-    #         "fuel_received_units",
-    #         "fuel_mmbtu_per_unit",
-    #         "fuel_cost_per_mmbtu",
-    #         "fuel_consumed_mmbtu",
-    #     ]
-    # ].sum()
 
     # fuel_cost_df["fuel_received_mmbtu"] = (
     #     fuel_cost_df.fuel_received_units * fuel_cost_df.fuel_mmbtu_per_unit
@@ -1471,8 +1497,13 @@ def _(alt, util_od_df):
 
 
 @app.cell
-def _(mo, summer_v_winter_demand_chart):
-    demand = mo.vstack([mo.md("## Demand"), summer_v_winter_demand_chart])
+def _(mo, summer_v_winter_demand_chart, table_preview_href):
+    demand = mo.vstack(
+        [
+            mo.md("### Peak Demand"), summer_v_winter_demand_chart,
+            mo.md(f"via {table_preview_href('core_eia861__yearly_operational_data_misc')}"),
+        ]
+    )
 
     demand
     return
