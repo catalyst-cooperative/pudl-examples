@@ -300,9 +300,9 @@ def _(Options, mo, query_params, reset_params, yu_df):
         @cached_property
         def end_year_selector(self) -> mo.ui.dropdown:
             return mo.ui.dropdown(
-                options = [
-                    str(i) for i in 
-                    sorted(Options.available_years(self.state, self.util_id))
+                options=[
+                    str(i)
+                    for i in sorted(Options.available_years(self.state, self.util_id))
                     if i >= int(self.start_year)
                 ],
                 label="Select an end year",
@@ -709,7 +709,7 @@ def _(mo, selection, status_df, table_preview_href):
 
 @app.cell
 def _(alt, gen_fuel_df, selection):
-    # ~~~~ GENERATE FUEL CHART ~~~~ 
+    # ~~~~ GENERATE FUEL CHART ~~~~
 
     util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"] == selection.util_id]
 
@@ -912,7 +912,9 @@ def _(util_mfrc_df):
         ]
     ].sum()
 
-    fuel_cost_df["fuel_cost_received"] = fuel_cost_df["fuel_cost_per_mmbtu"] * fuel_cost_df["fuel_received_mmbtu"]
+    fuel_cost_df["fuel_cost_received"] = (
+        fuel_cost_df["fuel_cost_per_mmbtu"] * fuel_cost_df["fuel_received_mmbtu"]
+    )
     return
 
 
@@ -925,8 +927,13 @@ def _():
 def _(alt, util_mfrc_df):
     # annual aggregate with volume-weighted price
     annual = (
-        util_mfrc_df.assign(fuel_cost=util_mfrc_df.fuel_cost_per_mmbtu * util_mfrc_df.fuel_received_mmbtu)
-        .groupby([util_mfrc_df.report_date.dt.year.rename("year"), "fuel_type_code_pudl"])
+        util_mfrc_df.assign(
+            fuel_cost=util_mfrc_df.fuel_cost_per_mmbtu
+            * util_mfrc_df.fuel_received_mmbtu
+        )
+        .groupby(
+            [util_mfrc_df.report_date.dt.year.rename("year"), "fuel_type_code_pudl"]
+        )
         .agg(mmbtu=("fuel_received_mmbtu", "sum"), fuel_cost=("fuel_cost", "sum"))
         .assign(price=lambda d: d.fuel_cost / d.mmbtu)
         .reset_index()
@@ -954,8 +961,10 @@ def _(alt, util_mfrc_df):
 
     endpoints = (
         base1.transform_window(
-            rank="rank()", sort=[alt.SortField("year", order="descending")],
-            groupby=["fuel_type_code_pudl"])
+            rank="rank()",
+            sort=[alt.SortField("year", order="descending")],
+            groupby=["fuel_type_code_pudl"],
+        )
         .transform_filter("datum.rank == 1")
         .mark_text(dx=12, align="left", fontWeight="bold", fontSize=12)
         .encode(text="fuel_type_code_pudl:N")
@@ -972,8 +981,8 @@ def _(fuel_cost_chart, mo, table_preview_href):
             mo.md("### Fuel Cost vs. Fuel Received"),
             fuel_cost_chart,
             mo.md(
-                 f"via {table_preview_href('out_eia923__monthly_fuel_receipts_costs')}"
-             ),
+                f"via {table_preview_href('out_eia923__monthly_fuel_receipts_costs')}"
+            ),
         ]
     )
     fuel_cost
@@ -1504,8 +1513,11 @@ def _(alt, util_od_df):
 def _(mo, summer_v_winter_demand_chart, table_preview_href):
     demand = mo.vstack(
         [
-            mo.md("### Peak Demand"), summer_v_winter_demand_chart,
-            mo.md(f"via {table_preview_href('core_eia861__yearly_operational_data_misc')}"),
+            mo.md("### Peak Demand"),
+            summer_v_winter_demand_chart,
+            mo.md(
+                f"via {table_preview_href('core_eia861__yearly_operational_data_misc')}"
+            ),
         ]
     )
 
