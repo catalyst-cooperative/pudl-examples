@@ -36,7 +36,7 @@ def _(mo, selection):
                 mo.hstack(
                     [
                         mo.md(
-                            f"""<div data-tooltip="Some utilities operate in multiple states. Use the state selector to help narrow down your utility search, but know that utility information from multiple states will show where applicable.">{mo.icon("lucide:info")}</div>"""
+                            f"""<div data-tooltip="Some utilities operate in multiple states. The dashboard data displayed will cover all states a utility operates in.">{mo.icon("lucide:info")}</div>"""
                         ),
                         selection.state_selector,
                     ],
@@ -148,6 +148,33 @@ def _(pudl):
         st_df,
         yu_df,
     )
+
+
+@app.cell
+def _():
+    cat_colors = [
+        "palevioletred",
+        "purple",
+        "mediumpurple",
+        "lightskyblue",
+        "lightseagreen",
+        "turquoise",
+        "aquamarine",
+        "lightgreen",
+        "gold",
+        "goldenrod",
+        "darkorange",
+        "tomato",
+        "firebrick",
+        "mediumorchid",
+        "mediumseagreen",
+        "mediumslateblue",
+        "mediumspringgreen",
+        "mediumturquoise",
+        "mediumvioletred",
+        "midnightblue",
+    ]
+    return (cat_colors,)
 
 
 @app.cell
@@ -490,7 +517,10 @@ def _(
                 "Total Plants Owned",
                 "Total Owned Capacity (MW)",
             ],
-        )
+        ),
+        selection=None,      
+        show_data_types=False,
+        wrapped_columns=["Value"],
     )
     return (stats_table,)
 
@@ -603,30 +633,7 @@ def _(fips_set, mo, selection, st_chart, stats_table, table_preview_href):
 
 
 @app.cell
-def _(gen_df, pd, selection):
-    # ~~~~ PREP CONTENT FOR UTIL STATS TABLE ~~~~
-
-    util_gen = gen_df[gen_df["utility_id_eia"] == selection.util_id].sort_values(
-        "report_date", ascending=False
-    )
-
-    util_gen_existing = pd.DataFrame()
-
-    if not util_gen.empty:
-        recent_report_date = util_gen["report_date"].dt.year.iloc[0]
-        util_gen_existing = util_gen[
-            (util_gen["report_date"].dt.year == recent_report_date)
-            & (util_gen["operational_status"] == "existing")
-        ]
-
-    # For util stats table
-    if not util_gen_existing.empty:
-        num_plants_owned = len(util_gen_existing.plant_id_eia.unique())
-        total_cap = round(util_gen_existing.capacity_mw.sum())
-    else:
-        num_plants_owned = "No owned generation reported"
-        total_cap = "No capacity to report"
-
+def _(pd):
     def agg_plant_values(df, op_status):
 
         df = df[df["operational_status"] == op_status]
@@ -655,7 +662,7 @@ def _(gen_df, pd, selection):
                         v for v in x.unique() if v is not None
                     ),
                     "capacity_mw": lambda x: f"{x.sum():.2f}",
-                    "city": lambda x: ", ".join(v for v in x.unique() if v is not None),
+                    "city": lambda x: ", ".join(v for v in x.unique() if v is not pd.NA),
                 }
             )
             .reset_index()
@@ -667,7 +674,34 @@ def _(gen_df, pd, selection):
         util_plant_df = util_plant_df.drop(columns=["report_date"])
         return util_plant_df
 
-    return agg_plant_values, num_plants_owned, total_cap, util_gen
+    return (agg_plant_values,)
+
+
+@app.cell
+def _(gen_df, pd, selection):
+    # ~~~~ PREP CONTENT FOR UTIL STATS TABLE ~~~~
+
+    util_gen = gen_df[gen_df["utility_id_eia"] == selection.util_id].sort_values(
+        "report_date", ascending=False
+    )
+
+    util_gen_existing = pd.DataFrame()
+
+    if not util_gen.empty:
+        recent_report_date = util_gen["report_date"].dt.year.iloc[0]
+        util_gen_existing = util_gen[
+            (util_gen["report_date"].dt.year == recent_report_date)
+            & (util_gen["operational_status"] == "existing")
+        ]
+
+    # For util stats table
+    if not util_gen_existing.empty:
+        num_plants_owned = len(util_gen_existing.plant_id_eia.unique())
+        total_cap = round(util_gen_existing.capacity_mw.sum())
+    else:
+        num_plants_owned = "No owned generation reported"
+        total_cap = "No capacity to report"
+    return num_plants_owned, total_cap, util_gen
 
 
 @app.cell
@@ -715,7 +749,7 @@ def _(mo, selection, status_df, table_preview_href):
 
 
 @app.cell
-def _(alt, gen_fuel_df, selection):
+def _(alt, cat_colors, gen_fuel_df, selection):
     # ~~~~ GENERATE FUEL CHART ~~~~
 
     util_gen_fuel = gen_fuel_df[gen_fuel_df["utility_id_eia"] == selection.util_id]
@@ -751,7 +785,7 @@ def _(alt, gen_fuel_df, selection):
             ),
             color=alt.Color(
                 "fuel_type_code_pudl:N",
-                scale=alt.Scale(scheme="tableau10"),
+                scale=alt.Scale(range=cat_colors),#scheme="tableau10"),
                 legend=alt.Legend(title="Fuel Type"),
             ),
             tooltip=[
@@ -771,7 +805,7 @@ def _(alt, gen_fuel_df, selection):
 
 
 @app.cell
-def _(alt, od_df, selection):
+def _(alt, cat_colors, od_df, selection):
     util_od_df = od_df[od_df["utility_id_eia"] == selection.util_id]
 
     # Define value cols
@@ -813,14 +847,19 @@ def _(alt, od_df, selection):
         x=alt.X("year(report_date):O", title="Year"),
         color=alt.Color(
             "source:N",
-            scale=alt.Scale(scheme="tableau10"),
+            scale=alt.Scale(range=cat_colors),
             legend=alt.Legend(orient="right", columns=1, labelLimit=300, offset=10),
         ),
+        tooltip=[
+            alt.Tooltip("report_date:T", title="Year", format="%Y"),
+            alt.Tooltip("mwh:Q", title="Net Generation (Mwh)", format=","),
+            alt.Tooltip("source:N", title="Source"),
+        ],
     )
     pos_chart = (
         base.mark_bar(width={"band": 0.8})
         .encode(
-            y=alt.Y("sum(mwh):Q", stack="zero", title="MWh"),
+            y=alt.Y("sum(mwh):Q", stack="zero", title="Net Generation (MWh)"),
         )
         .properties(data=od_pos)
     )
@@ -834,6 +873,11 @@ def _(alt, od_df, selection):
 
     source_chart = alt.layer(pos_chart, neg_chart)
     return source_chart, util_od_df
+
+
+@app.cell
+def _():
+    return
 
 
 @app.cell
@@ -924,7 +968,7 @@ def _(util_mfrc_df):
 
 
 @app.cell
-def _(alt, mo, selection, util_mfrc_df):
+def _(alt, cat_colors, mo, selection, util_mfrc_df):
     # annual aggregate with volume-weighted price
     annual = (
         util_mfrc_df.assign(
@@ -943,7 +987,7 @@ def _(alt, mo, selection, util_mfrc_df):
     base1 = alt.Chart(annual).encode(
         x=alt.X("mmbtu:Q", title="Fuel received (MMBtu)"),
         y=alt.Y("price:Q", title="Delivered cost ($/MMBtu)"),
-        color=alt.Color("fuel_type_code_pudl:N", legend=alt.Legend(title="Fuel type")),
+        color=alt.Color("fuel_type_code_pudl:N", legend=alt.Legend(title="Fuel type"), scale=alt.Scale(range=cat_colors)),
         detail="fuel_type_code_pudl:N",
         order="year:O",
         tooltip=[
@@ -989,145 +1033,6 @@ def _(fuel_cost_chart, mo, table_preview_href):
         ]
     )
     fuel_cost
-    return
-
-
-@app.cell
-def _():
-
-    # fuel_cost_df["fuel_received_mmbtu"] = (
-    #     fuel_cost_df.fuel_received_units * fuel_cost_df.fuel_mmbtu_per_unit
-    # )
-    # fuel_cost_df["fuel_consumed_cost"] = (
-    #     fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_consumed_mmbtu
-    # )
-    # fuel_cost_df["fuel_received_cost"] = (
-    #     fuel_cost_df.fuel_cost_per_mmbtu * fuel_cost_df.fuel_received_mmbtu
-    # )
-    return
-
-
-@app.cell
-def _():
-    # # For some reason, fuel_consumed_mmbtu is really off when you aggregate up...
-    # fuel_cost_net_gen = pd.merge(
-    #     fuel_plus_gen_df,
-    #     fuel_cost_df,
-    #     on=["report_date", "fuel_type_code_pudl"],
-    #     suffixes=["_gen_df", "_cost_df"],
-    # ).reset_index()
-
-    # fuel_cost_net_gen = fuel_cost_net_gen[fuel_cost_net_gen["fuel_received_units"] > 0]
-    # fuel_cost_net_gen["fuel_consumed_cost_per_net_gen"] = (
-    #     fuel_cost_net_gen.fuel_consumed_cost / fuel_cost_net_gen.net_generation_mwh
-    # )
-    return
-
-
-@app.cell
-def _():
-    # fuel_cost_mmbtu_chart = (
-    #     alt.Chart(fuel_cost_net_gen)
-    #     .mark_line(strokeWidth=2)
-    #     .encode(
-    #         x=alt.X("report_date:T", title="Report Date"),
-    #         y=alt.Y("fuel_cost_per_mmbtu:Q", title="Fuel Cost ($/MMBtu)"),
-    #         color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
-    #         tooltip=[
-    #             alt.Tooltip("report_date:T", title="Date"),
-    #             alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
-    #             alt.Tooltip("fuel_cost_per_mmbtu:Q", title="$/MMBtu", format="$.3f"),
-    #         ],
-    #     )
-    #     .properties(
-    #         title="Fuel Cost per MMBtu Over Time",
-    #     )
-    # )
-    return
-
-
-@app.cell
-def _():
-    # fuel_consumed_mmbtu_chart = (
-    #     alt.Chart(fuel_cost_net_gen)
-    #     .mark_line(strokeWidth=2)
-    #     .encode(
-    #         x=alt.X("report_date:T", title="Report Date"),
-    #         y=alt.Y("fuel_consumed_mmbtu_gen_df:Q", title="Fuel Consumed (MMBtu)"),
-    #         color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
-    #         tooltip=[
-    #             alt.Tooltip("report_date:T", title="Date"),
-    #             alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
-    #             alt.Tooltip("sum(fuel_consumed_mmbtu):Q", title="MMBtu", format=",.0f"),
-    #         ],
-    #     )
-    #     .properties(
-    #         title="Fuel Consumed (MMBtu) Over Time",
-    #     )
-    # )
-    return
-
-
-@app.cell
-def _():
-    # fuel_cost_mer_mwh_chart = (
-    #     alt.Chart(fuel_cost_net_gen)
-    #     .mark_line(strokeWidth=2)
-    #     .encode(
-    #         x=alt.X("report_date:T", title="Report Date"),
-    #         y=alt.Y(
-    #             "fuel_consumed_cost_per_net_gen:Q",
-    #             title="Fuel Cost ($) / Net Generation (MWh)",
-    #         ),
-    #         color=alt.Color("fuel_type_code_pudl:N", title="Fuel Type"),
-    #         tooltip=[
-    #             alt.Tooltip("report_date:T", title="Date"),
-    #             alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
-    #             alt.Tooltip(
-    #                 "fuel_consumed_cost_per_net_gen:Q",
-    #                 title="Total Cost ($)",
-    #                 format=",.0f",
-    #             ),
-    #         ],
-    #     )
-    #     .properties(
-    #         title="Fuel Cost per MWh Over Time",
-    #     )
-    # )
-    return
-
-
-@app.cell
-def _():
-    # combined_fuel_chart = alt.hconcat(
-    #     fuel_cost_mmbtu_chart.encode(
-    #         color=alt.Color(
-    #             "fuel_type_code_pudl:N",
-    #             title="Fuel Type",
-    #             legend=alt.Legend(orient="right", legendX=0, legendY=-30),
-    #         ),
-    #     ),
-    #     fuel_consumed_mmbtu_chart.encode(
-    #         color=alt.Color("fuel_type_code_pudl:N", legend=None)
-    #     ),
-    #     # fuel_cost_mer_mwh_chart.encode(color=alt.Color("fuel_type_code_pudl:N", legend=None)),
-    # ).resolve_scale(color="shared")
-    return
-
-
-@app.cell
-def _():
-    # fuel_cost = mo.vstack(
-    #     [
-    #         mo.md("### Fuel Stats"),
-    #         mo.ui.altair_chart(combined_fuel_chart),
-    #         mo.md(
-    #             f"via {table_preview_href('out_eia923__monthly_fuel_receipts_costs')} and {table_preview_href('out_eia923__generation_fuel_combined')}"
-    #         ),
-    #     ]
-    # )
-
-    # fuel_cost
     return
 
 
@@ -1197,7 +1102,7 @@ def _(alt, sales_long):
 
 
 @app.cell
-def _(alt, sales_long):
+def _(alt, cat_colors, sales_long):
     # ~~~~ REVENUE CHART ~~~~~
 
     sales_revenue_chart = (
@@ -1213,7 +1118,7 @@ def _(alt, sales_long):
             ),
             color=alt.Color(
                 "customer_class:N",
-                scale=alt.Scale(scheme="tableau10"),
+                scale=alt.Scale(range=cat_colors),
                 legend=alt.Legend(title="Customer Class", orient="right"),
             ),
             order=alt.Order("customer_class:N"),
@@ -1229,22 +1134,23 @@ def _(alt, sales_long):
 
 
 @app.cell
-def _(alt, sales_mwh_chart, sales_revenue_chart):
+def _(alt, cat_colors, sales_mwh_chart, sales_revenue_chart):
     combined_sales_chart = alt.hconcat(
         sales_mwh_chart.encode(
             color=alt.Color(
                 "customer_class:N",
                 title="Customer Class",
+                scale=alt.Scale(range=cat_colors),
                 legend=alt.Legend(orient="right", legendX=0, legendY=-30),
             ),
         ),
-        sales_revenue_chart.encode(color=alt.Color("customer_class:N", legend=None)),
+        sales_revenue_chart.encode(color=alt.Color("customer_class:N", legend=None, scale=alt.Scale(range=cat_colors),)),
     ).resolve_scale(color="shared")
     return (combined_sales_chart,)
 
 
 @app.cell
-def _(alt, get_util_years, make_report_date_report_year, odr_df):
+def _(alt, cat_colors, get_util_years, make_report_date_report_year, odr_df):
     # REVENUE CHART
 
     odr_year_util_df = make_report_date_report_year(get_util_years(odr_df))
@@ -1262,7 +1168,7 @@ def _(alt, get_util_years, make_report_date_report_year, odr_df):
             ),
             color=alt.Color(
                 "revenue_class:N",
-                scale=alt.Scale(scheme="tableau10"),
+                scale=alt.Scale(range=cat_colors),
                 legend=alt.Legend(title="Revenue Class", orient="right"),
             ),
             order=alt.Order("revenue_class:N"),
@@ -1303,7 +1209,7 @@ def _(get_util_years, make_report_date_report_year, r_df):
 
 
 @app.cell
-def _(alt, saidi_df):
+def _(alt, cat_colors, saidi_df):
     # SAIDI CHART
 
     saidi_long = saidi_df.copy().melt(
@@ -1323,6 +1229,7 @@ def _(alt, saidi_df):
             color=alt.Color(
                 "metric:N",
                 title="Metric",
+                scale=alt.Scale(range=cat_colors),
                 legend=alt.Legend(
                     orient="bottom", columns=1, labelLimit=300, offset=10
                 ),
@@ -1345,7 +1252,7 @@ def _(alt, saidi_df):
 
 
 @app.cell
-def _(alt, caidi_df):
+def _(alt, caidi_df, cat_colors):
     # CAIDI CHART
 
     caidi_long = caidi_df.melt(
@@ -1365,6 +1272,7 @@ def _(alt, caidi_df):
             color=alt.Color(
                 "metric:N",
                 title="Metric",
+                scale=alt.Scale(range=cat_colors),
                 legend=alt.Legend(
                     orient="bottom", columns=1, labelLimit=300, offset=10
                 ),
@@ -1387,7 +1295,7 @@ def _(alt, caidi_df):
 
 
 @app.cell
-def _(alt, saifi_df):
+def _(alt, cat_colors, saifi_df):
     # SAIFI CHART
 
     saifi_long = saifi_df.melt(
@@ -1407,6 +1315,7 @@ def _(alt, saifi_df):
             color=alt.Color(
                 "metric:N",
                 title="Metric",
+                scale=alt.Scale(range=cat_colors),
                 legend=alt.Legend(
                     orient="bottom", columns=1, labelLimit=300, offset=10
                 ),
@@ -1474,7 +1383,7 @@ def _():
 
 
 @app.cell
-def _(alt, util_od_df):
+def _(alt, cat_colors, util_od_df):
     peak_long = util_od_df[
         ["report_date", "summer_peak_demand_mw", "winter_peak_demand_mw"]
     ].melt(
@@ -1497,7 +1406,7 @@ def _(alt, util_od_df):
                 "season:N",
                 scale=alt.Scale(
                     domain=["summer_peak_demand_mw", "winter_peak_demand_mw"],
-                    range=["#e05c2a", "#4a90d9"],
+                    range=cat_colors,
                 ),
                 legend=alt.Legend(orient="right"),
             ),
