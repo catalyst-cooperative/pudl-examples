@@ -302,7 +302,7 @@ def _(Options, mo, query_params, reset_params, yu_df):
             return mo.ui.dropdown(
                 options=[
                     str(i)
-                    for i in sorted(Options.available_years(self.state, self.util_id))
+                    for i in sorted(Options.available_years(self.state, self.util_id), reverse=True)
                     if i >= int(self.start_year)
                 ],
                 label="Select an end year",
@@ -475,7 +475,7 @@ def _(
                     ),
                 },
                 {
-                    "Value": round(total_cap),
+                    "Value": total_cap,
                     "Reference Table": mo.md(
                         table_preview_href("out_eia__yearly_generators")
                     ),
@@ -559,7 +559,7 @@ def _(Options, alt, json, pd, selection, urlopen):
 
 
 @app.cell
-def _(fips_set, mo, selection, st_chart, stats_table):
+def _(fips_set, mo, selection, st_chart, stats_table, table_preview_href):
     # ~~~~ COMBINE AND DISPLAY UTIL STATS WITH SERVICE TERRITORY MAP ~~~~
     # TO-DO: Make it slide horizontally
 
@@ -590,6 +590,7 @@ def _(fips_set, mo, selection, st_chart, stats_table):
                         [
                             mo.md("### Service Territory"),
                             service_ter_chart,
+                            mo.md(f"via {table_preview_href("out_eia861__yearly_utility_service_territory")}")
                         ]
                     ),
                 ],
@@ -602,23 +603,29 @@ def _(fips_set, mo, selection, st_chart, stats_table):
 
 
 @app.cell
-def _(gen_df, selection):
+def _(gen_df, pd, selection):
     # ~~~~ PREP CONTENT FOR UTIL STATS TABLE ~~~~
 
     util_gen = gen_df[gen_df["utility_id_eia"] == selection.util_id].sort_values(
         "report_date", ascending=False
     )
 
-    recent_report_date = util_gen["report_date"].dt.year.iloc[0]
+    util_gen_existing = pd.DataFrame()
 
-    util_gen_existing = util_gen[
-        (util_gen["report_date"].dt.year == recent_report_date)
-        & (util_gen["operational_status"] == "existing")
-    ]
+    if not util_gen.empty:
+        recent_report_date = util_gen["report_date"].dt.year.iloc[0]
+        util_gen_existing = util_gen[
+            (util_gen["report_date"].dt.year == recent_report_date)
+            & (util_gen["operational_status"] == "existing")
+        ]
 
     # For util stats table
-    num_plants_owned = len(util_gen_existing.plant_id_eia.unique())
-    total_cap = util_gen_existing.capacity_mw.sum()
+    if not util_gen_existing.empty:
+        num_plants_owned = len(util_gen_existing.plant_id_eia.unique())
+        total_cap = round(util_gen_existing.capacity_mw.sum())
+    else:
+        num_plants_owned = "No owned generation reported"
+        total_cap = "No capacity to report"
 
     def agg_plant_values(df, op_status):
 
@@ -834,7 +841,7 @@ def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
     # ~~~~ YEAR RANGE SELECTION AND DISPLAY FOR ELECTRICITY SOURCE
 
     if fuel_long.empty:
-        fuel_chart_mo = f"*{selection.util_name} has no owned capacity*"
+        fuel_chart_mo = mo.md(f"*{selection.util_name} has no owned generation*")
     else:
         fuel_chart_mo = mo.ui.altair_chart(fuel_chart.properties(width=350, height=250))
 
@@ -850,9 +857,7 @@ def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
                     mo.vstack(
                         [
                             mo.md("### Owned Generation by Fuel Type"),
-                            mo.ui.altair_chart(
-                                fuel_chart.properties(width=350, height=250)
-                            ),
+                            fuel_chart_mo,
                             mo.md(
                                 f"via {table_preview_href('out_eia923__generation_fuel_combined')}"
                             ),
@@ -919,12 +924,7 @@ def _(util_mfrc_df):
 
 
 @app.cell
-def _():
-    return
-
-
-@app.cell
-def _(alt, util_mfrc_df):
+def _(alt, mo, selection, util_mfrc_df):
     # annual aggregate with volume-weighted price
     annual = (
         util_mfrc_df.assign(
@@ -970,7 +970,10 @@ def _(alt, util_mfrc_df):
         .encode(text="fuel_type_code_pudl:N")
     )
 
-    fuel_cost_chart = (lines + labels + endpoints).properties(width=620, height=380)
+    if util_mfrc_df.empty:
+        fuel_cost_chart = mo.md(f"*{selection.util_name} does not have purchased fuel*")
+    else:
+        fuel_cost_chart = (lines + labels + endpoints).properties(width=620, height=380)
     return (fuel_cost_chart,)
 
 
