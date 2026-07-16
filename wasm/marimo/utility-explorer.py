@@ -933,20 +933,11 @@ def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
 
 
 @app.cell
-def _(gen_fuel_df, mfrc_df, selection):
+def _(mfrc_df, selection):
     util_mfrc_df = mfrc_df[
         (mfrc_df["utility_id_eia"] == selection.util_id)
         & (
             mfrc_df["report_date"].dt.year.isin(
-                range(selection.start_year, selection.end_year + 1)
-            )
-        )
-    ]
-
-    util_year_gen_fuel_df = gen_fuel_df[
-        (gen_fuel_df["utility_id_eia"] == selection.util_id)
-        & (
-            gen_fuel_df["report_date"].dt.year.isin(
                 range(selection.start_year, selection.end_year + 1)
             )
         )
