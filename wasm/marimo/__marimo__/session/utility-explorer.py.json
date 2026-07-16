@@ -52,7 +52,14 @@
     {
       "id": "PKri",
       "code_hash": "f88e72b62f0f2405fdb47f73c25e9341",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
@@ -64,25 +71,53 @@
     {
       "id": "SFPL",
       "code_hash": "a6ee2d171aa74dd29b700dcf3c589afc",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "BYtC",
       "code_hash": "3b987a9acfc24ba5e3f50af8fb2404e0",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "RGSE",
       "code_hash": "1639b90782277ba211aaf98b32809548",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
       "id": "Kclp",
       "code_hash": "23fcd12bc226aa9f1d0e55723c2f0916",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
@@ -154,7 +189,14 @@
     {
       "id": "ecfG",
       "code_hash": "58f89ed862fc6115a48c12743175cc68",
-      "outputs": [],
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
       "console": []
     },
     {
