@@ -603,7 +603,9 @@ def _(fips_set, mo, selection, st_chart, stats_table, table_preview_href):
         )
 
     if not fips_set:
-        service_ter_chart = mo.md(f"*No service territory data for {selection.util_name}.*")
+        service_ter_chart = mo.md(
+            f"*No service territory data for {selection.util_name}.*"
+        )
 
     util_stats = mo.vstack(
         [
