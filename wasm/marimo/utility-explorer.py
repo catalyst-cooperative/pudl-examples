@@ -601,7 +601,7 @@ def _(fips_set, mo, selection, st_chart, stats_table, table_preview_href):
         )
 
     if not fips_set:
-        no_st_warning = mo.md(f"*No service territory data for {selection.util_name}.*")
+        service_ter_chart = mo.md(f"*No service territory data for {selection.util_name}.*")
 
     util_stats = mo.vstack(
         [
@@ -945,10 +945,6 @@ def _(gen_fuel_df, mfrc_df, selection):
             )
         )
     ]
-
-    fuel_plus_gen_df = util_year_gen_fuel_df.groupby(
-        ["report_date", "fuel_type_code_pudl"]
-    )[["net_generation_mwh", "fuel_consumed_mmbtu"]].sum()
     return (util_mfrc_df,)
 
 
@@ -1058,7 +1054,6 @@ def _(make_report_date_report_year, s_df, selection):
         .sort_index()
         .reset_index()
     )
-    customer_classes = [c for c in pivot.columns if c != "report_date"]
 
     sales_long = make_report_date_report_year(
         pivot.set_index("report_date")
