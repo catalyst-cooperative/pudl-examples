@@ -329,7 +329,9 @@ def _(Options, mo, query_params, reset_params, yu_df):
             return mo.ui.dropdown(
                 options=[
                     str(i)
-                    for i in sorted(Options.available_years(self.state, self.util_id), reverse=True)
+                    for i in sorted(
+                        Options.available_years(self.state, self.util_id), reverse=True
+                    )
                     if i >= int(self.start_year)
                 ],
                 label="Select an end year",
@@ -518,7 +520,7 @@ def _(
                 "Total Owned Capacity (MW)",
             ],
         ),
-        selection=None,      
+        selection=None,
         show_data_types=False,
         wrapped_columns=["Value"],
     )
@@ -620,7 +622,9 @@ def _(fips_set, mo, selection, st_chart, stats_table, table_preview_href):
                         [
                             mo.md("### Service Territory"),
                             service_ter_chart,
-                            mo.md(f"via {table_preview_href("out_eia861__yearly_utility_service_territory")}")
+                            mo.md(
+                                f"via {table_preview_href('out_eia861__yearly_utility_service_territory')}"
+                            ),
                         ]
                     ),
                 ],
@@ -662,7 +666,9 @@ def _(pd):
                         v for v in x.unique() if v is not None
                     ),
                     "capacity_mw": lambda x: f"{x.sum():.2f}",
-                    "city": lambda x: ", ".join(v for v in x.unique() if v is not pd.NA),
+                    "city": lambda x: ", ".join(
+                        v for v in x.unique() if v is not pd.NA
+                    ),
                 }
             )
             .reset_index()
@@ -785,7 +791,7 @@ def _(alt, cat_colors, gen_fuel_df, selection):
             ),
             color=alt.Color(
                 "fuel_type_code_pudl:N",
-                scale=alt.Scale(range=cat_colors),#scheme="tableau10"),
+                scale=alt.Scale(range=cat_colors),  # scheme="tableau10"),
                 legend=alt.Legend(title="Fuel Type"),
             ),
             tooltip=[
@@ -983,7 +989,11 @@ def _(alt, cat_colors, mo, selection, util_mfrc_df):
     base1 = alt.Chart(annual).encode(
         x=alt.X("mmbtu:Q", title="Fuel received (MMBtu)"),
         y=alt.Y("price:Q", title="Delivered cost ($/MMBtu)"),
-        color=alt.Color("fuel_type_code_pudl:N", legend=alt.Legend(title="Fuel type"), scale=alt.Scale(range=cat_colors)),
+        color=alt.Color(
+            "fuel_type_code_pudl:N",
+            legend=alt.Legend(title="Fuel type"),
+            scale=alt.Scale(range=cat_colors),
+        ),
         detail="fuel_type_code_pudl:N",
         order="year:O",
         tooltip=[
@@ -1139,7 +1149,13 @@ def _(alt, cat_colors, sales_mwh_chart, sales_revenue_chart):
                 legend=alt.Legend(orient="right", legendX=0, legendY=-30),
             ),
         ),
-        sales_revenue_chart.encode(color=alt.Color("customer_class:N", legend=None, scale=alt.Scale(range=cat_colors),)),
+        sales_revenue_chart.encode(
+            color=alt.Color(
+                "customer_class:N",
+                legend=None,
+                scale=alt.Scale(range=cat_colors),
+            )
+        ),
     ).resolve_scale(color="shared")
     return (combined_sales_chart,)
 
