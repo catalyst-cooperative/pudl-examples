@@ -94,13 +94,6 @@ def _(pd):
 
 
 @app.cell
-def _():
-    # conditionally display combined plots on their own for debug mode
-    debug = False
-    return (debug,)
-
-
-@app.cell
 def _(selection):
     # ~~~~ MORE HELPFUL FUNCTIONS ~~~~
 
@@ -1115,74 +1108,6 @@ def _(make_report_date_report_year, s_df, selection):
         .rename_axis(None, axis=1)
     )
     return (sales_long,)
-
-
-@app.cell
-def _(alt, debug, mo, sales_long):
-    # ~~~~ SALES MWH CHART ~~~~
-    # currently not used; defined for debugging only
-    sales_mwh_chart = (
-        alt.Chart(sales_long)
-        .mark_bar()
-        .encode(
-            x=alt.X("report_year:O", title="Year"),
-            y=alt.Y(
-                "sales_mwh:Q",
-                stack="zero",
-                title="Sales (MWh)",
-                axis=alt.Axis(format=",.0f"),
-            ),
-            color=alt.Color(
-                "customer_class:N",
-                scale=alt.Scale(scheme="tableau10"),
-                legend=alt.Legend(title="Customer Class", orient="right"),
-            ),
-            order=alt.Order("customer_class:N"),
-            tooltip=[
-                alt.Tooltip("report_year:T", title="Year", format="%Y"),
-                alt.Tooltip("customer_class:N", title="Customer Class"),
-                alt.Tooltip("sales_mwh:Q", title="Sales (MWh)", format=",.0f"),
-            ],
-        )
-        .properties(title="Retail Sales (MWh) by Customer Class")
-    )
-    if debug:
-        mo.output.append(sales_mwh_chart)
-    return
-
-
-@app.cell
-def _(alt, cat_colors, debug, mo, sales_long):
-    # ~~~~ REVENUE CHART ~~~~~
-    # currently not used; defined for debugging only
-    sales_revenue_chart = (
-        alt.Chart(sales_long)
-        .mark_bar()
-        .encode(
-            x=alt.X("report_year:O", title="Year"),
-            y=alt.Y(
-                "sales_revenue:Q",
-                stack="zero",
-                title="Revenue ($)",
-                axis=alt.Axis(format=",.0f"),
-            ),
-            color=alt.Color(
-                "customer_class:N",
-                scale=alt.Scale(range=cat_colors),
-                legend=alt.Legend(title="Customer Class", orient="right"),
-            ),
-            order=alt.Order("customer_class:N"),
-            tooltip=[
-                alt.Tooltip("report_year:T", title="Year", format="%Y"),
-                alt.Tooltip("customer_class:N", title="Customer Class"),
-                alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
-            ],
-        )
-        .properties(title="Retail Revenue ($) by Customer Class")
-    )
-    if debug:
-        mo.output.append(sales_revenue_chart)
-    return
 
 
 @app.cell
