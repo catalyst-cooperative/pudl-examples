@@ -5,16 +5,28 @@ app = marimo.App(width="medium")
 
 
 @app.cell
+def _(mo):
+    mo.output.append(mo.md("# ⚡Utility Explorer⚡"))
+    mo.output.append(
+        mo.md(
+            'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time, and generators.'
+        )
+    )
+    return
+
+
+@app.cell
 def _():
     # Imports
-    import pandas as pd
-    import marimo as mo
+    import json
+    from urllib.request import urlopen
 
     # import plotly.graph_objects as go
     # import plotly
     import altair as alt
-    import json
-    from urllib.request import urlopen
+    import pandas as pd
+
+    import marimo as mo
 
     # import plotly.express as px
     return alt, json, mo, pd, urlopen
@@ -23,13 +35,6 @@ def _():
 @app.cell
 def _(mo, selection):
     # ~~~~ FORMAT INITIAL STATE/UTIL SELECTION ~~~~
-
-    mo.output.append(mo.md("# ⚡Utility Explorer⚡"))
-    mo.output.append(
-        mo.md(
-            'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time, and generators.'
-        )
-    )
     mo.output.append(
         mo.vstack(
             [
@@ -125,18 +130,41 @@ def _(selection):
 
 
 @app.cell
-def _(pudl):
+def _(mo, pudl):
     # ~~~~ LOAD INPUT TABLES ~~~~
-
-    st_df = pudl("out_eia861__yearly_utility_service_territory")
-    yu_df = pudl("out_eia__yearly_utilities")
-    od_df = pudl("core_eia861__yearly_operational_data_misc")
-    odr_df = pudl("core_eia861__yearly_operational_data_revenue")
-    s_df = pudl("core_eia861__yearly_sales")
-    gen_df = pudl("out_eia__yearly_generators")
-    gen_fuel_df = pudl("out_eia923__generation_fuel_combined")
-    mfrc_df = pudl("out_eia923__monthly_fuel_receipts_costs")
-    r_df = pudl("core_eia861__yearly_reliability")
+    with mo.status.progress_bar(
+        total=9,
+        title="Loading data",
+        subtitle="out_eia861__yearly_utility_service_territory",
+        remove_on_exit=True,
+    ) as do_fetch_data:
+        st_df = pudl("out_eia861__yearly_utility_service_territory")
+        do_fetch_data.update(subtitle="out_eia861__yearly_utility_service_territory")
+        yu_df = pudl("out_eia__yearly_utilities")
+        do_fetch_data.update(subtitle="out_eia__yearly_utilities")
+        od_df = pudl("core_eia861__yearly_operational_data_misc")
+        do_fetch_data.update(subtitle="core_eia861__yearly_operational_data_misc")
+        odr_df = pudl("core_eia861__yearly_operational_data_revenue")
+        do_fetch_data.update(subtitle="core_eia861__yearly_operational_data_revenue")
+        s_df = pudl("core_eia861__yearly_sales")
+        do_fetch_data.update(subtitle="core_eia861__yearly_sales")
+        gen_df = pudl(
+            "out_eia__yearly_generators",
+            columns=[
+                "report_date",
+                "utility_id_eia",
+                "operational_status",
+                "balancing_authority_code_eia",
+            ],
+        )
+        do_fetch_data.update(subtitle="out_eia__yearly_generators")
+        gen_fuel_df = pudl("out_eia923__generation_fuel_combined")
+        do_fetch_data.update(subtitle="out_eia923__generation_fuel_combined")
+        mfrc_df = pudl("out_eia923__monthly_fuel_receipts_costs")
+        do_fetch_data.update(subtitle="out_eia923__monthly_fuel_receipts_costs")
+        r_df = pudl("core_eia861__yearly_reliability")
+        do_fetch_data.update(subtitle="core_eia861__yearly_reliability")
+        do_fetch_data.update(subtitle="Done!")
     return (
         gen_df,
         gen_fuel_df,
@@ -258,8 +286,9 @@ def _(initialize_default_params, query_params):
 def _(Options, mo, query_params, reset_params, yu_df):
     # ~~~~ CREATE SELECTION DROPDOWNS AND CACHED VALUES ~~~~
 
-    from pydantic import BaseModel, computed_field
     from functools import cached_property
+
+    from pydantic import BaseModel, computed_field
 
     class Selection(BaseModel):
         """Store/represent the user's current plant selection.
@@ -584,7 +613,7 @@ def _(Options, alt, json, pd, selection, urlopen):
     st_chart = (
         alt.layer(county_layer, state_layer)
         .project("albersUsa")
-        .properties(width=900, height=560)
+        .properties(width="container", height=560)
         .configure_view(stroke=None)
     )
     return fips_set, st_chart
@@ -599,7 +628,7 @@ def _(fips_set, mo, selection, st_chart, stats_table, table_preview_href):
         service_ter_chart = f"*No service territory reported for {selection.util_name}*"
     else:
         service_ter_chart = mo.ui.altair_chart(
-            st_chart.properties(width=500, height=300)
+            st_chart.properties(width="container", height=300)
         )
 
     if not fips_set:
@@ -782,8 +811,8 @@ def _(alt, cat_colors, gen_fuel_df, selection):
         .encode(
             x=alt.X(
                 "report_date:T",
-                axis=alt.Axis(format="%b", tickCount="month"),
-                title="Month",
+                axis=alt.Axis(format="%Y-%m", tickCount="month"),
+                title="Date",
             ),
             y=alt.Y(
                 "net_generation_mwh:Q",
@@ -797,7 +826,7 @@ def _(alt, cat_colors, gen_fuel_df, selection):
                 legend=alt.Legend(title="Fuel Type"),
             ),
             tooltip=[
-                alt.Tooltip("report_date:T", title="Date", format="%Y-%m-%d"),
+                alt.Tooltip("report_date:T", title="Date", format="%Y-%m"),
                 alt.Tooltip("fuel_type_code_pudl:N", title="Fuel Type"),
                 alt.Tooltip(
                     "net_generation_mwh:Q", title="Net Generation (MWh)", format=",.0f"
@@ -805,7 +834,7 @@ def _(alt, cat_colors, gen_fuel_df, selection):
             ],
         )
         .properties(
-            width=700,
+            width="container",
             height=400,
         )
     )
@@ -869,14 +898,14 @@ def _(alt, cat_colors, od_df, selection):
         .encode(
             y=alt.Y("sum(mwh):Q", stack="zero", title="Net Generation (MWh)"),
         )
-        .properties(data=od_pos)
+        .properties(data=od_pos, width="container")
     )
     neg_chart = (
         base.mark_bar(width={"band": 0.8})
         .encode(
             y=alt.Y("sum(mwh):Q", stack="zero"),
         )
-        .properties(data=od_neg)
+        .properties(data=od_neg, width="container")
     )
 
     source_chart = alt.layer(pos_chart, neg_chart)
@@ -895,7 +924,9 @@ def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
     if fuel_long.empty:
         fuel_chart_mo = mo.md(f"*{selection.util_name} has no owned generation*")
     else:
-        fuel_chart_mo = mo.ui.altair_chart(fuel_chart.properties(width=350, height=250))
+        fuel_chart_mo = mo.ui.altair_chart(
+            fuel_chart.properties(width="container", height=250)
+        )
 
     electricity_source = mo.vstack(
         [
@@ -919,7 +950,7 @@ def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
                         [
                             mo.md("### Owned vs. Purchased Generation"),
                             mo.ui.altair_chart(
-                                source_chart.properties(width=350, height=250)
+                                source_chart.properties(width="container", height=250)
                             ),
                             mo.md(
                                 f"via {table_preview_href('core_eia861__yearly_operational_data_misc')}"
@@ -1016,7 +1047,9 @@ def _(alt, cat_colors, mo, selection, util_mfrc_df):
     if util_mfrc_df.empty:
         fuel_cost_chart = mo.md(f"*{selection.util_name} does not have purchased fuel*")
     else:
-        fuel_cost_chart = (lines + labels + endpoints).properties(width=620, height=380)
+        fuel_cost_chart = (lines + labels + endpoints).properties(
+            width="container", height=380
+        )
     return (fuel_cost_chart,)
 
 
@@ -1094,7 +1127,7 @@ def _(alt, sales_long):
                 alt.Tooltip("sales_mwh:Q", title="Sales (MWh)", format=",.0f"),
             ],
         )
-        .properties(title="Retail Sales (MWh) by Customer Class", width=300)
+        .properties(title="Retail Sales (MWh) by Customer Class", width="container")
     )
     return (sales_mwh_chart,)
 
@@ -1126,7 +1159,7 @@ def _(alt, cat_colors, sales_long):
                 alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
             ],
         )
-        .properties(title="Retail Revenue ($) by Customer Class", width=300)
+        .properties(title="Retail Revenue ($) by Customer Class", width="container")
     )
     return (sales_revenue_chart,)
 
@@ -1139,7 +1172,7 @@ def _(alt, cat_colors, sales_mwh_chart, sales_revenue_chart):
                 "customer_class:N",
                 title="Customer Class",
                 scale=alt.Scale(range=cat_colors),
-                legend=alt.Legend(orient="right", legendX=0, legendY=-30),
+                legend=alt.Legend(orient="bottom", legendX=0, legendY=-30),
             ),
         ),
         sales_revenue_chart.encode(
@@ -1173,7 +1206,7 @@ def _(alt, cat_colors, get_util_years, make_report_date_report_year, odr_df):
             color=alt.Color(
                 "revenue_class:N",
                 scale=alt.Scale(range=cat_colors),
-                legend=alt.Legend(title="Revenue Class", orient="right"),
+                legend=alt.Legend(title="Revenue Class", orient="bottom"),
             ),
             order=alt.Order("revenue_class:N"),
             tooltip=[
@@ -1249,7 +1282,7 @@ def _(alt, cat_colors, saidi_df):
                 text="System Average Interruption Duration Index (SAIDI)",
                 subtitle="Total length of time (minutes) an average customer is without power per year",
             ),
-            width=500,
+            width=300,
         )
     )
     return (saidi,)
@@ -1292,7 +1325,7 @@ def _(alt, caidi_df, cat_colors):
                 text="Customer Average Interruption Duration Index (CAIDI)",
                 subtitle="Length of time (minutes) that an average customer is without power during an event",
             ),
-            width=500,
+            width=300,
         )
     )
     return (caidi,)
@@ -1335,7 +1368,7 @@ def _(alt, cat_colors, saifi_df):
                 text="System Average Interruption Frequency Index (SAIFI)",
                 subtitle="How often the average customer experiences interruptions per year",
             ),
-            width=500,
+            width=300,
         )
     )
     return (saifi,)
@@ -1381,12 +1414,6 @@ def _(
 
 
 @app.cell
-def _():
-    ## Utility Programs drop down menu
-    return
-
-
-@app.cell
 def _(alt, cat_colors, util_od_df):
     peak_long = util_od_df[
         ["report_date", "summer_peak_demand_mw", "winter_peak_demand_mw"]
@@ -1418,7 +1445,7 @@ def _(alt, cat_colors, util_od_df):
         )
         .properties(
             title="Summer vs. Winter Peak Demand",
-            width=700,
+            width="container",
             height=400,
         )
     )
