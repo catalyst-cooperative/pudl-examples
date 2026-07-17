@@ -119,12 +119,10 @@ def _(selection):
 
         if out_df.empty:
             value = "Nothing Reported"
-            year = "N/A"
         else:
             value_list = out_df[col].unique().tolist()
             value = ", ".join(str(x) for x in value_list)
-            year = recent_year
-        return value, year
+        return value
 
     return get_util_years, show_static_value_from_recent_year
 
@@ -155,6 +153,13 @@ def _(mo, pudl):
                 "utility_id_eia",
                 "operational_status",
                 "balancing_authority_code_eia",
+                "plant_id_eia",
+                "capacity_mw",
+                "fuel_type_code_pudl",
+                "technology_description",
+                "plant_name_eia",
+                "city",
+                "generator_id",
             ],
         )
         do_fetch_data.update(subtitle="out_eia__yearly_generators")
@@ -482,15 +487,10 @@ def _(
     # ~~~~ BUILD UTILITY STATS TABLE ~~~~
 
     # ---- Get stats from data ----
-    util_name, util_name_year = show_static_value_from_recent_year(
-        yu_df, "utility_name_eia"
-    )
-    address, address_year = show_static_value_from_recent_year(yu_df, "street_address")
-    states, states_year = show_static_value_from_recent_year(st_df, "state")
-    entity_type, entity_year = show_static_value_from_recent_year(od_df, "entity_type")
-    ba, ba_year = show_static_value_from_recent_year(
-        gen_df, "balancing_authority_code_eia"
-    )
+    address = show_static_value_from_recent_year(yu_df, "street_address")
+    states = show_static_value_from_recent_year(st_df, "state")
+    entity_type = show_static_value_from_recent_year(od_df, "entity_type")
+    ba = show_static_value_from_recent_year(gen_df, "balancing_authority_code_eia")
 
     # ---- Build stats table ----
     stats_table = mo.ui.table(
