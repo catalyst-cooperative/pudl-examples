@@ -777,7 +777,7 @@ def _(mo, selection, status_df, table_preview_href):
     mo.vstack(
         [
             mo.Html(
-                f'<div style="max-width: 1000px">{mo.ui.table(status_df).text if not status_df.empty else ""}</div>'
+                f'<div style="max-width: 1000px">{mo.ui.table(status_df, show_data_types=False, selection=None).text if not status_df.empty else ""}</div>'
             ),
             mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"),
         ]
