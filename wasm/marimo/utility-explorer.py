@@ -9,7 +9,7 @@ def _(mo):
     mo.output.append(mo.md("# ⚡Utility Explorer⚡"))
     mo.output.append(
         mo.md(
-            'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes, generation over time, and generators.'
+            'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes and its electricity sources, sales, and reliability over time.'
         )
     )
     return
@@ -91,6 +91,13 @@ def _(pd):
         return df
 
     return make_report_date_report_year, pudl, table_preview_href
+
+
+@app.cell
+def _():
+    # conditionally display combined plots on their own for debug mode
+    debug = False
+    return (debug,)
 
 
 @app.cell
@@ -805,13 +812,23 @@ def _(alt, cat_colors, gen_fuel_df, selection):
         .reset_index()
     )
 
+    def pick_fuel_ticks():
+        years = selection.end_year - selection.start_year
+        if years <= 2:
+            return "month"
+        if years <= 5:
+            # quarters
+            return {"interval": "month", "step": 3}
+        # otherwise
+        return "year"
+
     fuel_chart = (
         alt.Chart(fuel_long)
         .mark_area()
         .encode(
             x=alt.X(
                 "report_date:T",
-                axis=alt.Axis(format="%Y-%m", tickCount="month"),
+                axis=alt.Axis(format="%Y-%m", tickCount=pick_fuel_ticks()),
                 title="Date",
             ),
             y=alt.Y(
@@ -822,7 +839,7 @@ def _(alt, cat_colors, gen_fuel_df, selection):
             ),
             color=alt.Color(
                 "fuel_type_code_pudl:N",
-                scale=alt.Scale(range=cat_colors),  # scheme="tableau10"),
+                scale=alt.Scale(range=cat_colors),
                 legend=alt.Legend(title="Fuel Type"),
             ),
             tooltip=[
@@ -1101,9 +1118,9 @@ def _(make_report_date_report_year, s_df, selection):
 
 
 @app.cell
-def _(alt, sales_long):
+def _(alt, debug, mo, sales_long):
     # ~~~~ SALES MWH CHART ~~~~
-
+    # currently not used; defined for debugging only
     sales_mwh_chart = (
         alt.Chart(sales_long)
         .mark_bar()
@@ -1127,15 +1144,17 @@ def _(alt, sales_long):
                 alt.Tooltip("sales_mwh:Q", title="Sales (MWh)", format=",.0f"),
             ],
         )
-        .properties(title="Retail Sales (MWh) by Customer Class", width="container")
+        .properties(title="Retail Sales (MWh) by Customer Class")
     )
-    return (sales_mwh_chart,)
+    if debug:
+        mo.output.append(sales_mwh_chart)
+    return
 
 
 @app.cell
-def _(alt, cat_colors, sales_long):
+def _(alt, cat_colors, debug, mo, sales_long):
     # ~~~~ REVENUE CHART ~~~~~
-
+    # currently not used; defined for debugging only
     sales_revenue_chart = (
         alt.Chart(sales_long)
         .mark_bar()
@@ -1159,30 +1178,55 @@ def _(alt, cat_colors, sales_long):
                 alt.Tooltip("sales_revenue:Q", title="Revenue ($)", format=",.0f"),
             ],
         )
-        .properties(title="Retail Revenue ($) by Customer Class", width="container")
+        .properties(title="Retail Revenue ($) by Customer Class")
     )
-    return (sales_revenue_chart,)
+    if debug:
+        mo.output.append(sales_revenue_chart)
+    return
 
 
 @app.cell
-def _(alt, cat_colors, sales_mwh_chart, sales_revenue_chart):
-    combined_sales_chart = alt.hconcat(
-        sales_mwh_chart.encode(
-            color=alt.Color(
-                "customer_class:N",
-                title="Customer Class",
-                scale=alt.Scale(range=cat_colors),
-                legend=alt.Legend(orient="bottom", legendX=0, legendY=-30),
-            ),
-        ),
-        sales_revenue_chart.encode(
-            color=alt.Color(
-                "customer_class:N",
-                legend=None,
-                scale=alt.Scale(range=cat_colors),
+def _(alt, cat_colors, mo, sales_long):
+    combined_sales_chart = mo.ui.altair_chart(
+        alt.Chart(
+            # rename columns so that we can use a repeat chart
+            # and still have nice axis titles
+            sales_long.rename(
+                columns={
+                    "sales_mwh": "Sales (MWh)",
+                    "sales_revenue": "Revenue ($)",
+                }
             )
-        ),
-    ).resolve_scale(color="shared")
+        )
+        .mark_bar()
+        .encode(
+            x=alt.X("report_year:O", title="Year"),
+            y=alt.Y(
+                alt.repeat("column"),
+                type="quantitative",
+                stack="zero",
+                axis=alt.Axis(format=",.0f"),
+            ),
+            color=alt.Color(
+                "customer_class:N",
+                scale=alt.Scale(range=cat_colors),
+                legend=alt.Legend(title="Customer Class", orient="bottom"),
+            ),
+            order=alt.Order("customer_class:N"),
+            tooltip=[
+                alt.Tooltip("report_year:T", title="Year", format="%Y"),
+                alt.Tooltip("customer_class:N", title="Customer Class"),
+                alt.Tooltip(alt.repeat("column"), type="quantitative", format=",.0f"),
+            ],
+        )
+        .repeat(
+            column=["Sales (MWh)", "Revenue ($)"],
+        )
+        # sad note: can't use width="container" here because
+        # marimo-altair-vega doesn't pass container widths properly
+        # to combo charts
+        .properties(title="Retail Sales and Revenue by Customer Class")
+    )
     return (combined_sales_chart,)
 
 
@@ -1216,8 +1260,7 @@ def _(alt, cat_colors, get_util_years, make_report_date_report_year, odr_df):
             ],
         )
         .properties(
-            title="Total Revenue ($) by Type",
-            width=300,
+            title="Total Revenue ($) by Revenue Class",
         )
     )
     return (revenue_class_chart,)
@@ -1282,7 +1325,7 @@ def _(alt, cat_colors, saidi_df):
                 text="System Average Interruption Duration Index (SAIDI)",
                 subtitle="Total length of time (minutes) an average customer is without power per year",
             ),
-            width=300,
+            width="container",
         )
     )
     return (saidi,)
@@ -1325,7 +1368,7 @@ def _(alt, caidi_df, cat_colors):
                 text="Customer Average Interruption Duration Index (CAIDI)",
                 subtitle="Length of time (minutes) that an average customer is without power during an event",
             ),
-            width=300,
+            width="container",
         )
     )
     return (caidi,)
@@ -1368,7 +1411,7 @@ def _(alt, cat_colors, saifi_df):
                 text="System Average Interruption Frequency Index (SAIFI)",
                 subtitle="How often the average customer experiences interruptions per year",
             ),
-            width=300,
+            width="container",
         )
     )
     return (saifi,)
@@ -1387,26 +1430,30 @@ def _(
     customer_facing = mo.vstack(
         [
             mo.md("## Customer-Facing"),
-            mo.md("### Sales"),
-            mo.Html(f"""
-        <div style="overflow-x: auto; width: 100%; display: block;">
-            <div style="min-width: max-content;">
-                {mo.hstack([combined_sales_chart, revenue_class_chart]).text}
-            </div>
-        </div>
-        """),
-            mo.md(f"via {table_preview_href('core_eia861__yearly_sales')}"),
-            mo.Html("<div style='margin-top: 2rem;'></div>"),
-            mo.md("### Reliability"),
-            mo.Html(f"""
-        <div style="overflow-x: auto; width: 100%; display: block;">
-            <div style="min-width: max-content;">
-                {mo.hstack([saidi, saifi, caidi]).text}
-            </div>
-        </div>
-        """),
-            mo.md(f"via {table_preview_href('core_eia861__yearly_reliability')}"),
-        ]
+            mo.vstack(
+                [
+                    mo.md("### Sales"),
+                    mo.ui.tabs(
+                        {
+                            "By Customer Class": combined_sales_chart,
+                            "By Revenue Class": revenue_class_chart,
+                        }
+                    ),
+                    mo.md(f"via {table_preview_href('core_eia861__yearly_sales')}"),
+                ]
+            ),
+            mo.vstack(
+                [
+                    mo.md("### Reliability"),
+                    mo.ui.tabs({"SAIDI": saidi, "SAIFI": saifi, "CAIDI": caidi}),
+                    mo.md(
+                        f"via {table_preview_href('core_eia861__yearly_reliability')}"
+                    ),
+                ]
+            ),
+        ],
+        # make a larger gap between subsections than within each subsection
+        gap=1,
     )
 
     customer_facing
@@ -1473,11 +1520,6 @@ def _(mo):
     mo.md(r"""
     If you see anything odd in the data, find a bug or just have a question, feel free to reach out to us by emailing us at hello@catalyst.coop or write up a <a href="https://github.com/catalyst-cooperative/pudl/issues/new?template=bug_report.md" target="_blank">github issue</a>. Heck, if you just found this helpful, let us know! As an open-source project we love to hear about your energy data needs.
     """)
-    return
-
-
-@app.cell
-def _():
     return
 
 
