@@ -21,14 +21,12 @@ def _():
     import json
     from urllib.request import urlopen
 
-    # import plotly.graph_objects as go
-    # import plotly
     import altair as alt
     import pandas as pd
+    import pyarrow as pa
 
     import marimo as mo
 
-    # import plotly.express as px
     return alt, json, mo, pd, urlopen
 
 
