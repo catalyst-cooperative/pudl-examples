@@ -543,7 +543,7 @@ def filter_dfs(
 ):
     from typing import TypeVar
 
-    PandasDataFrame = TypeVar("pandas.core.frame.DataFrame")
+    PandasDataFrame = TypeVar("PandasDataFrame")
 
     class GraphInput(BaseModel):
         filtered_rate_base: PandasDataFrame
@@ -610,7 +610,7 @@ def filter_dfs(
                     utility_selection_title_part = f"{util_len} Utilities"
                     utils_subtitle = " & ".join(utility_selection)
                 else:
-                    utility_selection_title_part = f"{list(utility_selection)[0]}"
+                    utility_selection_title_part = f"{next(iter(utility_selection))}"
             filtered_rate_base = out_ferc1__yearly_rate_base[rate_mask]
             filtered_sales = core_eia861__yearly_sales[sales_mask]
             graph_inputs[opt_n] = GraphInput(

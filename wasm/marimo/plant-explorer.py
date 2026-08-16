@@ -644,7 +644,7 @@ def _(mo, this_plant__generators):
     only_option = set()
     filter_options = {}
     filter_defaults = {}
-    for k, v in filter_counts.to_dict().items():
+    for k in filter_counts.to_dict():
         available = this_plant__generators[k].value_counts(dropna=False)
         available = available.loc[available > 0].index
         if available.shape[0] == 1:
@@ -663,7 +663,7 @@ def _(mo, this_plant__generators):
         max_input = max(max(v) for v in option_lengths.values())
         columns = math.ceil(80 / max_column)
 
-        for k in filter_options:
+        for k, options in filter_options.items():
             filters[k] = mo.Html(
                 f"""<div data-testid="genselect-{k}" style="display: flex; gap: 0.5rem; {"color: #bbbbbb" if k in only_option else ""}">
          <label style="flex: {max_label / max_input} 1 0%; text-align: end;">{k}</label>
@@ -671,7 +671,7 @@ def _(mo, this_plant__generators):
      </div>"""
             ).batch(
                 multiselect=mo.ui.multiselect(
-                    options=filter_options[k],
+                    options=options,
                     value=filter_defaults[k],
                     # label=k,
                 )
