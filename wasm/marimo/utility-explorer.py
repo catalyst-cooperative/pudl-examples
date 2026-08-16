@@ -12,7 +12,6 @@ def _(mo):
             'Explore attributes of any utility that reports to <a href="https://docs.catalyst.coop/pudl/data_sources/eia861.html" target="_blank">EIA-861</a>. Select a state and specific utility to explore its attributes and its electricity sources, sales, and reliability over time.'
         )
     )
-    return
 
 
 @app.cell
@@ -49,7 +48,6 @@ def _(mo, selection):
             ]
         )
     )
-    return
 
 
 @app.cell
@@ -57,7 +55,6 @@ def _(mo, selection):
     mo.md(f"""
     #**{selection.util_name}**
     """)
-    return
 
 
 @app.cell
@@ -662,7 +659,6 @@ def _(fips_set, mo, selection, st_chart, stats_table, table_preview_href):
         ]
     )
     util_stats
-    return
 
 
 @app.cell
@@ -780,7 +776,6 @@ def _(mo, selection, status_df, table_preview_href):
             mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"),
         ]
     )
-    return
 
 
 @app.cell
@@ -970,7 +965,6 @@ def _(fuel_chart, fuel_long, mo, selection, source_chart, table_preview_href):
         ]
     )
     electricity_source
-    return
 
 
 @app.cell
@@ -998,7 +992,6 @@ def _(util_mfrc_df):
     fuel_cost_df["fuel_cost_received"] = (
         fuel_cost_df["fuel_cost_per_mmbtu"] * fuel_cost_df["fuel_received_mmbtu"]
     )
-    return
 
 
 @app.cell
@@ -1073,7 +1066,6 @@ def _(fuel_cost_chart, mo, table_preview_href):
         ]
     )
     fuel_cost
-    return
 
 
 @app.cell
@@ -1380,7 +1372,6 @@ def _(
     )
 
     customer_facing
-    return
 
 
 @app.cell
@@ -1435,7 +1426,6 @@ def _(mo, summer_v_winter_demand_chart, table_preview_href):
     )
 
     demand
-    return
 
 
 @app.cell(hide_code=True)
@@ -1443,7 +1433,6 @@ def _(mo):
     mo.md(r"""
     If you see anything odd in the data, find a bug or just have a question, feel free to reach out to us by emailing us at hello@catalyst.coop or write up a <a href="https://github.com/catalyst-cooperative/pudl/issues/new?template=bug_report.md" target="_blank">github issue</a>. Heck, if you just found this helpful, let us know! As an open-source project we love to hear about your energy data needs.
     """)
-    return
 
 
 if __name__ == "__main__":

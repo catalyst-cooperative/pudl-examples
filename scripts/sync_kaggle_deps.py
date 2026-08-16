@@ -73,7 +73,7 @@ def main() -> None:
 
     package_names = sorted(
         str(name)
-        for name in deps_table.keys()
+        for name in deps_table
         if name not in exempt_from_sync and name != "python"
     )
     probe_result = probe_kaggle_runtime_dependencies(
@@ -153,7 +153,7 @@ def apply_kaggle_pins_to_pixi_deps(
     kaggle_pins = probe_result["pins"]
     kaggle_pins["python"] = f"=={probe_result['python_version']}"
 
-    for dep_name in deps_table.keys():
+    for dep_name in deps_table:
         if dep_name in exempt_from_sync:
             continue
 

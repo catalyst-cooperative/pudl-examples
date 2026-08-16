@@ -15,7 +15,6 @@ def header(mo):
 
     These tables provide clues about how rates have changed over time, the primary drivers of that change and who bears the impact of that change. It’s important to note that, while informative, the data provide an incomplete and imperfect picture. The rate making process is complex and this dashboard only gives us a snapshot. Nonetheless, we think this information is useful and we encourage you to explore. For more background materials, see the Additional Resources at the bottom of the page.
     """)
-    return
 
 
 @app.cell
@@ -222,7 +221,6 @@ def add_columns(
             pd.StringDtype()
         )
     )
-    return
 
 
 @app.cell
@@ -524,7 +522,6 @@ def sidebar(mark_type_selector, mo, selection):
             ),
         ]
     )
-    return
 
 
 @app.cell
@@ -535,7 +532,6 @@ def no_utilities_1_stop(mo, selection):
             "## 🛑 **Choose a utilities the sidebar.** ⬅️\nWe really want to show you some pretty graphs, but you have to select utilities to show. If you happen to choose utilities in the 'To compare' section, you still need to choose utilities above that."
         ),
     )
-    return
 
 
 @app.cell
@@ -547,7 +543,7 @@ def filter_dfs(
 ):
     from typing import TypeVar
 
-    PandasDataFrame = TypeVar("pandas.core.frame.DataFrame")
+    PandasDataFrame = TypeVar("PandasDataFrame")
 
     class GraphInput(BaseModel):
         filtered_rate_base: PandasDataFrame
@@ -562,7 +558,7 @@ def filter_dfs(
 
     graph_inputs = {"opt_1": {}, "opt_2": {}}
 
-    for opt_n in graph_inputs.keys():
+    for opt_n in graph_inputs:
         utility_selection = selection.model_dump().get(
             f"utilities_{opt_n.removeprefix('opt_')}"
         )
@@ -614,7 +610,7 @@ def filter_dfs(
                     utility_selection_title_part = f"{util_len} Utilities"
                     utils_subtitle = " & ".join(utility_selection)
                 else:
-                    utility_selection_title_part = f"{list(utility_selection)[0]}"
+                    utility_selection_title_part = f"{next(iter(utility_selection))}"
             filtered_rate_base = out_ferc1__yearly_rate_base[rate_mask]
             filtered_sales = core_eia861__yearly_sales[sales_mask]
             graph_inputs[opt_n] = GraphInput(
@@ -820,7 +816,6 @@ def chart_ferc1(ColumToChart, graph_inputs, make_comparison_charts, mo):
     ]
 
     make_comparison_charts(cols_to_chart_ferc1, graph_inputs, "filtered_rate_base")
-    return
 
 
 @app.cell
@@ -895,7 +890,6 @@ def chart_eia861(ColumToChart, graph_inputs, make_comparison_charts, mo):
     ]
 
     make_comparison_charts(cols_to_chart_eia861, graph_inputs, "filtered_sales")
-    return
 
 
 @app.cell(hide_code=True)
@@ -903,7 +897,6 @@ def _(mo):
     mo.md(r"""
     ## 📚 Additional Resources
     """)
-    return
 
 
 @app.cell
@@ -979,7 +972,6 @@ def materials_accordion(mo):
     * <a href='https://www.raponline.org/wp-content/uploads/2023/10/rap-improving-utility-performance-incentives-in-the-united-states-2023-october.pdf' target='_blank'>RAP's Improving Utility Performance Incentives in the United States</a>"""),
         }
     )
-    return
 
 
 @app.cell(hide_code=True)
@@ -987,7 +979,6 @@ def contact_us(mo):
     mo.md(r"""
     If you see anything odd in the data, find a bug or just have a question, feel free to reach out to us by emailing us at hello@catalyst.coop or write up a <a href="https://github.com/catalyst-cooperative/pudl/issues/new?template=bug_report.md" target="_blank">github issue</a>. Heck, if you just found this helpful, let us know! As an open-source project we love to hear about your energy data needs.
     """)
-    return
 
 
 if __name__ == "__main__":

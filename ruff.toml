@@ -1,0 +1,4 @@
+# NOTE (2026-08-15): Jupyter notebooks are synced from Kaggle, which will
+# overwrite any lint fixes we make without running our tooling, so there's no
+# point linting them here. See .pre-commit-config.yaml for the same rationale.
+extend-exclude = ["*.ipynb"]

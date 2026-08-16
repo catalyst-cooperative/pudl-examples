@@ -21,13 +21,11 @@ def _(mo, selection):
             ]
         )
     )
-    return
 
 
 @app.cell(hide_code=True)
 def _(mo, this_plant):
     mo.md(f"# {this_plant.name} (EIA id={this_plant.plant_id_eia})")
-    return
 
 
 @app.cell
@@ -37,12 +35,12 @@ def _():
     with mo.status.progress_bar(
         total=1, title="Loading subroutines", remove_on_exit=True
     ) as do_imports:
-        import itertools
         import functools
+        import itertools
 
+        import altair as alt
         import pandas as pd
         import pyarrow as pa
-        import altair as alt
 
         do_imports.update(subtitle="Done!")
     return alt, functools, itertools, mo, pd
@@ -239,8 +237,9 @@ def _(initialize_default_params, query_params):
 
 @app.cell
 def _(Options, mo, query_params, reset_params):
-    from pydantic import BaseModel, Field, computed_field
     from functools import cached_property
+
+    from pydantic import BaseModel, Field, computed_field
 
     class Selection(BaseModel):
         """Store/represent the user's current plant selection.
@@ -573,7 +572,6 @@ def _(alt, mo, this_plant, this_plant__monthly_generation_fuel_combined):
             f"via {table_preview_href('out_eia923__monthly_generation_fuel_combined')}"
         )
     )
-    return
 
 
 @app.cell
@@ -625,7 +623,6 @@ def _(
     mo.output.append(
         mo.md(f"via {table_preview_href('out_eia923__monthly_generation')}")
     )
-    return
 
 
 @app.cell
@@ -647,7 +644,7 @@ def _(mo, this_plant__generators):
     only_option = set()
     filter_options = {}
     filter_defaults = {}
-    for k, v in filter_counts.to_dict().items():
+    for k in filter_counts.to_dict():
         available = this_plant__generators[k].value_counts(dropna=False)
         available = available.loc[available > 0].index
         if available.shape[0] == 1:
@@ -666,7 +663,7 @@ def _(mo, this_plant__generators):
         max_input = max(max(v) for v in option_lengths.values())
         columns = math.ceil(80 / max_column)
 
-        for k in filter_options:
+        for k, options in filter_options.items():
             filters[k] = mo.Html(
                 f"""<div data-testid="genselect-{k}" style="display: flex; gap: 0.5rem; {"color: #bbbbbb" if k in only_option else ""}">
          <label style="flex: {max_label / max_input} 1 0%; text-align: end;">{k}</label>
@@ -674,7 +671,7 @@ def _(mo, this_plant__generators):
      </div>"""
             ).batch(
                 multiselect=mo.ui.multiselect(
-                    options=filter_options[k],
+                    options=options,
                     value=filter_defaults[k],
                     # label=k,
                 )
@@ -799,7 +796,6 @@ def _(
         )
     )
     mo.output.append(mo.md(f"via {table_preview_href('out_eia__yearly_generators')}"))
-    return
 
 
 if __name__ == "__main__":

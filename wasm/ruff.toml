@@ -1,4 +1,13 @@
+extend = "../ruff.toml"
+
 [lint.pyflakes]
 # NOTE 2026-02-27: these need to be imported so that Pandas can read Parquet
 # files in pyodide, but are not explicitly used in the code.
 allowed-unused-imports = ["fastparquet", "pyarrow"]
+
+[lint.per-file-ignores]
+# NOTE (2026-08-15): marimo notebook cells commonly end with a bare
+# expression, which marimo treats as the cell's displayed output (mirroring
+# Jupyter's "last line is shown" behavior). Ruff sees this as a useless
+# expression, but it's an intentional and idiomatic part of marimo notebooks.
+"marimo/*.py" = ["B018"]
